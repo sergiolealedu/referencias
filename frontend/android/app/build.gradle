@@ -16,6 +16,13 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+    packagingOptions {
+        exclude 'build-data.properties'
+    }
     signingConfigs {
         release {
             def keystorePropsFile = rootProject.file('keystore.properties')

@@ -21,6 +21,7 @@
     "start": "npm run start -w backend",
     "build:android": "npm run build:android -w frontend",
     "android:assemble": "node scripts/android-gradle.mjs assembleRelease",
+    "android:assemble:debug": "node scripts/android-gradle.mjs assembleDebug",
     "android:bundle": "node scripts/android-gradle.mjs bundleRelease",
     "android:release": "npm run build:android && npm run android:bundle && npm run android:assemble"
   },
