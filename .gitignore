@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+app.config.json
+data/workspaces.json
+data/registry.db
+*.db
+*.db-shm
+*.db-wal
+data/backups/
+.cursor/
+*.tsbuildinfo
+*.bak
+.DS_Store

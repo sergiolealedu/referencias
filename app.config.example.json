@@ -1,0 +1,6 @@
+{
+  "sqliteDbPath": "data/referencias.db",
+  "allowedPdfRoots": [
+    "G:\\Meu Drive\\doutorado"
+  ]
+}

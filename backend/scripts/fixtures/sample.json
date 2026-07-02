@@ -1,0 +1,33 @@
+{
+  "groups": [
+    {
+      "id": 1,
+      "title": "Teste",
+      "versao": "v2",
+      "mecanismo": "Scopus",
+      "stringBusca": "",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "articles": [
+        {
+          "entry": {
+            "type": "article",
+            "key": "a2024",
+            "fields": {
+              "title": "Artigo Teste",
+              "author": "Silva, J.",
+              "year": "2024"
+            }
+          },
+          "status": "exists",
+          "source": "",
+          "location": "",
+          "caminho": "",
+          "notes": "",
+          "tags": ["ml"],
+          "descartado": false,
+          "usado": true
+        }
+      ]
+    }
+  ]
+}
