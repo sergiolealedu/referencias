@@ -117,7 +117,7 @@ Recomenda-se manter o `.db` em disco local (não sincronizar via Google Drive em
 Cada push ou pull request na branch `main` dispara o workflow [CI](.github/workflows/ci.yml), que:
 
 - instala dependências e executa `npm run build`;
-- valida o build Android (`assembleRelease`) com Capacitor + Gradle.
+- valida o build Android de release (`bundleRelease` + `assembleRelease`) com Capacitor + Gradle.
 
 ### App Android (Capacitor)
 

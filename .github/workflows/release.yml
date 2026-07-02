@@ -45,7 +45,6 @@ jobs:
           scope: '@sergiolealedu'
 
       - name: Setup Java
-        id: setup-java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -58,6 +57,20 @@ jobs:
         run: |
           yes | sdkmanager --licenses >/dev/null || true
           sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Check Android signing secrets
+        id: android_signing
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Align package versions
         run: npm version "${{ steps.version.outputs.version }}" --no-git-tag-version --allow-same-version --workspaces --include-workspace-root
@@ -89,13 +102,26 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: node scripts/android-prepare-signing.mjs
 
-      - name: Build Android app
-        env:
-          JAVA_HOME: ${{ steps.setup-java.outputs.path }}
+      - name: Sync Capacitor Android project
+        run: npm run cap:sync:only -w frontend
+
+      - name: Build Android release
+        working-directory: frontend/android
         run: |
-          chmod +x frontend/android/gradlew
-          npm run cap:sync:only -w frontend
-          ./frontend/android/gradlew -p frontend/android bundleRelease assembleRelease --no-daemon --stacktrace
+          chmod +x ./gradlew
+          set -o pipefail
+          if ! ./gradlew bundleRelease assembleRelease --no-daemon --stacktrace 2>&1 | tee ../../gradle-android-release.log; then
+            MESSAGE=$(grep -E 'What went wrong:|Execution failed for task|error:' ../../gradle-android-release.log | head -5 | tr '\n' ' ')
+            echo "::error title=Gradle build failed::${MESSAGE:-Ver gradle-android-release.log}"
+            exit 1
+          fi
+
+      - name: Upload Gradle log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-android-release-log
+          path: gradle-android-release.log
 
       - name: Collect Android artifacts
         run: node scripts/android-collect-artifacts.mjs "${{ steps.version.outputs.version }}"
@@ -105,6 +131,8 @@ jobs:
 
       - name: Generate release notes
         id: notes
+        env:
+          ANDROID_SIGNING_CONFIGURED: ${{ steps.android_signing.outputs.configured }}
         run: |
           PREVIOUS=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo '')
           if [ -n "$PREVIOUS" ]; then
@@ -135,10 +163,10 @@ jobs:
             echo "- \`referencias-${{ steps.version.outputs.version }}.aab\` — bundle para Google Play"
             echo "- \`referencias-${{ steps.version.outputs.version }}.apk\` — instalação direta (sideload)"
             echo
-            if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            if [ "$ANDROID_SIGNING_CONFIGURED" = "true" ]; then
               echo "Build assinado com o keystore de release configurado nos secrets do repositório."
             else
-              echo "> Configure os secrets \`ANDROID_KEYSTORE_*\` para gerar builds assinados."
+              echo "> Configure os secrets \`ANDROID_KEYSTORE_*\` para gerar builds assinados para produção."
             fi
             echo
             echo "### Alterações"

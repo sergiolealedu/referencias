@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { cpSync, mkdirSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
@@ -40,6 +40,7 @@ writeFileSync(
     'Conteúdo:',
     '- backend/dist — API compilada',
     '- frontend/dist — SPA estática',
+    '- referencias-*.aab / referencias-*.apk — app Android (quando gerado na release)',
     '- docs — documentação funcional e não funcional',
     '',
     'Instalação rápida:',
@@ -49,6 +50,18 @@ writeFileSync(
   ].join('\n'),
   'utf8',
 );
+
+const androidArtifacts = [
+  `referencias-${version}.aab`,
+  `referencias-${version}.apk`,
+];
+
+for (const artifact of androidArtifacts) {
+  const source = join(root, 'release', artifact);
+  if (existsSync(source)) {
+    cpSync(source, join(bundleDir, artifact));
+  }
+}
 
 const zipPath = join(root, 'release', `referencias-${version}.zip`);
 execSync(`cd "${join(root, 'release')}" && zip -r "${zipPath}" "referencias-${version}"`, {

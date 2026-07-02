@@ -78,12 +78,12 @@ jobs:
       - name: Sync Capacitor Android project
         run: npm run build:android
 
-      - name: Build debug APK
+      - name: Build release APK/AAB
         working-directory: frontend/android
         run: |
           chmod +x ./gradlew
           set -o pipefail
-          if ! ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tee ../../gradle-android.log; then
+          if ! ./gradlew bundleRelease assembleRelease --no-daemon --stacktrace 2>&1 | tee ../../gradle-android.log; then
             MESSAGE=$(grep -E 'What went wrong:|Execution failed for task|error:' ../../gradle-android.log | head -5 | tr '\n' ' ')
             echo "::error title=Gradle build failed::${MESSAGE:-Ver gradle-android.log}"
             exit 1
@@ -96,5 +96,7 @@ jobs:
           name: gradle-android-log
           path: gradle-android.log
 
-      - name: Verify Android artifact
-        run: test -n "$(find frontend/android/app/build/outputs/apk -name '*.apk' -print -quit)"
+      - name: Verify Android artifacts
+        run: |
+          test -n "$(find frontend/android/app/build/outputs/apk/release -name '*.apk' -print -quit)"
+          test -n "$(find frontend/android/app/build/outputs/bundle/release -name '*.aab' -print -quit)"

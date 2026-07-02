@@ -25,15 +25,34 @@ function findFiles(dir, extension) {
       matches.push(...findFiles(fullPath, extension));
       continue;
     }
-    if (fullPath.endsWith(extension)) {
+    if (fullPath.endsWith(extension) && !fullPath.includes('androidTest')) {
       matches.push(fullPath);
     }
   }
   return matches;
 }
 
-const aabFiles = findFiles(outputsDir, '.aab');
-const apkFiles = findFiles(outputsDir, '.apk');
+function preferReleaseArtifacts(files) {
+  const release = files.filter((file) => /[/\\]release[/\\]/.test(file));
+  if (release.length > 0) {
+    return release;
+  }
+  const bundleRelease = files.filter((file) => /[/\\]bundle[/\\]release[/\\]/.test(file));
+  if (bundleRelease.length > 0) {
+    return bundleRelease;
+  }
+  return files;
+}
+
+function pickNewest(files) {
+  if (files.length === 0) return null;
+  return files
+    .map((file) => ({ file, mtime: statSync(file).mtimeMs }))
+    .sort((a, b) => b.mtime - a.mtime)[0].file;
+}
+
+const aabFiles = preferReleaseArtifacts(findFiles(outputsDir, '.aab'));
+const apkFiles = preferReleaseArtifacts(findFiles(outputsDir, '.apk'));
 
 if (aabFiles.length === 0 && apkFiles.length === 0) {
   console.error(`Nenhum artefato Android encontrado em ${outputsDir}`);
@@ -42,15 +61,17 @@ if (aabFiles.length === 0 && apkFiles.length === 0) {
 
 const copied = [];
 
-if (aabFiles.length > 0) {
+const aabSource = pickNewest(aabFiles);
+if (aabSource) {
   const target = join(releaseDir, `referencias-${version}.aab`);
-  copyFileSync(aabFiles[0], target);
+  copyFileSync(aabSource, target);
   copied.push(target);
 }
 
-if (apkFiles.length > 0) {
+const apkSource = pickNewest(apkFiles);
+if (apkSource) {
   const target = join(releaseDir, `referencias-${version}.apk`);
-  copyFileSync(apkFiles[0], target);
+  copyFileSync(apkSource, target);
   copied.push(target);
 }
 
