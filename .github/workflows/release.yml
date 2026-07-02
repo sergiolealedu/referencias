@@ -45,7 +45,7 @@ jobs:
           scope: '@sergiolealedu'
 
       - name: Align package versions
-        run: npm version "${{ steps.version.outputs.version }}" --no-git-tag-version -ws --include-workspace-root
+        run: npm version "${{ steps.version.outputs.version }}" --no-git-tag-version --allow-same-version --workspaces --include-workspace-root
 
       - name: Install dependencies
         run: npm ci

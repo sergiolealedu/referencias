@@ -47,7 +47,7 @@ export function createGroupsRouter(): Router {
 
   router.post('/', async (req, res) => {
     try {
-      const body = createGroupSchema.parse(req.body);
+      const body = createGroupSchema.parse(req.body ?? {});
       const group = await storeFrom(req).createGroup(body);
       res.status(201).json(group);
     } catch (error) {
@@ -99,7 +99,7 @@ export function createGroupsRouter(): Router {
         res.status(400).json({ error: 'ID de grupo inválido' });
         return;
       }
-      const body = updateGroupSchema.parse(req.body);
+      const body = updateGroupSchema.parse(req.body ?? {});
       const group = await storeFrom(req).updateGroup(groupId, body);
       res.json(group);
     } catch (error) {
@@ -128,7 +128,7 @@ export function createGroupsRouter(): Router {
         res.status(400).json({ error: 'ID de grupo inválido' });
         return;
       }
-      const body = bibtexImportSchema.parse(req.body);
+      const body = bibtexImportSchema.parse(req.body ?? {});
       const { entries, errors: parseErrors } = parseBibtex(body.bibtex);
       if (entries.length === 0) {
         res.status(400).json({
@@ -198,7 +198,7 @@ export function createArticlesRouter(): Router {
         return;
       }
       const { createArticleSchema } = await import('../schemas/referencias.js');
-      const body = createArticleSchema.parse(req.body);
+      const body = createArticleSchema.parse(req.body ?? {});
       const article = await storeFrom(req).createArticle(groupId, body);
       res.status(201).json(article);
     } catch (error) {
@@ -227,7 +227,7 @@ export function createArticlesRouter(): Router {
         res.status(400).json({ error: 'ID de grupo inválido' });
         return;
       }
-      const body = exportArticlesSchema.parse(req.body);
+      const body = exportArticlesSchema.parse(req.body ?? {});
       const articles = await storeFrom(req).exportArticlesByKeys(groupId, body.keys);
       res.json(articles);
     } catch (error) {
@@ -259,7 +259,7 @@ export function createArticlesRouter(): Router {
         return;
       }
       const { articlePatchSchema } = await import('../schemas/referencias.js');
-      const body = articlePatchSchema.parse(req.body);
+      const body = articlePatchSchema.parse(req.body ?? {});
       const article = await storeFrom(req).updateArticle(
         groupId,
         key,

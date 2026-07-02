@@ -27,7 +27,7 @@ export function createSettingsRouter(): Router {
   router.put('/', async (req, res) => {
     try {
       const authReq = req as AuthenticatedRequest;
-      const body = updateSettingsSchema.parse(req.body);
+      const body = updateSettingsSchema.parse(req.body ?? {});
       const allowedPdfRoots =
         body.allowedPdfRoots ?? defaultPdfRootsForDbPath(body.sqliteDbPath);
       const workspace = await updateActiveWorkspaceSettings(

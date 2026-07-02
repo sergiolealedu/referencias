@@ -97,7 +97,7 @@ export function createWorkspacesRouter(): Router {
   router.post('/join', (req, res) => {
     try {
       const { deviceId } = resolveDeviceForWorkspaces(req);
-      const body = joinSchema.parse(req.body);
+      const body = joinSchema.parse(req.body ?? {});
       const workspace = joinWorkspaceWithToken(deviceId, body.token.trim());
       setDeviceActiveWorkspace(deviceId, workspace.id);
       res.json({ ...workspace, isActive: true });
@@ -116,7 +116,7 @@ export function createWorkspacesRouter(): Router {
   router.post('/', async (req, res) => {
     try {
       const { deviceId } = resolveDeviceForWorkspaces(req);
-      const body = workspaceInputSchema.parse(req.body);
+      const body = workspaceInputSchema.parse(req.body ?? {});
       const workspace = await createWorkspace(body);
       addDeviceToNewWorkspace(deviceId, workspace.id);
       await syncActiveWorkspaceToAppSettings(workspace);
@@ -141,7 +141,7 @@ export function createWorkspacesRouter(): Router {
         res.status(403).json({ error: 'Sem acesso a este workspace.' });
         return;
       }
-      const body = workspaceUpdateSchema.parse(req.body);
+      const body = workspaceUpdateSchema.parse(req.body ?? {});
       const workspace = await updateWorkspace(workspaceId, body);
       invalidateStore(workspace.sqliteDbPath);
       res.json({

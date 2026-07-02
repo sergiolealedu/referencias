@@ -8,7 +8,7 @@ export const duplicateRefSchema = z.object({
 export const entrySchema = z.object({
   type: z.string().min(1),
   key: z.string().min(1),
-  fields: z.record(z.string()),
+  fields: z.record(z.string(), z.string()),
 });
 
 export const articleSchema = z.object({
@@ -26,7 +26,7 @@ export const articleSchema = z.object({
 
 export const articlePatchSchema = articleSchema.partial().extend({
   entry: entrySchema.partial().extend({
-    fields: z.record(z.string()).optional(),
+    fields: z.record(z.string(), z.string()).optional(),
   }).optional(),
 });
 
