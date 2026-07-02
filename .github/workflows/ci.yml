@@ -12,6 +12,7 @@ concurrency:
 
 permissions:
   contents: read
+  actions: write
 
 jobs:
   build:
@@ -61,11 +62,13 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Prepare Android SDK
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK components
         run: |
-          echo "ANDROID_HOME=${ANDROID_HOME}"
           yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
+          sdkmanager --install "platforms;android-34" "build-tools;34.0.0"
 
       - name: Install dependencies
         run: npm ci
@@ -79,7 +82,15 @@ jobs:
           JAVA_HOME: ${{ steps.setup-java.outputs.path }}
         run: |
           chmod +x ./gradlew
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          set -o pipefail
+          ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tee ../../gradle-android.log
+
+      - name: Upload Gradle log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-android-log
+          path: gradle-android.log
 
       - name: Verify Android artifact
         run: test -n "$(find frontend/android/app/build/outputs/apk -name '*.apk' -print -quit)"
