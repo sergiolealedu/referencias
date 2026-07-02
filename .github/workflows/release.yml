@@ -51,11 +51,10 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Android SDK components
-        run: sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
+      - name: Prepare Android SDK
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
 
       - name: Align package versions
         run: npm version "${{ steps.version.outputs.version }}" --no-git-tag-version --allow-same-version --workspaces --include-workspace-root
@@ -93,8 +92,7 @@ jobs:
         run: |
           chmod +x frontend/android/gradlew
           npm run cap:sync:only -w frontend
-          npm run android:bundle -- --no-daemon --stacktrace
-          npm run android:assemble -- --no-daemon --stacktrace
+          ./frontend/android/gradlew -p frontend/android bundleRelease assembleRelease --no-daemon --stacktrace
 
       - name: Collect Android artifacts
         run: node scripts/android-collect-artifacts.mjs "${{ steps.version.outputs.version }}"

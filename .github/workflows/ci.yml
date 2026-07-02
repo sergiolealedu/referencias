@@ -61,11 +61,11 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Android SDK components
-        run: sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
+      - name: Prepare Android SDK
+        run: |
+          echo "ANDROID_HOME=${ANDROID_HOME}"
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
 
       - name: Install dependencies
         run: npm ci
@@ -74,11 +74,12 @@ jobs:
         run: npm run build:android
 
       - name: Build debug APK
+        working-directory: frontend/android
         env:
           JAVA_HOME: ${{ steps.setup-java.outputs.path }}
         run: |
-          chmod +x frontend/android/gradlew
-          npm run android:assemble:debug -- --no-daemon --stacktrace
+          chmod +x ./gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Verify Android artifact
         run: test -n "$(find frontend/android/app/build/outputs/apk -name '*.apk' -print -quit)"
