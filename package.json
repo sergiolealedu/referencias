@@ -18,7 +18,9 @@
   "scripts": {
     "dev": "concurrently -n backend,frontend -c blue,green \"npm run dev -w backend\" \"npm run dev -w frontend\"",
     "build": "npm run build -w backend && npm run build -w frontend",
-    "start": "npm run start -w backend"
+    "start": "npm run start -w backend",
+    "build:android": "npm run build:android -w frontend",
+    "android:release": "npm run android:release -w frontend"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

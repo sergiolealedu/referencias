@@ -87,6 +87,9 @@ npm start
 | PATCH | `/api/groups/:groupId/articles/:key` | Atualização parcial |
 | DELETE | `/api/groups/:groupId/articles/:key` | Remove artigo |
 | GET | `/api/search` | Busca global paginada com FTS |
+| GET | `/api/sync/status` | Status de sync (última alteração, workspace) |
+| GET | `/api/sync/pull?since=` | Pull incremental para app mobile |
+| POST | `/api/sync/push` | Push de alterações do app mobile |
 
 ## Persistência
 
@@ -111,7 +114,42 @@ Recomenda-se manter o `.db` em disco local (não sincronizar via Google Drive em
 
 ### CI contínua
 
-Cada push ou pull request na branch `main` dispara o workflow [CI](.github/workflows/ci.yml), que instala dependências e executa `npm run build`.
+Cada push ou pull request na branch `main` dispara o workflow [CI](.github/workflows/ci.yml), que:
+
+- instala dependências e executa `npm run build`;
+- valida o build Android (`assembleRelease`) com Capacitor + Gradle.
+
+### App Android (Capacitor)
+
+Build local (requer [Android SDK](https://developer.android.com/studio) e `ANDROID_HOME`):
+
+```powershell
+npm run build:android
+npm run android:release -w frontend
+```
+
+Artefatos em `frontend/android/app/build/outputs/`.
+
+Para assinar releases localmente, copie `frontend/android/keystore.properties.example` para `keystore.properties` e coloque o `.jks` na pasta `frontend/android/`.
+
+#### Secrets para release assinado no GitHub
+
+Configure em *Settings → Secrets and variables → Actions*:
+
+| Secret | Descrição |
+|--------|-----------|
+| `ANDROID_KEYSTORE_BASE64` | Conteúdo do `.jks` em Base64 |
+| `ANDROID_KEYSTORE_PASSWORD` | Senha do keystore |
+| `ANDROID_KEY_ALIAS` | Alias da chave |
+| `ANDROID_KEY_PASSWORD` | Senha da chave |
+
+Gerar Base64 do keystore (PowerShell):
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("caminho\referencias-release.jks"))
+```
+
+Sem esses secrets, o workflow ainda gera `.aab`/`.apk`, porém sem assinatura de release.
 
 ### Publicar uma release
 
@@ -126,7 +164,8 @@ git push origin v1.0.0
 3. O workflow [Release](.github/workflows/release.yml) irá:
    - compilar backend e frontend;
    - publicar `@sergiolealedu/referencias-backend` e `@sergiolealedu/referencias-frontend` no [GitHub Packages](https://github.com/sergiolealedu/referencias/pkgs/npm/referencias-backend);
-   - gerar um ZIP de deploy e anexá-lo à [GitHub Release](https://github.com/sergiolealedu/referencias/releases).
+   - gerar o app Android (`.aab` e `.apk`) com Capacitor;
+   - gerar um ZIP de deploy e anexar tudo à [GitHub Release](https://github.com/sergiolealedu/referencias/releases).
 
 Tags pré-release (ex.: `v1.1.0-beta.1`) são marcadas como *pre-release* automaticamente.
 

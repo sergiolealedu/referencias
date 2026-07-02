@@ -44,6 +44,15 @@ jobs:
           registry-url: https://npm.pkg.github.com
           scope: '@sergiolealedu'
 
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Align package versions
         run: npm version "${{ steps.version.outputs.version }}" --no-git-tag-version --allow-same-version --workspaces --include-workspace-root
 
@@ -62,6 +71,27 @@ jobs:
         run: npm publish -w frontend --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set Android version
+        run: node scripts/android-set-version.mjs "${{ steps.version.outputs.version }}"
+
+      - name: Prepare Android signing
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: node scripts/android-prepare-signing.mjs
+
+      - name: Build Android app
+        run: |
+          chmod +x frontend/android/gradlew
+          npm run cap:sync:only -w frontend
+          npm run android:bundle -w frontend
+          npm run android:assemble -w frontend
+
+      - name: Collect Android artifacts
+        run: node scripts/android-collect-artifacts.mjs "${{ steps.version.outputs.version }}"
 
       - name: Create release bundle
         run: node scripts/package-release.mjs "${{ steps.version.outputs.version }}"
@@ -93,6 +123,17 @@ jobs:
             echo '//npm.pkg.github.com/:_authToken=SEU_TOKEN'
             echo '```'
             echo
+            echo "### App Android"
+            echo
+            echo "- \`referencias-${{ steps.version.outputs.version }}.aab\` — bundle para Google Play"
+            echo "- \`referencias-${{ steps.version.outputs.version }}.apk\` — instalação direta (sideload)"
+            echo
+            if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+              echo "Build assinado com o keystore de release configurado nos secrets do repositório."
+            else
+              echo "> Configure os secrets \`ANDROID_KEYSTORE_*\` para gerar builds assinados."
+            fi
+            echo
             echo "### Alterações"
             echo
             echo "$NOTES"
@@ -104,7 +145,10 @@ jobs:
         with:
           name: Referências v${{ steps.version.outputs.version }}
           body: ${{ steps.notes.outputs.body }}
-          files: release/referencias-${{ steps.version.outputs.version }}.zip
+          files: |
+            release/referencias-${{ steps.version.outputs.version }}.zip
+            release/referencias-${{ steps.version.outputs.version }}.aab
+            release/referencias-${{ steps.version.outputs.version }}.apk
           generate_release_notes: false
           draft: false
           prerelease: ${{ contains(steps.version.outputs.version, '-') }}
