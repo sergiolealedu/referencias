@@ -20,7 +20,9 @@
     "build": "npm run build -w backend && npm run build -w frontend",
     "start": "npm run start -w backend",
     "build:android": "npm run build:android -w frontend",
-    "android:release": "npm run android:release -w frontend"
+    "android:assemble": "node scripts/android-gradle.mjs assembleRelease",
+    "android:bundle": "node scripts/android-gradle.mjs bundleRelease",
+    "android:release": "npm run build:android && npm run android:bundle && npm run android:assemble"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

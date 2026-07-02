@@ -72,7 +72,7 @@ jobs:
       - name: Build release APK
         run: |
           chmod +x frontend/android/gradlew
-          npm run android:assemble -w frontend
+          npm run android:assemble
 
       - name: Verify Android artifact
         run: test -n "$(find frontend/android/app/build/outputs/apk -name '*.apk' -print -quit)"

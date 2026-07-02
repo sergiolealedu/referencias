@@ -87,8 +87,8 @@ jobs:
         run: |
           chmod +x frontend/android/gradlew
           npm run cap:sync:only -w frontend
-          npm run android:bundle -w frontend
-          npm run android:assemble -w frontend
+          npm run android:bundle
+          npm run android:assemble
 
       - name: Collect Android artifacts
         run: node scripts/android-collect-artifacts.mjs "${{ steps.version.outputs.version }}"

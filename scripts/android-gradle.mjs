@@ -4,7 +4,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', 'frontend', 'android');
-const gradlew = process.platform === 'win32' ? 'gradlew.bat' : 'gradlew';
+const isWindows = process.platform === 'win32';
+const gradlew = isWindows ? 'gradlew.bat' : './gradlew';
 const args = process.argv.slice(2);
 
 if (args.length === 0) {
@@ -15,7 +16,7 @@ if (args.length === 0) {
 const result = spawnSync(gradlew, args, {
   cwd: root,
   stdio: 'inherit',
-  shell: process.platform === 'win32',
+  shell: isWindows,
 });
 
 process.exit(result.status ?? 1);
