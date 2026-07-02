@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { api } from '../api/client';
+import { api } from '../api/dataProvider';
 import { useUpdateArticle } from '../hooks/useApi';
 import type { Article, SortColumn, SortDirection } from '../types/referencias';
 import {

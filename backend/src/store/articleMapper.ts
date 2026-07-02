@@ -16,6 +16,10 @@ export interface ArticleRow {
   usado: number;
   duplicate_group_id: number | null;
   duplicate_key: string | null;
+  updated_at?: string;
+  carregado_at?: string | null;
+  usado_at?: string | null;
+  descartado_at?: string | null;
 }
 
 export function rowToArticle(row: ArticleRow): Article {
@@ -33,6 +37,9 @@ export function rowToArticle(row: ArticleRow): Article {
     tags: JSON.parse(row.tags_json) as string[],
     descartado: row.descartado === 1,
     usado: row.usado === 1,
+    ...(row.carregado_at ? { carregadoAt: row.carregado_at } : {}),
+    ...(row.usado_at ? { usadoAt: row.usado_at } : {}),
+    ...(row.descartado_at ? { descartadoAt: row.descartado_at } : {}),
     ...(row.duplicate_group_id != null && row.duplicate_key
       ? { duplicateOf: { groupId: row.duplicate_group_id, key: row.duplicate_key } }
       : {}),

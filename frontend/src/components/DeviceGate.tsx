@@ -1,7 +1,10 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { api } from '../api/client';
+import { api } from '../api/dataProvider';
+import { isNativePlatform } from '../platform/native';
+import { getLocalStore } from '../store/LocalSqliteStore';
+import { syncEngine } from '../sync/SyncEngine';
 import type { DeviceSession } from '../types/device';
 import { getAuthToken } from '../utils/device';
 import { DeviceOnboarding } from './DeviceOnboarding';
@@ -11,7 +14,8 @@ interface DeviceGateProps {
 }
 
 async function bootstrapSession(): Promise<DeviceSession> {
-  if (getAuthToken()) {
+  const token = await getAuthToken();
+  if (token) {
     try {
       return await api.getDeviceSession();
     } catch {
@@ -32,8 +36,15 @@ export function DeviceGate({ children }: DeviceGateProps) {
     setLoading(true);
     setError(null);
     try {
+      if (isNativePlatform()) {
+        await getLocalStore();
+        await syncEngine.start();
+      }
       const nextSession = await bootstrapSession();
       setSession(nextSession);
+      if (isNativePlatform() && !nextSession.needsOnboarding) {
+        await syncEngine.fullPull();
+      }
       queryClient.invalidateQueries();
     } catch (err) {
       setError((err as Error).message);

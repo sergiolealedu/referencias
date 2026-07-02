@@ -4,6 +4,8 @@ import {
   setAuthToken,
   setLegacyDeviceId,
 } from '../utils/device';
+import { getApiBase } from '../platform/serverUrl';
+import { isNativePlatform } from '../platform/native';
 
 import type {
   AppSettings,
@@ -23,15 +25,13 @@ import type {
 import type { DeviceSession, JoinTokenInfo } from '../types/device';
 import type { WorkspaceInput, WorkspaceSummary } from '../types/workspace';
 
-const API_BASE = '/api';
-
-function authHeaders(): HeadersInit {
-  const authToken = getAuthToken();
+async function authHeaders(): Promise<HeadersInit> {
+  const authToken = await getAuthToken();
   if (authToken) {
     return { 'X-Auth-Token': authToken };
   }
 
-  const legacyDeviceId = getLegacyDeviceId();
+  const legacyDeviceId = await getLegacyDeviceId();
   if (legacyDeviceId) {
     return { 'X-Device-Id': legacyDeviceId };
   }
@@ -39,17 +39,18 @@ function authHeaders(): HeadersInit {
   return {};
 }
 
-function persistSession(session: DeviceSession): DeviceSession {
-  setAuthToken(session.authToken);
-  setLegacyDeviceId(session.device.id);
+async function persistSession(session: DeviceSession): Promise<DeviceSession> {
+  await setAuthToken(session.authToken);
+  await setLegacyDeviceId(session.device.id);
   return session;
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, {
+  const apiBase = await getApiBase();
+  const response = await fetch(`${apiBase}${path}`, {
     headers: {
       'Content-Type': 'application/json',
-      ...authHeaders(),
+      ...(await authHeaders()),
       ...options?.headers,
     },
     ...options,
@@ -103,9 +104,9 @@ function toQuery(params: ArticleListParams): string {
   return qs ? `?${qs}` : '';
 }
 
-export const api = {
+export const remoteApi = {
   registerDevice: async () => {
-    const legacyDeviceId = getLegacyDeviceId();
+    const legacyDeviceId = await getLegacyDeviceId();
     const session = await request<DeviceSession>('/device/register', {
       method: 'POST',
       body: JSON.stringify(legacyDeviceId ? { deviceId: legacyDeviceId } : {}),
@@ -138,8 +139,7 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
-  deleteGroup: (id: number) =>
-    request<void>(`/groups/${id}`, { method: 'DELETE' }),
+  deleteGroup: (id: number) => request<void>(`/groups/${id}`, { method: 'DELETE' }),
 
   listArticles: (groupId: number, params: ArticleListParams = {}) =>
     request<PaginatedArticles>(`/groups/${groupId}/articles${toQuery(params)}`),
@@ -178,8 +178,10 @@ export const api = {
   search: (params: ArticleListParams = {}) =>
     request<PaginatedSearchResults>(`/search${toQuery(params)}`),
 
-  pdfUrl: (filePath: string) =>
-    `/api/files/pdf?path=${encodeURIComponent(filePath.trim())}`,
+  pdfUrl: async (filePath: string) => {
+    const base = await getApiBase();
+    return `${base}/files/pdf?path=${encodeURIComponent(filePath.trim())}`;
+  },
 
   importBibtex: (groupId: number, input: BibtexImportInput) =>
     request<BibtexImportResult>(`/groups/${groupId}/import/bibtex`, {
@@ -196,6 +198,17 @@ export const api = {
 
   detectDuplicates: (versao = 'v2') =>
     request<DuplicateDetectionResult>(`/stats/detect-duplicates?versao=${encodeURIComponent(versao)}`, {
+      method: 'POST',
+    }),
+
+  getStatusActivity: (params: { from: string; to: string; versao?: string }) => {
+    const qs = new URLSearchParams({ from: params.from, to: params.to });
+    if (params.versao) qs.set('versao', params.versao);
+    return request<import('../types/referencias').DayStatusActivity[]>(`/stats/status-activity?${qs}`);
+  },
+
+  recordArticleLoaded: (groupId: number, key: string) =>
+    request<Article>(`/groups/${groupId}/articles/${encodeURIComponent(key)}/loaded`, {
       method: 'POST',
     }),
 
@@ -248,4 +261,32 @@ export const api = {
       `/workspaces/${encodeURIComponent(workspaceId)}/tokens/${encodeURIComponent(token)}`,
       { method: 'DELETE' },
     ),
+
+  getSyncStatus: () =>
+    request<{ lastUpdatedAt: string | null; workspaceId: string; workspaceName: string }>(
+      '/sync/status',
+    ),
+
+  syncPull: (since?: string) => {
+    const qs = since ? `?since=${encodeURIComponent(since)}` : '';
+    return request<import('../sync/types').SyncPullResult>(`/sync/pull${qs}`);
+  },
+
+  syncPush: (changes: import('../sync/types').SyncChange[]) =>
+    request<import('../sync/types').SyncPushResult>('/sync/push', {
+      method: 'POST',
+      body: JSON.stringify({ changes }),
+    }),
 };
+
+/** @deprecated use remoteApi or dataProvider */
+export const api = remoteApi;
+
+export async function resolvePdfUrl(filePath: string): Promise<string> {
+  if (isNativePlatform()) {
+    const { getCachedPdfUri } = await import('../pdf/pdfCache');
+    const cached = await getCachedPdfUri(filePath);
+    if (cached) return cached;
+  }
+  return remoteApi.pdfUrl(filePath);
+}

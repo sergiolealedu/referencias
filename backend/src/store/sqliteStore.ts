@@ -23,6 +23,7 @@ import type {
   SearchResult,
   SortColumn,
   YearArticleStats,
+  DayStatusActivity,
 } from '../types/referencias.js';
 
 interface FilterClause {
@@ -79,6 +80,119 @@ export class SqliteStore {
 
   constructor(dbPath: string) {
     this.db = openDatabase(dbPath);
+  }
+
+  getDb(): Database.Database {
+    return this.db;
+  }
+
+  private nowIso(): string {
+    return new Date().toISOString();
+  }
+
+  private recordStatusEvent(
+    groupId: number,
+    entryKey: string,
+    eventType: 'carregado' | 'usado' | 'descartado',
+    occurredAt: string,
+  ): void {
+    this.db
+      .prepare(
+        `INSERT INTO article_status_events (group_id, entry_key, event_type, occurred_at)
+         VALUES (?, ?, ?, ?)`,
+      )
+      .run(groupId, entryKey, eventType, occurredAt);
+  }
+
+  private applyStatusTransitions(
+    groupId: number,
+    current: Article,
+    merged: Article,
+    now: string,
+  ): { carregadoAt?: string; usadoAt?: string; descartadoAt?: string } {
+    const timestamps: { carregadoAt?: string; usadoAt?: string; descartadoAt?: string } = {
+      ...(current.carregadoAt ? { carregadoAt: current.carregadoAt } : {}),
+      ...(current.usadoAt ? { usadoAt: current.usadoAt } : {}),
+      ...(current.descartadoAt ? { descartadoAt: current.descartadoAt } : {}),
+    };
+    const entryKey = merged.entry.key;
+
+    if (!current.location.trim() && merged.location.trim() && !current.carregadoAt) {
+      timestamps.carregadoAt = now;
+      this.recordStatusEvent(groupId, entryKey, 'carregado', now);
+    }
+
+    if (!current.usado && merged.usado) {
+      timestamps.usadoAt = now;
+      this.recordStatusEvent(groupId, entryKey, 'usado', now);
+    }
+
+    if (!current.descartado && merged.descartado) {
+      timestamps.descartadoAt = now;
+      this.recordStatusEvent(groupId, entryKey, 'descartado', now);
+    }
+
+    return timestamps;
+  }
+
+  async recordArticleLoaded(groupId: number, key: string): Promise<Article> {
+    const current = await this.getArticle(groupId, key);
+    if (current.carregadoAt) {
+      return current;
+    }
+
+    const now = this.nowIso();
+    this.recordStatusEvent(groupId, key, 'carregado', now);
+    this.db
+      .prepare(
+        `UPDATE articles SET carregado_at = ?, updated_at = ?
+         WHERE group_id = ? AND entry_key = ?`,
+      )
+      .run(now, now, groupId, key);
+
+    return { ...current, carregadoAt: now };
+  }
+
+  getStatusActivity(params: {
+    from: string;
+    to: string;
+    versao?: string;
+  }): DayStatusActivity[] {
+    const conditions = ['e.occurred_at >= ?', 'e.occurred_at < ?'];
+    const queryParams: unknown[] = [params.from, params.to];
+
+    if (params.versao) {
+      conditions.push('g.versao = ?');
+      queryParams.push(params.versao);
+    }
+
+    const rows = this.db
+      .prepare(
+        `SELECT
+          date(e.occurred_at, 'localtime') AS date,
+          SUM(CASE WHEN e.event_type = 'carregado' THEN 1 ELSE 0 END) AS carregados,
+          SUM(CASE WHEN e.event_type = 'usado' THEN 1 ELSE 0 END) AS usados,
+          SUM(CASE WHEN e.event_type = 'descartado' THEN 1 ELSE 0 END) AS descartados
+        FROM article_status_events e
+        JOIN groups g ON g.id = e.group_id
+        WHERE ${conditions.join(' AND ')}
+        GROUP BY date(e.occurred_at)
+        ORDER BY date ASC`,
+      )
+      .all(...queryParams) as Array<{
+      date: string;
+      carregados: number;
+      usados: number;
+      descartados: number;
+    }>;
+
+    return rows.map((row) => ({
+      date: row.date,
+      carregados: row.carregados,
+      usados: row.usados,
+      descartados: row.descartados,
+      total: row.carregados + row.usados + row.descartados,
+    }));
   }
 
   close(): void {
@@ -196,10 +310,11 @@ export class SqliteStore {
       string_busca: input.stringBusca ?? '',
       created_at: new Date().toISOString(),
     };
+    const now = new Date().toISOString();
     this.db
       .prepare(
-        `INSERT INTO groups (id, title, versao, mecanismo, string_busca, created_at)
-         VALUES (?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO groups (id, title, versao, mecanismo, string_busca, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         group.id,
@@ -208,6 +323,7 @@ export class SqliteStore {
         group.mecanismo,
         group.string_busca,
         group.created_at,
+        now,
       );
     return {
       id: group.id,
@@ -234,11 +350,12 @@ export class SqliteStore {
     const versao = patch.versao ?? current.versao;
     const mecanismo = patch.mecanismo ?? current.mecanismo;
     const stringBusca = patch.stringBusca ?? current.string_busca;
+    const now = new Date().toISOString();
     this.db
       .prepare(
-        `UPDATE groups SET title = ?, versao = ?, mecanismo = ?, string_busca = ? WHERE id = ?`,
+        `UPDATE groups SET title = ?, versao = ?, mecanismo = ?, string_busca = ?, updated_at = ? WHERE id = ?`,
       )
-      .run(patch.title, versao, mecanismo, stringBusca, groupId);
+      .run(patch.title, versao, mecanismo, stringBusca, now, groupId);
     return this.getGroup(groupId);
   }
 
@@ -359,12 +476,27 @@ export class SqliteStore {
       );
     }
     const values = articleToRowValues(groupId, article);
+    const now = this.nowIso();
+    const baseline: Article = {
+      entry: { type: 'article', key: '', fields: {} },
+      status: 'exists',
+      source: '',
+      location: '',
+      caminho: '',
+      notes: '',
+      tags: [],
+      descartado: false,
+      usado: false,
+    };
+    const statusTimestamps = this.applyStatusTransitions(groupId, baseline, article, now);
+
     this.db
       .prepare(
         `INSERT INTO articles (
           group_id, entry_key, entry_type, fields_json, status, source, location,
-          caminho, notes, tags_json, descartado, usado, duplicate_group_id, duplicate_key
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          caminho, notes, tags_json, descartado, usado, duplicate_group_id, duplicate_key,
+          updated_at, carregado_at, usado_at, descartado_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         values.group_id,
@@ -381,8 +513,15 @@ export class SqliteStore {
         values.usado,
         values.duplicate_group_id,
         values.duplicate_key,
+        now,
+        statusTimestamps.carregadoAt ?? null,
+        statusTimestamps.usadoAt ?? null,
+        statusTimestamps.descartadoAt ?? null,
       );
-    return structuredClone(article);
+    return structuredClone({
+      ...article,
+      ...statusTimestamps,
+    });
   }
 
   private updateDuplicateRefsForKeyRename(
@@ -435,12 +574,16 @@ export class SqliteStore {
     };
 
     const values = articleToRowValues(groupId, merged);
+    const now = this.nowIso();
+    const statusTimestamps = this.applyStatusTransitions(groupId, current, merged, now);
+
     const result = this.db
       .prepare(
         `UPDATE articles SET
           entry_key = ?, entry_type = ?, fields_json = ?, status = ?, source = ?,
           location = ?, caminho = ?, notes = ?, tags_json = ?, descartado = ?,
-          usado = ?, duplicate_group_id = ?, duplicate_key = ?
+          usado = ?, duplicate_group_id = ?, duplicate_key = ?, updated_at = ?,
+          carregado_at = ?, usado_at = ?, descartado_at = ?
          WHERE group_id = ? AND entry_key = ?`,
       )
       .run(
@@ -457,6 +600,10 @@ export class SqliteStore {
         values.usado,
         values.duplicate_group_id,
         values.duplicate_key,
+        now,
+        statusTimestamps.carregadoAt ?? current.carregadoAt ?? null,
+        statusTimestamps.usadoAt ?? current.usadoAt ?? null,
+        statusTimestamps.descartadoAt ?? current.descartadoAt ?? null,
         groupId,
         key,
       );
@@ -468,7 +615,10 @@ export class SqliteStore {
       );
     }
 
-    return structuredClone(merged);
+    return structuredClone({
+      ...merged,
+      ...statusTimestamps,
+    });
   }
 
   async deleteArticle(groupId: number, key: string): Promise<void> {

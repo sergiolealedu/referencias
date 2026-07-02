@@ -31,5 +31,24 @@ export function createStatsRouter(): Router {
     }
   });
 
+  router.get('/status-activity', (req, res) => {
+    try {
+      const from = typeof req.query.from === 'string' ? req.query.from.trim() : '';
+      const to = typeof req.query.to === 'string' ? req.query.to.trim() : '';
+      if (!from || !to) {
+        res.status(400).json({ error: 'Parâmetros from e to são obrigatórios (ISO 8601)' });
+        return;
+      }
+      const versao = typeof req.query.versao === 'string' && req.query.versao.trim()
+        ? req.query.versao.trim()
+        : undefined;
+      const stats = (req as AuthenticatedRequest).store.getStatusActivity({ from, to, versao });
+      res.json(stats);
+    } catch (error) {
+      console.error('Erro ao obter atividade de status:', error);
+      res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+  });
+
   return router;
 }

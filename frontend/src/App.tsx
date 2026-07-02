@@ -10,6 +10,8 @@ import { BibtexImportModal } from './components/BibtexImportModal';
 
 import { Dashboard } from './components/Dashboard';
 
+import { ActivityDashboard } from './components/ActivityDashboard';
+
 import { SettingsModal } from './components/SettingsModal';
 
 import { WorkspaceModal } from './components/WorkspaceModal';
@@ -38,6 +40,8 @@ import {
 
   useActiveWorkspace,
 
+  useRecordArticleLoaded,
+
 } from './hooks/useApi';
 
 import type { ArticleFilters, SortColumn, SortDirection } from './types/referencias';
@@ -46,7 +50,7 @@ import type { ArticleFilters, SortColumn, SortDirection } from './types/referenc
 
 type ArticleTarget = { groupId: number; key: string };
 
-type AppView = 'articles' | 'dashboard';
+type AppView = 'articles' | 'dashboard' | 'activity';
 
 
 
@@ -207,6 +211,26 @@ export default function App() {
     formArticle !== undefined &&
 
     formArticle.entry.key === formTarget.key;
+
+
+
+  const recordArticleLoaded = useRecordArticleLoaded();
+
+
+
+  useEffect(() => {
+
+    if (!formArticleReady || !formTarget || formArticle?.carregadoAt) return;
+
+    void recordArticleLoaded.mutateAsync({
+
+      groupId: formTarget.groupId,
+
+      key: formTarget.key,
+
+    });
+
+  }, [formArticleReady, formTarget?.groupId, formTarget?.key, formArticle?.carregadoAt]);
 
 
 
@@ -388,6 +412,20 @@ export default function App() {
 
             type="button"
 
+            className={view === 'activity' ? 'active-view' : ''}
+
+            onClick={() => setView('activity')}
+
+          >
+
+            Atividade
+
+          </button>
+
+          <button
+
+            type="button"
+
             onClick={() => setShowSettings(true)}
 
             title="Configuração do workspace ativo"
@@ -425,6 +463,14 @@ export default function App() {
           <main className="main-panel dashboard-panel">
 
             <Dashboard />
+
+          </main>
+
+        ) : view === 'activity' ? (
+
+          <main className="main-panel dashboard-panel">
+
+            <ActivityDashboard />
 
           </main>
 

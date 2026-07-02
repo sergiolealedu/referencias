@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { api } from '../api/client';
+import { api } from '../api/dataProvider';
 import type { Article, ArticleListParams, GroupInput } from '../types/referencias';
 
 export function useGroups() {
@@ -34,6 +34,31 @@ export function useArticleStatsByYear(versao?: string) {
   return useQuery({
     queryKey: ['stats', 'articles-by-year', versao ?? 'all'],
     queryFn: () => api.getArticleStatsByYear(versao),
+  });
+}
+
+export function useStatusActivity(params: {
+  from: string;
+  to: string;
+  versao?: string;
+  enabled?: boolean;
+}) {
+  return useQuery({
+    queryKey: ['stats', 'status-activity', params.from, params.to, params.versao ?? 'all'],
+    queryFn: () => api.getStatusActivity(params),
+    enabled: params.enabled !== false,
+  });
+}
+
+export function useRecordArticleLoaded() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ groupId, key }: { groupId: number; key: string }) =>
+      api.recordArticleLoaded(groupId, key),
+    onSuccess: (data, { groupId, key }) => {
+      queryClient.setQueryData(['article', groupId, key], data);
+      queryClient.invalidateQueries({ queryKey: ['stats', 'status-activity'] });
+    },
   });
 }
 
@@ -137,6 +162,7 @@ export function useUpdateArticle(groupId: number | null) {
       }
       queryClient.invalidateQueries({ queryKey: ['usado-articles'] });
       queryClient.invalidateQueries({ queryKey: ['stats'] });
+      queryClient.invalidateQueries({ queryKey: ['stats', 'status-activity'] });
       if (groupId) queryClient.invalidateQueries({ queryKey: ['groups', groupId] });
     },
   });

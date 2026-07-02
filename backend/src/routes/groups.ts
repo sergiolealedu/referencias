@@ -235,6 +235,21 @@ export function createArticlesRouter(): Router {
     }
   });
 
+  router.post('/:key/loaded', async (req, res) => {
+    try {
+      const groupId = parseGroupId(req.params as Record<string, string | undefined>);
+      const key = parseKey(req.params as Record<string, string | undefined>);
+      if (groupId === null || !key) {
+        res.status(400).json({ error: 'ID de grupo ou chave inválidos' });
+        return;
+      }
+      const article = await storeFrom(req).recordArticleLoaded(groupId, key);
+      res.json(article);
+    } catch (error) {
+      handleRouteError(error, res);
+    }
+  });
+
   router.get('/:key', async (req, res) => {
     try {
       const groupId = parseGroupId(req.params as Record<string, string | undefined>);

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { api } from '../api/client';
+import { resolvePdfUrl } from '../api/client';
 import {
   useCreateArticle,
   useDeleteArticle,
@@ -384,7 +384,9 @@ export function ArticleForm({
           disabled={!form.caminho.trim()}
           onClick={() => {
             if (!form.caminho.trim()) return;
-            window.open(api.pdfUrl(form.caminho), '_blank', 'noopener,noreferrer');
+            void resolvePdfUrl(form.caminho).then((url) => {
+              window.open(url, '_blank', 'noopener,noreferrer');
+            });
           }}
         >
           Abrir PDF

@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS groups (
   versao TEXT NOT NULL DEFAULT 'v2',
   mecanismo TEXT NOT NULL DEFAULT '',
   string_busca TEXT NOT NULL DEFAULT '',
-  created_at TEXT NOT NULL
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS articles (
@@ -25,12 +26,28 @@ CREATE TABLE IF NOT EXISTS articles (
   usado INTEGER NOT NULL DEFAULT 0,
   duplicate_group_id INTEGER,
   duplicate_key TEXT,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  carregado_at TEXT,
+  usado_at TEXT,
+  descartado_at TEXT,
   UNIQUE(group_id, entry_key)
 );
+
+CREATE TABLE IF NOT EXISTS article_status_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+  entry_key TEXT NOT NULL,
+  event_type TEXT NOT NULL CHECK(event_type IN ('carregado', 'usado', 'descartado')),
+  occurred_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_status_events_date ON article_status_events(occurred_at);
+CREATE INDEX IF NOT EXISTS idx_status_events_type ON article_status_events(event_type, occurred_at);
 
 CREATE INDEX IF NOT EXISTS idx_articles_group ON articles(group_id);
 CREATE INDEX IF NOT EXISTS idx_articles_status ON articles(group_id, status);
 CREATE INDEX IF NOT EXISTS idx_articles_usado ON articles(group_id, usado);
+CREATE INDEX IF NOT EXISTS idx_articles_updated ON articles(updated_at);
 
 CREATE VIRTUAL TABLE IF NOT EXISTS articles_fts USING fts5(
   entry_key,

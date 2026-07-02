@@ -19,6 +19,9 @@ export interface Article {
   tags: string[];
   descartado: boolean;
   usado: boolean;
+  carregadoAt?: string;
+  usadoAt?: string;
+  descartadoAt?: string;
   duplicateOf?: DuplicateRef;
 }
 
@@ -146,4 +149,12 @@ export interface GroupArticleStats {
   groupTitle: string;
   versao: string;
   series: YearArticleStats[];
+}
+
+export interface DayStatusActivity {
+  date: string;
+  carregados: number;
+  usados: number;
+  descartados: number;
+  total: number;
 }

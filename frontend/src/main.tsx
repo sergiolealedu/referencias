@@ -4,6 +4,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import App from './App';
 import { DeviceGate } from './components/DeviceGate';
+import { ServerUrlGate } from './components/ServerUrlGate';
+import { MobileApp } from './layouts/MobileApp';
+import { isNativePlatform } from './platform/native';
 import './index.css';
 
 const queryClient = new QueryClient({
@@ -15,12 +18,23 @@ const queryClient = new QueryClient({
   },
 });
 
+function RootApp() {
+  const native = isNativePlatform();
+  const content = (
+    <DeviceGate>{native ? <MobileApp /> : <App />}</DeviceGate>
+  );
+
+  if (native) {
+    return <ServerUrlGate>{content}</ServerUrlGate>;
+  }
+
+  return content;
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <DeviceGate>
-        <App />
-      </DeviceGate>
+      <RootApp />
     </QueryClientProvider>
   </StrictMode>,
 );

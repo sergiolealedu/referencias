@@ -12,6 +12,7 @@ import {
 import { createFilesRouter } from './routes/files.js';
 import { createSettingsRouter } from './routes/settings.js';
 import { createStatsRouter } from './routes/stats.js';
+import { createSyncRouter } from './routes/sync.js';
 import { createWorkspacesRouter } from './routes/workspaces.js';
 import { getActiveWorkspace } from './workspaceManager.js';
 
@@ -40,6 +41,7 @@ app.use('/api/groups/:groupId/articles', createArticlesRouter());
 app.use('/api/search', createSearchRouter());
 app.use('/api/files', createFilesRouter());
 app.use('/api/stats', createStatsRouter());
+app.use('/api/sync', createSyncRouter());
 
 app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
   console.error('Erro na API:', error);
@@ -47,9 +49,9 @@ app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
   res.status(500).json({ error: 'Erro interno do servidor' });
 });
 
-app.listen(config.port, () => {
+app.listen(config.port, '0.0.0.0', () => {
   const active = getActiveWorkspace();
-  console.log(`API rodando em http://localhost:${config.port}`);
+  console.log(`API rodando em http://0.0.0.0:${config.port}`);
   console.log(`Workspace padrão: ${active.name}`);
   console.log(`SQLite DB: ${config.sqliteDbPath}`);
 });
