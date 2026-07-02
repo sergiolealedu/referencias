@@ -1,8 +1,24 @@
 {
-  "name": "backend",
+  "name": "@sergiolealedu/referencias-backend",
   "version": "1.0.0",
-  "private": true,
+  "description": "API Express + SQLite do sistema Referências",
   "type": "module",
+  "main": "dist/server.js",
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sergiolealedu/referencias.git",
+    "directory": "backend"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "public"
+  },
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc && node -e \"const fs=require('node:fs');fs.copyFileSync('src/store/schema.sql','dist/store/schema.sql');fs.mkdirSync('dist/registry',{recursive:true});fs.copyFileSync('src/registry/schema.sql','dist/registry/schema.sql');\"",

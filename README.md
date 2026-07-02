@@ -106,3 +106,44 @@ Recomenda-se manter o `.db` em disco local (não sincronizar via Google Drive em
 - Formulário lateral para criar/editar artigos
 - Toggle rápido de `usado` e `descartado` na tabela
 - Link para artigo original em entradas duplicadas
+
+## Releases e pacotes
+
+### CI contínua
+
+Cada push ou pull request na branch `main` dispara o workflow [CI](.github/workflows/ci.yml), que instala dependências e executa `npm run build`.
+
+### Publicar uma release
+
+1. Garanta que `main` está estável (CI verde).
+2. Crie e envie uma tag semver:
+
+```powershell
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+3. O workflow [Release](.github/workflows/release.yml) irá:
+   - compilar backend e frontend;
+   - publicar `@sergiolealedu/referencias-backend` e `@sergiolealedu/referencias-frontend` no [GitHub Packages](https://github.com/sergiolealedu/referencias/pkgs/npm/referencias-backend);
+   - gerar um ZIP de deploy e anexá-lo à [GitHub Release](https://github.com/sergiolealedu/referencias/releases).
+
+Tags pré-release (ex.: `v1.1.0-beta.1`) são marcadas como *pre-release* automaticamente.
+
+### Instalar pacotes da registry
+
+Configure o `.npmrc` (ou copie o arquivo raiz do repositório) e autentique com um [Personal Access Token](https://docs.github.com/pt/packages/working-with-a-github-packages-registry/working-with-the-npm-registry#autenticação) com escopo `read:packages`:
+
+```
+@sergiolealedu:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=SEU_TOKEN
+```
+
+```powershell
+npm install @sergiolealedu/referencias-backend@1.0.0
+npm install @sergiolealedu/referencias-frontend@1.0.0
+```
+
+### Dependabot
+
+Atualizações semanais de dependências npm e GitHub Actions são propostas via [Dependabot](.github/dependabot.yml).
