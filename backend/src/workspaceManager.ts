@@ -167,10 +167,13 @@ export async function createWorkspace(input: WorkspaceInput): Promise<Workspace>
   const id = uniqueId(slugify(input.name), existingIds);
 
   const sqliteDbPath = input.sqliteDbPath?.trim() || (await defaultDbPathForWorkspace(input.name));
+  await mkdir(dirname(sqliteDbPath), { recursive: true });
+
+  const globalSettings = getAppSettings();
   const allowedPdfRoots =
     input.allowedPdfRoots?.length
       ? input.allowedPdfRoots
-      : defaultPdfRootsForDbPath(sqliteDbPath);
+      : globalSettings.allowedPdfRoots;
 
   const workspace: Workspace = {
     id,
@@ -252,6 +255,20 @@ export async function updateWorkspacePaths(
   };
   await writeConfigFile(config);
   return structuredClone(config.workspaces[index]);
+}
+
+/** Propaga pastas de PDF globais para todos os workspaces. */
+export async function syncAllWorkspacePdfRoots(allowedPdfRoots: string[]): Promise<void> {
+  const config = getWorkspacesConfig();
+  if (config.workspaces.length === 0) {
+    return;
+  }
+
+  config.workspaces = config.workspaces.map((workspace) => ({
+    ...workspace,
+    allowedPdfRoots,
+  }));
+  await writeConfigFile(config);
 }
 
 export class WorkspaceNotFoundError extends Error {

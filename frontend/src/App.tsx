@@ -12,6 +12,8 @@ import { GroupImportModal } from './components/GroupImportModal';
 
 import { Dashboard } from './components/Dashboard';
 
+import { SettingsModal } from './components/SettingsModal';
+
 import { WorkspaceAccessModal } from './components/WorkspaceAccessModal';
 
 import { UsadoBibtexExportModal } from './components/UsadoBibtexExportModal';
@@ -37,6 +39,8 @@ import {
   useSettings,
 
   useActiveWorkspace,
+
+  useDeviceSession,
 
 } from './hooks/useApi';
 
@@ -90,7 +94,7 @@ export default function App() {
 
   const [showWorkspaceAccess, setShowWorkspaceAccess] = useState(false);
 
-  const [workspaceAccessTab, setWorkspaceAccessTab] = useState<'access' | 'workspaces'>('access');
+  const [showSettings, setShowSettings] = useState(false);
 
   const [view, setView] = useState<AppView>('articles');
 
@@ -99,6 +103,8 @@ export default function App() {
   const { data: settings } = useSettings();
 
   const { data: activeWorkspace } = useActiveWorkspace();
+
+  const { data: deviceSession } = useDeviceSession();
 
   const displayGroupId = openTarget?.groupId ?? selectedGroupId;
 
@@ -380,19 +386,13 @@ export default function App() {
 
             className="workspace-switcher"
 
-            onClick={() => {
+            onClick={() => setShowWorkspaceAccess(true)}
 
-              setWorkspaceAccessTab('access');
-
-              setShowWorkspaceAccess(true);
-
-            }}
-
-            title="Acesso ao workspace, caminhos de dados e convites"
+            title="Workspaces, convites e tokens de acesso"
 
           >
 
-            Acesso · {activeWorkspace?.name ?? '…'}
+            {activeWorkspace?.name ?? 'Workspace'}
 
           </button>
 
@@ -423,6 +423,16 @@ export default function App() {
             Dashboard
 
           </button>
+
+          {deviceSession?.isServerAdmin && (
+            <button
+              type="button"
+              onClick={() => setShowSettings(true)}
+              title="Caminhos globais de banco e PDF (somente administrador)"
+            >
+              Configuração
+            </button>
+          )}
 
           <button
 
@@ -798,11 +808,23 @@ export default function App() {
 
 
 
+      {showSettings && (
+
+        <SettingsModal
+
+          onClose={() => setShowSettings(false)}
+
+          onSaved={resetViewState}
+
+        />
+
+      )}
+
+
+
       {showWorkspaceAccess && (
 
         <WorkspaceAccessModal
-
-          initialTab={workspaceAccessTab}
 
           onClose={() => setShowWorkspaceAccess(false)}
 

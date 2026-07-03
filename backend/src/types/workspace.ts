@@ -30,4 +30,5 @@ export interface AccessSetup {
   bootstrapToken?: string;
   bootstrapWorkspaceId?: string;
   bootstrapWorkspaceName?: string;
+  isServerAdmin: boolean;
 }

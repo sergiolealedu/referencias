@@ -262,6 +262,13 @@ export function useActiveWorkspace() {
   });
 }
 
+export function useDeviceSession() {
+  return useQuery({
+    queryKey: ['device-session'],
+    queryFn: api.getDeviceSession,
+  });
+}
+
 export function useCreateWorkspace() {
   const queryClient = useQueryClient();
   return useMutation({

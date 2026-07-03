@@ -3,14 +3,13 @@ import { useEffect, useState } from 'react';
 import {
   useAccessSetup,
   useActivateWorkspace,
+  useActiveWorkspace,
   useCreateJoinToken,
   useCreateWorkspace,
   useJoinTokens,
   useJoinWorkspace,
   useLeaveWorkspace,
   useRevokeJoinToken,
-  useSettings,
-  useUpdateSettings,
   useWorkspaces,
 } from '../hooks/useApi';
 import type { JoinTokenInfo } from '../types/device';
@@ -19,20 +18,14 @@ import type { WorkspaceSummary } from '../types/workspace';
 interface WorkspaceAccessModalProps {
   onClose: () => void;
   onChanged: () => void;
-  initialTab?: 'access' | 'workspaces';
 }
 
-type Panel = 'access' | 'workspaces' | 'create' | 'join' | 'invite';
+type Panel = 'workspaces' | 'create' | 'join' | 'invite';
 
-export function WorkspaceAccessModal({
-  onClose,
-  onChanged,
-  initialTab = 'access',
-}: WorkspaceAccessModalProps) {
-  const { data: settings, isLoading: settingsLoading, error: settingsError } = useSettings();
-  const updateSettings = useUpdateSettings();
+export function WorkspaceAccessModal({ onClose, onChanged }: WorkspaceAccessModalProps) {
   const { data: workspaces = [], isLoading: workspacesLoading, error: workspacesError } =
     useWorkspaces();
+  const { data: activeWorkspaceMeta } = useActiveWorkspace();
   const { data: accessSetup } = useAccessSetup();
 
   const activateWorkspace = useActivateWorkspace();
@@ -43,60 +36,25 @@ export function WorkspaceAccessModal({
   const revokeJoinToken = useRevokeJoinToken();
 
   const activeWorkspace =
-    workspaces.find((workspace) => workspace.isActive) ??
-    workspaces.find((workspace) => workspace.id === settings?.activeWorkspaceId) ??
-    null;
+    workspaces.find((workspace) => workspace.isActive) ?? activeWorkspaceMeta ?? null;
 
   const { data: activeTokens = [], refetch: refetchTokens } = useJoinTokens(
     activeWorkspace?.id ?? null,
   );
 
-  const [panel, setPanel] = useState<Panel>(initialTab);
-  const [sqliteDbPath, setSqliteDbPath] = useState('');
-  const [allowedPdfRoots, setAllowedPdfRoots] = useState('');
+  const [panel, setPanel] = useState<Panel>('workspaces');
   const [newName, setNewName] = useState('');
   const [joinToken, setJoinToken] = useState('');
   const [inviteWorkspace, setInviteWorkspace] = useState<WorkspaceSummary | null>(null);
   const [generatedToken, setGeneratedToken] = useState<JoinTokenInfo | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [saveError, setSaveError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    if (!settings) return;
-    setSqliteDbPath(settings.sqliteDbPath);
-    setAllowedPdfRoots(settings.allowedPdfRoots.join('; '));
-    setSaveError(null);
-  }, [settings]);
 
   useEffect(() => {
     setActionError(null);
     setGeneratedToken(null);
     setCopied(false);
   }, [panel, workspaces]);
-
-  const handleSavePaths = async () => {
-    if (!sqliteDbPath.trim()) {
-      setSaveError('Informe o caminho do banco SQLite.');
-      return;
-    }
-
-    const roots = allowedPdfRoots
-      .split(';')
-      .map((root) => root.trim())
-      .filter(Boolean);
-
-    setSaveError(null);
-    try {
-      await updateSettings.mutateAsync({
-        sqliteDbPath: sqliteDbPath.trim(),
-        ...(roots.length > 0 ? { allowedPdfRoots: roots } : {}),
-      });
-      onChanged();
-    } catch (err) {
-      setSaveError((err as Error).message);
-    }
-  };
 
   const handleActivate = async (workspace: WorkspaceSummary) => {
     if (workspace.isActive) return;
@@ -135,7 +93,7 @@ export function WorkspaceAccessModal({
     try {
       await joinWorkspace.mutateAsync(joinToken.trim());
       setJoinToken('');
-      setPanel('access');
+      setPanel('workspaces');
       onChanged();
     } catch (err) {
       setActionError((err as Error).message);
@@ -143,16 +101,22 @@ export function WorkspaceAccessModal({
   };
 
   const handleLeave = async (workspace: WorkspaceSummary) => {
-    if (
-      !window.confirm(
-        `Sair do workspace "${workspace.name}"?\n\nVocê poderá voltar com um novo token de acesso.`,
-      )
-    ) {
+    const isLast = workspaces.length === 1;
+    const message = isLast
+      ? `Sair do workspace "${workspace.name}"?\n\nVocê voltará à tela inicial e precisará de um token (ou criar outro workspace) para entrar de novo.`
+      : `Sair do workspace "${workspace.name}"?\n\nVocê poderá voltar com um novo token de acesso.`;
+
+    if (!window.confirm(message)) {
       return;
     }
     setActionError(null);
     try {
       await leaveWorkspace.mutateAsync(workspace.id);
+      onClose();
+      if (isLast) {
+        window.location.reload();
+        return;
+      }
       onChanged();
     } catch (err) {
       setActionError((err as Error).message);
@@ -199,7 +163,6 @@ export function WorkspaceAccessModal({
     leaveWorkspace.isPending ||
     joinWorkspace.isPending ||
     createJoinToken.isPending ||
-    updateSettings.isPending ||
     revokeJoinToken.isPending;
 
   return (
@@ -212,141 +175,55 @@ export function WorkspaceAccessModal({
           </button>
         </div>
 
-        {(panel === 'access' || panel === 'workspaces') && (
-          <div className="workspace-access-tabs">
-            <button
-              type="button"
-              className={panel === 'access' ? 'active' : ''}
-              onClick={() => setPanel('access')}
-            >
-              Workspace ativo
-            </button>
-            <button
-              type="button"
-              className={panel === 'workspaces' ? 'active' : ''}
-              onClick={() => setPanel('workspaces')}
-            >
-              Todos os workspaces
-            </button>
-          </div>
-        )}
-
         <div className="modal-body">
-          {panel === 'access' && (
-            <>
-              <p className="modal-subtitle">
-                Quem tem acesso ao workspace <strong>{activeWorkspace?.name ?? '…'}</strong> pode
-                alterar caminhos de dados e gerar tokens para convidar outros dispositivos.
-              </p>
-
-              {settingsLoading && <p>Carregando…</p>}
-              {settingsError && <p className="error">Erro: {(settingsError as Error).message}</p>}
-
-              {!settingsLoading && !settingsError && (
-                <>
-                  <label>
-                    Caminho do banco SQLite
-                    <input
-                      value={sqliteDbPath}
-                      onChange={(e) => setSqliteDbPath(e.target.value)}
-                      placeholder="data/referencias.db"
-                    />
-                  </label>
-
-                  <label>
-                    Pastas permitidas para PDF (separadas por ;)
-                    <input
-                      value={allowedPdfRoots}
-                      onChange={(e) => setAllowedPdfRoots(e.target.value)}
-                      placeholder="/var/lib/referencias/pdfs"
-                    />
-                  </label>
-
-                  <p className="hint">
-                    Alterações afetam apenas o workspace ativo e são compartilhadas com todos os
-                    dispositivos que têm acesso a ele.
-                  </p>
-
-                  <div className="workspace-create-actions">
-                    <button
-                      type="button"
-                      className="primary"
-                      onClick={() => void handleSavePaths()}
-                      disabled={isBusy}
-                    >
-                      {updateSettings.isPending ? 'Salvando…' : 'Salvar caminhos'}
-                    </button>
-                  </div>
-
-                  {saveError && <p className="error">{saveError}</p>}
-
-                  <section className="workspace-access-section">
-                    <h4>Convidar outro dispositivo</h4>
-                    <p className="hint">
-                      Gere um token e envie para quem precisa acessar este workspace em outro
-                      navegador ou computador.
-                    </p>
-                    {activeWorkspace && (
-                      <button
-                        type="button"
-                        onClick={() => void handleGenerateToken(activeWorkspace)}
-                        disabled={isBusy}
-                      >
-                        Gerar token de acesso
-                      </button>
-                    )}
-
-                    {activeTokens.length > 0 && (
-                      <ul className="workspace-token-list">
-                        {activeTokens.map((tokenInfo) => (
-                          <li key={tokenInfo.token} className="workspace-token-item">
-                            <code title={tokenInfo.token}>{tokenInfo.token.slice(0, 20)}…</code>
-                            <span className="hint">
-                              {new Date(tokenInfo.createdAt).toLocaleString('pt-BR')}
-                            </span>
-                            <div className="workspace-item-actions">
-                              <button
-                                type="button"
-                                onClick={() => void handleCopyToken(tokenInfo.token)}
-                              >
-                                Copiar
-                              </button>
-                              <button
-                                type="button"
-                                className="danger"
-                                onClick={() => void handleRevokeToken(tokenInfo.token)}
-                                disabled={isBusy}
-                              >
-                                Revogar
-                              </button>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </section>
-
-                  <div className="workspace-list-actions">
-                    <button type="button" onClick={() => setPanel('join')} disabled={isBusy}>
-                      Entrar com token
-                    </button>
-                    {accessSetup?.canCreateWorkspace && (
-                      <button type="button" onClick={() => setPanel('create')} disabled={isBusy}>
-                        + Novo workspace
-                      </button>
-                    )}
-                  </div>
-                </>
-              )}
-            </>
-          )}
-
           {panel === 'workspaces' && (
             <>
               <p className="modal-subtitle">
-                Cada dispositivo pode participar de vários workspaces. Troque o ativo para ver
-                grupos e artigos diferentes.
+                Quem tem acesso a um workspace pode convidar outros dispositivos com um token.
+                Pastas de PDF são globais em <strong>Configuração</strong>; cada workspace tem banco próprio.
               </p>
+
+              {activeWorkspace && (
+                <section className="workspace-access-section">
+                  <h4>Workspace ativo: {activeWorkspace.name}</h4>
+                  <p className="hint">
+                    Gere um token para quem precisa acessar este workspace em outro dispositivo.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => void handleGenerateToken(activeWorkspace)}
+                    disabled={isBusy}
+                  >
+                    Gerar token de acesso
+                  </button>
+
+                  {activeTokens.length > 0 && (
+                    <ul className="workspace-token-list">
+                      {activeTokens.map((tokenInfo) => (
+                        <li key={tokenInfo.token} className="workspace-token-item">
+                          <code title={tokenInfo.token}>{tokenInfo.token.slice(0, 20)}…</code>
+                          <span className="hint">
+                            {new Date(tokenInfo.createdAt).toLocaleString('pt-BR')}
+                          </span>
+                          <div className="workspace-item-actions">
+                            <button type="button" onClick={() => void handleCopyToken(tokenInfo.token)}>
+                              Copiar
+                            </button>
+                            <button
+                              type="button"
+                              className="danger"
+                              onClick={() => void handleRevokeToken(tokenInfo.token)}
+                              disabled={isBusy}
+                            >
+                              Revogar
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
+              )}
 
               {workspacesLoading && <p>Carregando workspaces…</p>}
               {workspacesError && (
@@ -363,9 +240,6 @@ export function WorkspaceAccessModal({
                       <div className="workspace-item-info">
                         <strong>{workspace.name}</strong>
                         {workspace.isActive && <span className="workspace-badge">Ativo</span>}
-                        <span className="workspace-path" title={workspace.sqliteDbPath}>
-                          {workspace.sqliteDbPath}
-                        </span>
                       </div>
                       <div className="workspace-item-actions">
                         {!workspace.isActive && (
@@ -384,16 +258,15 @@ export function WorkspaceAccessModal({
                         >
                           Convidar
                         </button>
-                        {workspaces.length > 1 && (
-                          <button
-                            type="button"
-                            className="danger"
-                            onClick={() => void handleLeave(workspace)}
-                            disabled={isBusy}
-                          >
-                            Sair
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          className="danger"
+                          onClick={() => void handleLeave(workspace)}
+                          disabled={isBusy}
+                          title="Remove o acesso deste dispositivo a este workspace"
+                        >
+                          Sair
+                        </button>
                       </div>
                     </li>
                   ))}
@@ -428,11 +301,11 @@ export function WorkspaceAccessModal({
                 />
               </label>
               <p className="hint">
-                Um banco SQLite será criado em{' '}
+                Será criado um banco próprio em{' '}
                 <code>data/workspaces/&lt;nome&gt;/referencias.db</code>.
               </p>
               <div className="workspace-create-actions">
-                <button type="button" onClick={() => setPanel('access')}>
+                <button type="button" onClick={() => setPanel('workspaces')}>
                   Voltar
                 </button>
                 <button
@@ -465,7 +338,7 @@ export function WorkspaceAccessModal({
                 Cole o token gerado por quem já tem acesso ao workspace.
               </p>
               <div className="workspace-create-actions">
-                <button type="button" onClick={() => setPanel('access')}>
+                <button type="button" onClick={() => setPanel('workspaces')}>
                   Voltar
                 </button>
                 <button
@@ -502,7 +375,7 @@ export function WorkspaceAccessModal({
                 </>
               )}
               <div className="workspace-create-actions">
-                <button type="button" onClick={() => setPanel('access')}>
+                <button type="button" onClick={() => setPanel('workspaces')}>
                   Voltar
                 </button>
               </div>

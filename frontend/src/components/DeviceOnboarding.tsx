@@ -75,8 +75,6 @@ export function DeviceOnboarding({ onComplete }: DeviceOnboardingProps) {
   const isBusy = createWorkspace.isPending || joinWorkspace.isPending;
   const showBootstrap =
     accessSetup?.bootstrapToken && accessSetup.bootstrapWorkspaceName;
-  const canCreate = accessSetup?.canCreateWorkspace ?? false;
-  const inviteOnly = accessSetup?.inviteOnly ?? false;
 
   return (
     <div className="device-onboarding">
@@ -85,51 +83,46 @@ export function DeviceOnboarding({ onComplete }: DeviceOnboardingProps) {
 
         {setupLoading && <p>Verificando acesso ao servidor…</p>}
 
-        {!setupLoading && showBootstrap && mode === 'choose' && (
-          <div className="device-onboarding-bootstrap">
-            <p className="device-onboarding-lead">
-              Este servidor foi recém-instalado. Obtenha acesso ao workspace{' '}
-              <strong>{accessSetup.bootstrapWorkspaceName}</strong> para começar.
-            </p>
-            <button
-              type="button"
-              className="primary"
-              onClick={() => void handleBootstrapJoin()}
-              disabled={isBusy}
-            >
-              {joinWorkspace.isPending ? 'Conectando…' : 'Obter acesso inicial'}
-            </button>
-            <div className="workspace-token-box">
-              <code>{accessSetup.bootstrapToken}</code>
-            </div>
-            <button type="button" onClick={() => void handleCopyBootstrap()}>
-              {copied ? 'Token copiado!' : 'Copiar token para outro dispositivo'}
-            </button>
-            <p className="hint">
-              O token também aparece nos logs do servidor ao iniciar a API. Compartilhe-o com
-              quem precisar de acesso.
-            </p>
-          </div>
-        )}
-
-        {!setupLoading && !showBootstrap && mode === 'choose' && (
+        {!setupLoading && mode === 'choose' && (
           <>
-            <p className="device-onboarding-lead">
-              {inviteOnly
-                ? 'Este dispositivo ainda não tem acesso a nenhum workspace. Entre com um token concedido por quem já tem acesso.'
-                : 'Este dispositivo ainda não tem acesso a nenhum workspace. Crie um novo ou entre com um token.'}
-            </p>
-            <div className="device-onboarding-actions">
-              {canCreate && (
-                <button type="button" className="primary" onClick={() => setMode('create')}>
-                  Criar workspace
+            {showBootstrap ? (
+              <div className="device-onboarding-bootstrap">
+                <p className="device-onboarding-lead">
+                  Este servidor foi recém-instalado. Você pode obter acesso ao workspace{' '}
+                  <strong>{accessSetup.bootstrapWorkspaceName}</strong>, entrar com outro token
+                  ou criar um workspace novo. O primeiro dispositivo com acesso torna-se{' '}
+                  <strong>administrador</strong>.
+                </p>
+                <button
+                  type="button"
+                  className="primary"
+                  onClick={() => void handleBootstrapJoin()}
+                  disabled={isBusy}
+                >
+                  {joinWorkspace.isPending ? 'Conectando…' : 'Obter acesso inicial'}
                 </button>
-              )}
-              <button
-                type="button"
-                className={canCreate ? '' : 'primary'}
-                onClick={() => setMode('join')}
-              >
+                <div className="workspace-token-box">
+                  <code>{accessSetup.bootstrapToken}</code>
+                </div>
+                <button type="button" onClick={() => void handleCopyBootstrap()}>
+                  {copied ? 'Token copiado!' : 'Copiar token para outro dispositivo'}
+                </button>
+                <p className="hint">
+                  O token também aparece nos logs do servidor ao iniciar a API.
+                </p>
+              </div>
+            ) : (
+              <p className="device-onboarding-lead">
+                Este dispositivo ainda não tem acesso a nenhum workspace. Crie um novo ou entre
+                com um token concedido por quem já tem acesso.
+              </p>
+            )}
+
+            <div className="device-onboarding-actions">
+              <button type="button" className="primary" onClick={() => setMode('create')}>
+                Criar workspace
+              </button>
+              <button type="button" onClick={() => setMode('join')}>
                 Entrar com token
               </button>
             </div>
@@ -150,6 +143,10 @@ export function DeviceOnboarding({ onComplete }: DeviceOnboardingProps) {
                 }}
               />
             </label>
+            <p className="hint">
+              Será criado um banco SQLite em{' '}
+              <code>data/workspaces/&lt;nome&gt;/referencias.db</code> (dados isolados).
+            </p>
             <div className="device-onboarding-form-actions">
               <button type="button" onClick={() => setMode('choose')}>
                 Voltar
@@ -197,14 +194,6 @@ export function DeviceOnboarding({ onComplete }: DeviceOnboardingProps) {
               </button>
             </div>
           </div>
-        )}
-
-        {showBootstrap && mode !== 'choose' && (
-          <p className="hint">
-            <button type="button" className="link-btn" onClick={() => setMode('choose')}>
-              Voltar ao acesso inicial
-            </button>
-          </p>
         )}
 
         {error && <p className="error">{error}</p>}

@@ -170,6 +170,26 @@ export class RegistryStore {
     return row.count;
   }
 
+  getFirstMemberDeviceId(excludeDeviceId?: string): string | null {
+    const row = excludeDeviceId
+      ? (this.db
+          .prepare(
+            `SELECT device_id FROM device_workspaces
+             WHERE device_id != ?
+             ORDER BY joined_at ASC
+             LIMIT 1`,
+          )
+          .get(excludeDeviceId) as { device_id: string } | undefined)
+      : (this.db
+          .prepare(
+            `SELECT device_id FROM device_workspaces
+             ORDER BY joined_at ASC
+             LIMIT 1`,
+          )
+          .get() as { device_id: string } | undefined);
+    return row?.device_id ?? null;
+  }
+
   createJoinToken(workspaceId: string, createdByDeviceId: string): JoinTokenRow {
     const token = `ws_${randomBytes(24).toString('base64url')}`;
     const createdAt = new Date().toISOString();

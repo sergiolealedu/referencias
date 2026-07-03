@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import { z } from 'zod';
 
-import { defaultPdfRootsForDbPath, getAppSettings } from '../appSettings.js';
+import { defaultPdfRootsForDbPath, getAppSettings, saveAppSettings } from '../appSettings.js';
 import type { AuthenticatedRequest } from '../middleware/deviceAuth.js';
-import { updateActiveWorkspaceSettings } from './workspaces.js';
+import { assertServerAdmin, ServerAdminRequiredError } from '../serverAdmin.js';
+import { invalidateStore } from '../storeManager.js';
+import { syncAllWorkspacePdfRoots } from '../workspaceManager.js';
 
 const updateSettingsSchema = z.object({
   sqliteDbPath: z.string().min(1),
@@ -15,33 +17,37 @@ export function createSettingsRouter(): Router {
 
   router.get('/', (req, res) => {
     const authReq = req as AuthenticatedRequest;
+    const settings = getAppSettings();
     res.json({
-      ...getAppSettings(),
+      ...settings,
       activeWorkspaceId: authReq.activeWorkspace.id,
       activeWorkspaceName: authReq.activeWorkspace.name,
-      sqliteDbPath: authReq.activeWorkspace.sqliteDbPath,
-      allowedPdfRoots: authReq.activeWorkspace.allowedPdfRoots,
     });
   });
 
   router.put('/', async (req, res) => {
     try {
       const authReq = req as AuthenticatedRequest;
+      assertServerAdmin(authReq.deviceId);
       const body = updateSettingsSchema.parse(req.body ?? {});
       const allowedPdfRoots =
         body.allowedPdfRoots ?? defaultPdfRootsForDbPath(body.sqliteDbPath);
-      const workspace = await updateActiveWorkspaceSettings(
-        authReq,
-        body.sqliteDbPath,
+      const settings = await saveAppSettings({
+        sqliteDbPath: body.sqliteDbPath,
         allowedPdfRoots,
-      );
+      });
+      await syncAllWorkspacePdfRoots(allowedPdfRoots);
+      invalidateStore(authReq.activeWorkspace.sqliteDbPath);
       res.json({
-        sqliteDbPath: workspace.sqliteDbPath,
-        allowedPdfRoots: workspace.allowedPdfRoots,
-        activeWorkspaceId: workspace.id,
-        activeWorkspaceName: workspace.name,
+        ...settings,
+        activeWorkspaceId: authReq.activeWorkspace.id,
+        activeWorkspaceName: authReq.activeWorkspace.name,
       });
     } catch (error) {
+      if (error instanceof ServerAdminRequiredError) {
+        res.status(403).json({ error: error.message });
+        return;
+      }
       if (error instanceof z.ZodError) {
         res.status(400).json({ error: 'Dados inválidos', details: error.flatten() });
         return;

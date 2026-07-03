@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 import { getRegistry } from './registry/registryStore.js';
+import { assignServerAdminIfUnset, isServerAdmin } from './serverAdmin.js';
 import type { Device, DeviceSession, JoinTokenInfo } from './types/device.js';
 import {
   getWorkspacesConfig,
@@ -59,6 +60,7 @@ function buildSession(deviceId: string, authToken: string): DeviceSession {
     workspaceIds,
     needsOnboarding: workspaceIds.length === 0,
     authToken,
+    isServerAdmin: isServerAdmin(deviceId),
   };
 }
 
@@ -83,6 +85,7 @@ export function registerDevice(
     if (granted.length > 0 && !row.active_workspace_id) {
       registry.setDeviceActiveWorkspace(id, granted[0]);
       row = registry.getDevice(id)!;
+      assignServerAdminIfUnset(id);
     }
   }
 
@@ -227,6 +230,7 @@ export function joinWorkspaceWithToken(deviceId: string, token: string): Workspa
   }
 
   registry.addDeviceToWorkspace(deviceId, workspace.id);
+  assignServerAdminIfUnset(deviceId);
 
   const device = registry.getDevice(deviceId);
   if (!device?.active_workspace_id) {
@@ -277,6 +281,7 @@ export function revokeJoinToken(
 export function addDeviceToNewWorkspace(deviceId: string, workspaceId: string): void {
   getRegistry().addDeviceToWorkspace(deviceId, workspaceId);
   getRegistry().setDeviceActiveWorkspace(deviceId, workspaceId);
+  assignServerAdminIfUnset(deviceId);
 }
 
 export function leaveWorkspace(deviceId: string, workspaceId: string): void {
@@ -286,9 +291,6 @@ export function leaveWorkspace(deviceId: string, workspaceId: string): void {
 
   const registry = getRegistry();
   const memberships = registry.listDeviceWorkspaceIds(deviceId);
-  if (memberships.length <= 1) {
-    throw new Error('Não é possível sair do único workspace deste dispositivo.');
-  }
 
   if (registry.getDevice(deviceId)?.active_workspace_id === workspaceId) {
     const remaining = memberships.filter((id) => id !== workspaceId);

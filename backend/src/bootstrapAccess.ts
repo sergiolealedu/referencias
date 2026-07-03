@@ -1,6 +1,7 @@
 import { getRegistry } from './registry/registryStore.js';
 import type { DeviceSession } from './types/device.js';
 import type { AccessSetup } from './types/workspace.js';
+import { isServerAdmin } from './serverAdmin.js';
 import { getActiveWorkspace, getWorkspacesConfig } from './workspaceManager.js';
 
 const BOOTSTRAP_DEVICE_ID = 'bootstrap-system';
@@ -73,11 +74,12 @@ export function getAccessSetup(session: DeviceSession): AccessSetup {
     hasAnyMember,
     hasExistingWorkspaces,
     needsOnboarding,
-    canCreateWorkspace: !hasExistingWorkspaces,
+    canCreateWorkspace: true,
     inviteOnly: needsOnboarding && hasExistingWorkspaces,
     bootstrapToken: bootstrap?.token,
     bootstrapWorkspaceId: bootstrap?.workspaceId,
     bootstrapWorkspaceName: bootstrap?.workspaceName,
+    isServerAdmin: isServerAdmin(session.device.id),
   };
 }
 

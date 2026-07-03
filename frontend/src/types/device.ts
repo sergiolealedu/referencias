@@ -10,6 +10,7 @@ export interface DeviceSession {
   workspaceIds: string[];
   needsOnboarding: boolean;
   authToken: string;
+  isServerAdmin: boolean;
 }
 
 export interface JoinTokenInfo {

@@ -114,7 +114,8 @@ Recomenda-se manter o `.db` em disco local (não sincronizar via Google Drive em
 - Link para artigo original em entradas duplicadas
 - Importação BibTeX por grupo
 - Exportar / importar grupo completo entre servidores (JSON)
-- **Acesso ao workspace** — caminhos de dados, troca de workspace e convites por token
+- **Acesso ao workspace** — convites por token, troca de workspace (botão com nome do workspace)
+- **Configuração** — caminhos globais de banco SQLite e PDF (`app.config.json`), válidos para todos os workspaces
 
 ## Acesso ao workspace
 
@@ -139,6 +140,12 @@ sudo bash /opt/referencias/scripts/migrate/create-join-token.sh
 1. Clique em **Acesso · &lt;workspace&gt;** no cabeçalho.
 2. Em *Convidar outro dispositivo*, gere um token e envie ao colega.
 3. No outro dispositivo: tela inicial → **Entrar com token** (ou onboarding).
+
+### Configuração global
+
+Somente o **administrador da instalação** (primeiro dispositivo que obteve acesso) vê o botão **Configuração** e pode alterar caminhos de banco SQLite e pastas de PDF em `app.config.json`.
+
+Demais membros do workspace usam os artigos normalmente e podem **gerar tokens** para convidar outros dispositivos, mas não alteram a configuração global.
 
 ### API de acesso
 

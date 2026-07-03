@@ -128,16 +128,7 @@ export function createWorkspacesRouter(): Router {
 
   router.post('/', async (req, res) => {
     try {
-      const { deviceId, session } = resolveDeviceForWorkspaces(req);
-      const access = getAccessSetup(session);
-      if (!access.canCreateWorkspace) {
-        res.status(403).json({
-          error:
-            'Este servidor já possui workspaces configurados. Entre com um token de acesso concedido por quem já tem acesso.',
-          inviteOnly: access.inviteOnly,
-        });
-        return;
-      }
+      const { deviceId } = resolveDeviceForWorkspaces(req);
       const body = workspaceInputSchema.parse(req.body ?? {});
       const workspace = await createWorkspace(body);
       addDeviceToNewWorkspace(deviceId, workspace.id);
