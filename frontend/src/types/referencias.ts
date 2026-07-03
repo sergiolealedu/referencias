@@ -188,6 +188,36 @@ export interface GroupArticleStats {
   series: YearArticleStats[];
 }
 
+export interface GroupExportMeta {
+  title: string;
+  versao: string;
+  mecanismo: string;
+  stringBusca: string;
+  createdAt: string;
+  sourceId: number;
+}
+
+export interface GroupExport {
+  formatVersion: 1;
+  exportedAt: string;
+  group: GroupExportMeta;
+  articles: Article[];
+}
+
+export interface GroupImportOptions {
+  targetGroupId?: number;
+  title?: string;
+  onConflict?: 'skip' | 'replace';
+}
+
+export interface GroupImportResult {
+  groupId: number;
+  groupTitle: string;
+  imported: number;
+  skipped: number;
+  replaced: number;
+}
+
 export const emptyArticle = (): Article => ({
   entry: {
     type: 'article',

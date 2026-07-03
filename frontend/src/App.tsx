@@ -8,6 +8,8 @@ import { ArticleTable, type PageSize } from './components/ArticleTable';
 
 import { BibtexImportModal } from './components/BibtexImportModal';
 
+import { GroupImportModal } from './components/GroupImportModal';
+
 import { Dashboard } from './components/Dashboard';
 
 import { SettingsModal } from './components/SettingsModal';
@@ -41,6 +43,10 @@ import {
 } from './hooks/useApi';
 
 import type { ArticleFilters, SortColumn, SortDirection } from './types/referencias';
+
+import { api } from './api/client';
+
+import { downloadGroupExport } from './utils/groupExport';
 
 
 
@@ -77,6 +83,10 @@ export default function App() {
   const [findKey, setFindKey] = useState<string | undefined>();
 
   const [showImport, setShowImport] = useState(false);
+
+  const [showGroupImport, setShowGroupImport] = useState(false);
+
+  const [exportingGroup, setExportingGroup] = useState(false);
 
   const [showUsadoExport, setShowUsadoExport] = useState(false);
 
@@ -304,6 +314,32 @@ export default function App() {
 
 
 
+  const handleExportGroup = async () => {
+
+    if (displayGroupId === null || !group) return;
+
+    setExportingGroup(true);
+
+    try {
+
+      const payload = await api.exportGroup(displayGroupId);
+
+      downloadGroupExport(payload);
+
+    } catch (err) {
+
+      window.alert(`Não foi possível exportar o grupo: ${(err as Error).message}`);
+
+    } finally {
+
+      setExportingGroup(false);
+
+    }
+
+  };
+
+
+
   const resetViewState = () => {
 
     setSelectedGroupId(null);
@@ -520,6 +556,28 @@ export default function App() {
 
                       </button>
 
+                      <button type="button" onClick={() => setShowGroupImport(true)}>
+
+                        Importar grupo
+
+                      </button>
+
+                      <button
+
+                        type="button"
+
+                        onClick={handleExportGroup}
+
+                        disabled={!group || exportingGroup}
+
+                        title="Exporta metadados e todos os artigos para transferir a outro servidor"
+
+                      >
+
+                        {exportingGroup ? 'Exportando…' : 'Exportar grupo'}
+
+                      </button>
+
                       <button
 
                         type="button"
@@ -707,6 +765,28 @@ export default function App() {
                 groupTitle={group.title}
 
                 onClose={() => setShowImport(false)}
+
+              />
+
+            )}
+
+
+
+            {showGroupImport && (
+
+              <GroupImportModal
+
+                defaultTargetGroupId={displayGroupId}
+
+                onClose={() => setShowGroupImport(false)}
+
+                onImported={(result) => {
+
+                  setSelectedGroupId(result.groupId);
+
+                  setShowGroupImport(false);
+
+                }}
 
               />
 

@@ -19,6 +19,9 @@ import type {
   PaginatedArticles,
   DuplicateDetectionResult,
   GroupArticleStats,
+  GroupExport,
+  GroupImportOptions,
+  GroupImportResult,
   PaginatedSearchResults,
   SearchResult,
   SortColumn,
@@ -332,6 +335,166 @@ export class SqliteStore {
       )
       .all(groupId, ...keys) as ArticleRow[];
     return rows.map(rowToArticle);
+  }
+
+  async exportGroup(groupId: number): Promise<GroupExport> {
+    const meta = await this.getGroup(groupId);
+    const rows = this.db
+      .prepare(
+        `SELECT * FROM articles WHERE group_id = ? ORDER BY entry_key COLLATE NOCASE`,
+      )
+      .all(groupId) as ArticleRow[];
+
+    return {
+      formatVersion: 1,
+      exportedAt: new Date().toISOString(),
+      group: {
+        title: meta.title,
+        versao: meta.versao,
+        mecanismo: meta.mecanismo,
+        stringBusca: meta.stringBusca,
+        createdAt: meta.createdAt,
+        sourceId: meta.id,
+      },
+      articles: rows.map(rowToArticle),
+    };
+  }
+
+  private sanitizeArticleForImport(article: Article): Article {
+    const copy = structuredClone(article);
+    if (copy.duplicateOf) {
+      delete copy.duplicateOf;
+      if (copy.status === 'duplicate') {
+        copy.status = 'exists';
+      }
+    }
+    return copy;
+  }
+
+  async importGroup(
+    data: GroupExport,
+    options: GroupImportOptions = {},
+  ): Promise<GroupImportResult> {
+    const onConflict = options.onConflict ?? 'skip';
+    const result: GroupImportResult = {
+      groupId: 0,
+      groupTitle: '',
+      imported: 0,
+      skipped: 0,
+      replaced: 0,
+    };
+
+    const importTx = this.db.transaction(() => {
+      let groupId: number;
+      let groupTitle: string;
+
+      if (options.targetGroupId != null) {
+        const row = this.getGroupRow(options.targetGroupId);
+        groupId = options.targetGroupId;
+        groupTitle = options.title ?? row.title;
+        if (options.title && options.title !== row.title) {
+          this.db
+            .prepare('UPDATE groups SET title = ? WHERE id = ?')
+            .run(options.title, groupId);
+        }
+      } else {
+        const newGroup = {
+          id: Date.now(),
+          title: options.title ?? data.group.title,
+          versao: data.group.versao || 'v2',
+          mecanismo: data.group.mecanismo ?? '',
+          string_busca: data.group.stringBusca ?? '',
+          created_at: new Date().toISOString(),
+        };
+        this.db
+          .prepare(
+            `INSERT INTO groups (id, title, versao, mecanismo, string_busca, created_at)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+          )
+          .run(
+            newGroup.id,
+            newGroup.title,
+            newGroup.versao,
+            newGroup.mecanismo,
+            newGroup.string_busca,
+            newGroup.created_at,
+          );
+        groupId = newGroup.id;
+        groupTitle = newGroup.title;
+      }
+
+      const insert = this.db.prepare(
+        `INSERT INTO articles (
+          group_id, entry_key, entry_type, fields_json, status, source, location,
+          caminho, notes, tags_json, descartado, usado, duplicate_group_id, duplicate_key
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      );
+
+      const update = this.db.prepare(
+        `UPDATE articles SET
+          entry_type = ?, fields_json = ?, status = ?, source = ?, location = ?,
+          caminho = ?, notes = ?, tags_json = ?, descartado = ?,
+          usado = ?, duplicate_group_id = ?, duplicate_key = ?
+         WHERE group_id = ? AND entry_key = ?`,
+      );
+
+      for (const rawArticle of data.articles) {
+        const article = this.sanitizeArticleForImport(rawArticle);
+        const values = articleToRowValues(groupId, article);
+        const exists = this.db
+          .prepare('SELECT 1 FROM articles WHERE group_id = ? AND entry_key = ?')
+          .get(groupId, article.entry.key);
+
+        if (exists) {
+          if (onConflict === 'skip') {
+            result.skipped += 1;
+            continue;
+          }
+          update.run(
+            values.entry_type,
+            values.fields_json,
+            values.status,
+            values.source,
+            values.location,
+            values.caminho,
+            values.notes,
+            values.tags_json,
+            values.descartado,
+            values.usado,
+            values.duplicate_group_id,
+            values.duplicate_key,
+            groupId,
+            article.entry.key,
+          );
+          result.replaced += 1;
+          continue;
+        }
+
+        insert.run(
+          values.group_id,
+          values.entry_key,
+          values.entry_type,
+          values.fields_json,
+          values.status,
+          values.source,
+          values.location,
+          values.caminho,
+          values.notes,
+          values.tags_json,
+          values.descartado,
+          values.usado,
+          values.duplicate_group_id,
+          values.duplicate_key,
+        );
+        result.imported += 1;
+      }
+
+      result.groupId = groupId;
+      result.groupTitle = groupTitle;
+    });
+
+    importTx();
+    return result;
   }
 
   async getArticle(groupId: number, key: string): Promise<Article> {

@@ -3,6 +3,7 @@ import { ZodError } from 'zod';
 
 import { createGroupSchema, updateGroupSchema } from '../schemas/referencias.js';
 import { bibtexImportSchema } from '../schemas/import.js';
+import { groupImportBodySchema } from '../schemas/groupTransfer.js';
 import { StoreError } from '../store/storeError.js';
 import type { AuthenticatedRequest } from '../middleware/deviceAuth.js';
 import { parseBibtex } from '../utils/bibtexParser.js';
@@ -55,6 +56,17 @@ export function createGroupsRouter(): Router {
     }
   });
 
+  router.post('/import', async (req, res) => {
+    try {
+      const body = groupImportBodySchema.parse(req.body ?? {});
+      const { options, ...exportPayload } = body;
+      const result = await storeFrom(req).importGroup(exportPayload, options);
+      res.status(201).json(result);
+    } catch (error) {
+      handleRouteError(error, res);
+    }
+  });
+
   router.get('/usado-articles', async (req, res) => {
     try {
       const items = await storeFrom(req).listUsadoArticles();
@@ -73,6 +85,20 @@ export function createGroupsRouter(): Router {
       }
       const tags = await storeFrom(req).listGroupTags(groupId);
       res.json(tags);
+    } catch (error) {
+      handleRouteError(error, res);
+    }
+  });
+
+  router.get('/:id/export', async (req, res) => {
+    try {
+      const groupId = Number(req.params.id);
+      if (Number.isNaN(groupId)) {
+        res.status(400).json({ error: 'ID de grupo inválido' });
+        return;
+      }
+      const payload = await storeFrom(req).exportGroup(groupId);
+      res.json(payload);
     } catch (error) {
       handleRouteError(error, res);
     }

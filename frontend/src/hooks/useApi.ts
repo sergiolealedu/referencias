@@ -188,6 +188,27 @@ export function useImportBibtex(groupId: number | null) {
   });
 }
 
+export function useImportGroup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      payload,
+      options,
+    }: {
+      payload: import('../types/referencias').GroupExport;
+      options?: import('../types/referencias').GroupImportOptions;
+    }) => api.importGroup(payload, options),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['groups'] });
+      queryClient.invalidateQueries({ queryKey: ['usado-articles'] });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
+      queryClient.invalidateQueries({ queryKey: ['articles', result.groupId] });
+      queryClient.invalidateQueries({ queryKey: ['group-tags', result.groupId] });
+      queryClient.invalidateQueries({ queryKey: ['groups', result.groupId] });
+    },
+  });
+}
+
 export function useSettings() {
   return useQuery({
     queryKey: ['settings'],

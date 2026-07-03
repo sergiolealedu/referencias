@@ -80,6 +80,9 @@ npm start
 | GET | `/api/groups/:id/tags` | Tags distintas do grupo |
 | PUT | `/api/groups/:id` | Atualiza grupo |
 | DELETE | `/api/groups/:id` | Remove grupo |
+| GET | `/api/groups/:id/export` | Exporta grupo completo (metadados + todos os artigos) em JSON |
+| POST | `/api/groups/import` | Importa pacote exportado (`formatVersion: 1`) — cria grupo novo ou mescla em existente |
+| POST | `/api/groups/:id/import/bibtex` | Importa entradas BibTeX no grupo |
 | GET | `/api/groups/:id/articles` | Lista paginada (`page`, `pageSize`, `sortBy`, `sortDir`, filtros) |
 | POST | `/api/groups/:id/articles/export` | Exporta artigos por chaves `{ "keys": [...] }` |
 | POST | `/api/groups/:id/articles` | Adiciona artigo |
@@ -109,6 +112,60 @@ Recomenda-se manter o `.db` em disco local (não sincronizar via Google Drive em
 - Formulário lateral para criar/editar artigos
 - Toggle rápido de `usado` e `descartado` na tabela
 - Link para artigo original em entradas duplicadas
+- Importação BibTeX por grupo
+- **Exportar / importar grupo completo** — transferência de metadados e artigos entre servidores via arquivo JSON
+
+## Transferência de grupo entre servidores
+
+Use esta funcionalidade para mover um grupo inteiro de uma instância para outra (ex.: produção → local, ou backup em outro ambiente).
+
+### Exportar (servidor de origem)
+
+1. Selecione o grupo na sidebar.
+2. Clique em **Exportar grupo** no cabeçalho do painel.
+3. Salve o arquivo `.json` gerado (contém metadados, artigos, tags, status, `usado`, `descartado`, etc.).
+
+Via API:
+
+```powershell
+curl -H "X-Auth-Token: SEU_TOKEN" http://localhost:3001/api/groups/123/export -o grupo-123.json
+```
+
+### Importar (servidor de destino)
+
+1. Clique em **Importar grupo** no cabeçalho do painel.
+2. Selecione o arquivo `.json` exportado.
+3. Escolha o destino:
+   - **Criar novo grupo** — gera um novo ID no servidor de destino;
+   - **Mesclar em grupo existente** — adiciona artigos ao grupo escolhido (ignorar ou substituir chaves duplicadas).
+4. Ajuste o título, se necessário, e confirme.
+
+Via API:
+
+```powershell
+curl -X POST http://localhost:3001/api/groups/import `
+  -H "Content-Type: application/json" `
+  -H "X-Auth-Token: SEU_TOKEN" `
+  -d "@grupo-123.json"
+```
+
+O body aceita o JSON exportado com um campo opcional `options`:
+
+```json
+{
+  "formatVersion": 1,
+  "exportedAt": "2026-07-03T10:00:00.000Z",
+  "group": { "title": "...", "versao": "v2", "mecanismo": "Scopus", "stringBusca": "", "createdAt": "...", "sourceId": 123 },
+  "articles": [ ... ],
+  "options": {
+    "title": "Título no destino",
+    "targetGroupId": 456,
+    "onConflict": "skip"
+  }
+}
+```
+
+`onConflict`: `skip` (padrão) ou `replace`. Referências `duplicateOf` entre grupos são removidas na importação, pois os IDs de grupo diferem entre servidores.
 
 ## Releases e pacotes
 
@@ -179,8 +236,8 @@ Configure o `.npmrc` (ou copie o arquivo raiz do repositório) e autentique com 
 ```
 
 ```powershell
-npm install @sergiolealedu/referencias-backend@1.0.0
-npm install @sergiolealedu/referencias-frontend@1.0.0
+npm install @sergiolealedu/referencias-backend@1.1.0
+npm install @sergiolealedu/referencias-frontend@1.1.0
 ```
 
 ### Dependabot

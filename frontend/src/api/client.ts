@@ -13,6 +13,9 @@ import type {
   BibtexImportResult,
   DuplicateDetectionResult,
   GroupArticleStats,
+  GroupExport,
+  GroupImportOptions,
+  GroupImportResult,
   GroupInput,
   GroupMeta,
   GroupSummary,
@@ -140,6 +143,14 @@ export const api = {
 
   deleteGroup: (id: number) =>
     request<void>(`/groups/${id}`, { method: 'DELETE' }),
+
+  exportGroup: (id: number) => request<GroupExport>(`/groups/${id}/export`),
+
+  importGroup: (payload: GroupExport, options?: GroupImportOptions) =>
+    request<GroupImportResult>('/groups/import', {
+      method: 'POST',
+      body: JSON.stringify({ ...payload, options }),
+    }),
 
   listArticles: (groupId: number, params: ArticleListParams = {}) =>
     request<PaginatedArticles>(`/groups/${groupId}/articles${toQuery(params)}`),
