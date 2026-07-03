@@ -27,7 +27,9 @@ import type { DeviceSession, JoinTokenInfo } from '../types/device';
 import type { WorkspaceInput, WorkspaceSummary, AccessSetup } from '../types/workspace';
 import { resolveApiBaseUrl } from '../utils/platform';
 
-const API_BASE = resolveApiBaseUrl();
+function getApiBase(): string {
+  return resolveApiBaseUrl();
+}
 
 function authHeaders(): HeadersInit {
   const authToken = getAuthToken();
@@ -50,7 +52,7 @@ function persistSession(session: DeviceSession): DeviceSession {
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, {
+  const response = await fetch(`${getApiBase()}${path}`, {
     headers: {
       'Content-Type': 'application/json',
       ...authHeaders(),
@@ -191,7 +193,7 @@ export const api = {
     request<PaginatedSearchResults>(`/search${toQuery(params)}`),
 
   pdfUrl: (filePath: string) =>
-    `${API_BASE}/files/pdf?path=${encodeURIComponent(filePath.trim())}`,
+    `${getApiBase()}/files/pdf?path=${encodeURIComponent(filePath.trim())}`,
 
   openPdf: async (filePath: string) => {
     const response = await fetch(api.pdfUrl(filePath), {
@@ -215,7 +217,7 @@ export const api = {
 
   uploadArticlePdf: async (groupId: number, key: string, file: File) => {
     const response = await fetch(
-      `${API_BASE}/groups/${groupId}/articles/${encodeURIComponent(key)}/pdf`,
+      `${getApiBase()}/groups/${groupId}/articles/${encodeURIComponent(key)}/pdf`,
       {
         method: 'POST',
         headers: {
