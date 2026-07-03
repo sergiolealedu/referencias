@@ -25,8 +25,9 @@ import type {
 } from '../types/referencias';
 import type { DeviceSession, JoinTokenInfo } from '../types/device';
 import type { WorkspaceInput, WorkspaceSummary, AccessSetup } from '../types/workspace';
+import { resolveApiBaseUrl } from '../utils/platform';
 
-const API_BASE = '/api';
+const API_BASE = resolveApiBaseUrl();
 
 function authHeaders(): HeadersInit {
   const authToken = getAuthToken();
@@ -190,7 +191,57 @@ export const api = {
     request<PaginatedSearchResults>(`/search${toQuery(params)}`),
 
   pdfUrl: (filePath: string) =>
-    `/api/files/pdf?path=${encodeURIComponent(filePath.trim())}`,
+    `${API_BASE}/files/pdf?path=${encodeURIComponent(filePath.trim())}`,
+
+  openPdf: async (filePath: string) => {
+    const response = await fetch(api.pdfUrl(filePath), {
+      headers: { ...authHeaders() },
+    });
+    if (!response.ok) {
+      let message = `Erro ${response.status}`;
+      try {
+        const body = (await response.json()) as { error?: string };
+        if (body.error) message = body.error;
+      } catch {
+        // ignore
+      }
+      throw new Error(message);
+    }
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank', 'noopener,noreferrer');
+    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  },
+
+  uploadArticlePdf: async (groupId: number, key: string, file: File) => {
+    const response = await fetch(
+      `${API_BASE}/groups/${groupId}/articles/${encodeURIComponent(key)}/pdf`,
+      {
+        method: 'POST',
+        headers: {
+          ...authHeaders(),
+          'Content-Type': 'application/pdf',
+        },
+        body: file,
+      },
+    );
+    if (!response.ok) {
+      let message = `Erro ${response.status}`;
+      try {
+        const body = (await response.json()) as { error?: string };
+        if (body.error) message = body.error;
+      } catch {
+        // ignore
+      }
+      throw new Error(message);
+    }
+    return response.json() as Promise<Article>;
+  },
+
+  deleteArticlePdf: (groupId: number, key: string) =>
+    request<Article>(`/groups/${groupId}/articles/${encodeURIComponent(key)}/pdf`, {
+      method: 'DELETE',
+    }),
 
   importBibtex: (groupId: number, input: BibtexImportInput) =>
     request<BibtexImportResult>(`/groups/${groupId}/import/bibtex`, {

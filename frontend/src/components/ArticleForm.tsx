@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { api } from '../api/client';
 import {
   useCreateArticle,
   useDeleteArticle,
+  useDeleteArticlePdf,
   useUpdateArticle,
+  useUploadArticlePdf,
 } from '../hooks/useApi';
 import { ARTICLE_STATUSES, ENTRY_TYPES, type Article } from '../types/referencias';
 import { emptyArticle } from '../types/referencias';
@@ -59,16 +61,22 @@ export function ArticleForm({
   const [extraFieldValue, setExtraFieldValue] = useState('');
   const [saveError, setSaveError] = useState<string | null>(null);
   const [exportMessage, setExportMessage] = useState<string | null>(null);
+  const [pdfMessage, setPdfMessage] = useState<string | null>(null);
   const [abstractExpanded, setAbstractExpanded] = useState(false);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
   const createArticle = useCreateArticle(groupId);
   const updateArticle = useUpdateArticle(groupId);
   const deleteArticle = useDeleteArticle(groupId);
+  const uploadPdf = useUploadArticlePdf(groupId);
+  const deletePdf = useDeleteArticlePdf(groupId);
   const isSaving = createArticle.isPending || updateArticle.isPending;
+  const isPdfBusy = uploadPdf.isPending || deletePdf.isPending;
 
   useEffect(() => {
     setForm(normalizeArticleForForm(article ?? emptyArticle()));
     setSaveError(null);
     setExportMessage(null);
+    setPdfMessage(null);
     setAbstractExpanded(false);
   }, [article, isNew]);
 
@@ -372,23 +380,105 @@ export function ArticleForm({
         </label>
 
         <label>
-          Caminho
+          Caminho do PDF
           <input
             value={form.caminho}
             onChange={(e) => setRoot('caminho', caminhoForStorage(e.target.value))}
+            placeholder="Preenchido automaticamente ao enviar um PDF"
           />
         </label>
-        <button
-          type="button"
-          className="open-pdf-btn"
-          disabled={!form.caminho.trim()}
-          onClick={() => {
-            if (!form.caminho.trim()) return;
-            window.open(api.pdfUrl(form.caminho), '_blank', 'noopener,noreferrer');
+        <input
+          ref={pdfInputRef}
+          type="file"
+          accept="application/pdf,.pdf"
+          className="visually-hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = '';
+            if (!file) return;
+            void (async () => {
+              if (isNew || !form.entry.key.trim()) {
+                setPdfMessage('Salve o artigo antes de enviar o PDF.');
+                return;
+              }
+              if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
+                setPdfMessage('Selecione um arquivo PDF.');
+                return;
+              }
+              setPdfMessage(null);
+              try {
+                const updated = await uploadPdf.mutateAsync({
+                  key: form.entry.key,
+                  file,
+                });
+                setForm(normalizeArticleForForm(updated));
+                setPdfMessage('PDF enviado com sucesso.');
+                onSaved(updated.entry.key);
+              } catch (err) {
+                setPdfMessage((err as Error).message);
+              }
+            })();
           }}
-        >
-          Abrir PDF
-        </button>
+        />
+        <div className="pdf-actions">
+          <button
+            type="button"
+            className="open-pdf-btn"
+            disabled={isNew || isPdfBusy || !form.entry.key.trim()}
+            title={isNew ? 'Salve o artigo antes de enviar o PDF' : 'Enviar PDF do artigo'}
+            onClick={() => pdfInputRef.current?.click()}
+          >
+            {uploadPdf.isPending ? 'Enviando…' : 'Enviar PDF'}
+          </button>
+          <button
+            type="button"
+            className="open-pdf-btn"
+            disabled={!form.caminho.trim() || isPdfBusy}
+            onClick={() => {
+              if (!form.caminho.trim()) return;
+              void (async () => {
+                setPdfMessage(null);
+                try {
+                  await api.openPdf(form.caminho);
+                } catch (err) {
+                  setPdfMessage((err as Error).message);
+                }
+              })();
+            }}
+          >
+            Abrir PDF
+          </button>
+          <button
+            type="button"
+            className="danger"
+            disabled={isNew || !form.caminho.trim() || isPdfBusy}
+            onClick={() => {
+              if (isNew || !form.entry.key.trim() || !form.caminho.trim()) return;
+              if (!window.confirm('Remover o PDF deste artigo?')) return;
+              void (async () => {
+                setPdfMessage(null);
+                try {
+                  const updated = await deletePdf.mutateAsync(form.entry.key);
+                  setForm(normalizeArticleForForm(updated));
+                  setPdfMessage('PDF removido.');
+                  onSaved(updated.entry.key);
+                } catch (err) {
+                  setPdfMessage((err as Error).message);
+                }
+              })();
+            }}
+          >
+            {deletePdf.isPending ? 'Removendo…' : 'Remover PDF'}
+          </button>
+        </div>
+        {isNew && (
+          <p className="hint">Salve o artigo para liberar o envio de PDF.</p>
+        )}
+        {pdfMessage && (
+          <p className={pdfMessage.includes('sucesso') || pdfMessage.includes('removido') ? 'hint' : 'error'}>
+            {pdfMessage}
+          </p>
+        )}
 
         <label>
           Tags (vírgula)

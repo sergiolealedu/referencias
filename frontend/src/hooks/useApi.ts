@@ -157,6 +157,38 @@ export function useDeleteArticle(groupId: number | null) {
   });
 }
 
+function invalidateArticlePdfQueries(
+  queryClient: ReturnType<typeof useQueryClient>,
+  groupId: number | null,
+  key: string,
+) {
+  queryClient.invalidateQueries({ queryKey: ['articles', groupId] });
+  queryClient.invalidateQueries({ queryKey: ['article', groupId, key] });
+  queryClient.invalidateQueries({ queryKey: ['usado-articles'] });
+  if (groupId) queryClient.invalidateQueries({ queryKey: ['groups', groupId] });
+}
+
+export function useUploadArticlePdf(groupId: number | null) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ key, file }: { key: string; file: File }) =>
+      api.uploadArticlePdf(groupId!, key, file),
+    onSuccess: (_data, { key }) => {
+      invalidateArticlePdfQueries(queryClient, groupId, key);
+    },
+  });
+}
+
+export function useDeleteArticlePdf(groupId: number | null) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (key: string) => api.deleteArticlePdf(groupId!, key),
+    onSuccess: (_data, key) => {
+      invalidateArticlePdfQueries(queryClient, groupId, key);
+    },
+  });
+}
+
 export function useClearGroupArticles(groupId: number | null) {
   const queryClient = useQueryClient();
   return useMutation({

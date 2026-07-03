@@ -5,6 +5,7 @@ import {
   useCreateWorkspace,
   useJoinWorkspace,
 } from '../hooks/useApi';
+import { showGlobalSettings } from '../utils/platform';
 
 interface DeviceOnboardingProps {
   onComplete: () => void;
@@ -90,8 +91,10 @@ export function DeviceOnboarding({ onComplete }: DeviceOnboardingProps) {
                 <p className="device-onboarding-lead">
                   Este servidor foi recém-instalado. Você pode obter acesso ao workspace{' '}
                   <strong>{accessSetup.bootstrapWorkspaceName}</strong>, entrar com outro token
-                  ou criar um workspace novo. O primeiro dispositivo com acesso torna-se{' '}
-                  <strong>administrador</strong>.
+                  ou criar um workspace novo.
+                  {showGlobalSettings() && (
+                    <> O primeiro dispositivo com acesso torna-se <strong>administrador</strong>.</>
+                  )}
                 </p>
                 <button
                   type="button"
@@ -143,10 +146,14 @@ export function DeviceOnboarding({ onComplete }: DeviceOnboardingProps) {
                 }}
               />
             </label>
-            <p className="hint">
-              Será criado um banco SQLite em{' '}
-              <code>data/workspaces/&lt;nome&gt;/referencias.db</code> (dados isolados).
-            </p>
+            {showGlobalSettings() ? (
+              <p className="hint">
+                Será criado um banco SQLite em{' '}
+                <code>data/workspaces/&lt;nome&gt;/referencias.db</code> (dados isolados).
+              </p>
+            ) : (
+              <p className="hint">O workspace será criado no servidor com dados isolados.</p>
+            )}
             <div className="device-onboarding-form-actions">
               <button type="button" onClick={() => setMode('choose')}>
                 Voltar

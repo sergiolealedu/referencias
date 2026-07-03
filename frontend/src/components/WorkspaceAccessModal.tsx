@@ -14,6 +14,7 @@ import {
 } from '../hooks/useApi';
 import type { JoinTokenInfo } from '../types/device';
 import type { WorkspaceSummary } from '../types/workspace';
+import { showGlobalSettings } from '../utils/platform';
 
 interface WorkspaceAccessModalProps {
   onClose: () => void;
@@ -180,7 +181,15 @@ export function WorkspaceAccessModal({ onClose, onChanged }: WorkspaceAccessModa
             <>
               <p className="modal-subtitle">
                 Quem tem acesso a um workspace pode convidar outros dispositivos com um token.
-                Pastas de PDF são globais em <strong>Configuração</strong>; cada workspace tem banco próprio.
+                {showGlobalSettings() ? (
+                  <>
+                    {' '}
+                    Pastas de PDF são globais em <strong>Configuração</strong>; cada workspace tem
+                    banco próprio.
+                  </>
+                ) : (
+                  <> Os dados ficam no servidor; use tokens para acessar em outros dispositivos.</>
+                )}
               </p>
 
               {activeWorkspace && (
@@ -300,10 +309,14 @@ export function WorkspaceAccessModal({ onClose, onChanged }: WorkspaceAccessModa
                   }}
                 />
               </label>
-              <p className="hint">
-                Será criado um banco próprio em{' '}
-                <code>data/workspaces/&lt;nome&gt;/referencias.db</code>.
-              </p>
+              {showGlobalSettings() ? (
+                <p className="hint">
+                  Será criado um banco próprio em{' '}
+                  <code>data/workspaces/&lt;nome&gt;/referencias.db</code>.
+                </p>
+              ) : (
+                <p className="hint">O workspace será criado no servidor com dados isolados.</p>
+              )}
               <div className="workspace-create-actions">
                 <button type="button" onClick={() => setPanel('workspaces')}>
                   Voltar

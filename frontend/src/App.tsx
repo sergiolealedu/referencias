@@ -49,6 +49,7 @@ import type { ArticleFilters, SortColumn, SortDirection } from './types/referenc
 import { api } from './api/client';
 
 import { downloadGroupExport } from './utils/groupExport';
+import { showGlobalSettings } from './utils/platform';
 
 
 
@@ -370,7 +371,10 @@ export default function App() {
 
           <h1>Referências — Doutorado</h1>
 
-          <p className="subtitle" title={settings?.sqliteDbPath}>
+          <p
+            className="subtitle"
+            title={showGlobalSettings() ? settings?.sqliteDbPath : undefined}
+          >
 
             Workspace: {activeWorkspace?.name ?? settings?.activeWorkspaceName ?? '…'}
 
@@ -424,7 +428,7 @@ export default function App() {
 
           </button>
 
-          {deviceSession?.isServerAdmin && (
+          {showGlobalSettings() && deviceSession?.isServerAdmin && (
             <button
               type="button"
               onClick={() => setShowSettings(true)}
@@ -808,7 +812,7 @@ export default function App() {
 
 
 
-      {showSettings && (
+      {showGlobalSettings() && showSettings && (
 
         <SettingsModal
 

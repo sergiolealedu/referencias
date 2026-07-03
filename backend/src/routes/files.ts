@@ -4,6 +4,7 @@ import { basename, normalize, resolve } from 'node:path';
 import { Router } from 'express';
 
 import type { AuthenticatedRequest } from '../middleware/deviceAuth.js';
+import { allowedPdfRootsForWorkspace } from '../pdfStorage.js';
 
 function isPathInsideAllowedRoots(filePath: string, allowedRoots: string[]): boolean {
   const normalized = resolve(normalize(filePath));
@@ -28,7 +29,11 @@ export function createFilesRouter(): Router {
     }
 
     const filePath = resolve(normalize(rawPath.trim()));
-    const allowedRoots = (req as AuthenticatedRequest).activeWorkspace.allowedPdfRoots;
+    const authReq = req as AuthenticatedRequest;
+    const allowedRoots = allowedPdfRootsForWorkspace(
+      authReq.activeWorkspace.id,
+      authReq.activeWorkspace.allowedPdfRoots,
+    );
 
     if (!isPathInsideAllowedRoots(filePath, allowedRoots)) {
       res.status(403).json({ error: 'Caminho fora das pastas permitidas' });

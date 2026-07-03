@@ -1,4 +1,4 @@
-import { Router, type NextFunction, type Request, type Response } from 'express';
+import express, { Router, type NextFunction, type Request, type Response } from 'express';
 import { ZodError } from 'zod';
 
 import { createGroupSchema, updateGroupSchema } from '../schemas/referencias.js';
@@ -6,12 +6,18 @@ import { bibtexImportSchema } from '../schemas/import.js';
 import { groupImportBodySchema } from '../schemas/groupTransfer.js';
 import { StoreError } from '../store/storeError.js';
 import type { AuthenticatedRequest } from '../middleware/deviceAuth.js';
+import { PdfStorageError, removeManagedPdf, saveArticlePdf } from '../pdfStorage.js';
 import { parseBibtex } from '../utils/bibtexParser.js';
 import { exportArticlesSchema, parseArticleListParams } from '../schemas/articleList.js';
 
 function handleRouteError(error: unknown, res: Response): void {
   if (error instanceof ZodError) {
     res.status(400).json({ error: 'Dados inválidos', details: error.flatten() });
+    return;
+  }
+  if (error instanceof PdfStorageError) {
+    const status = error.code === 'NOT_FOUND' ? 404 : 422;
+    res.status(status).json({ error: error.message, code: error.code });
     return;
   }
   if (error instanceof StoreError) {
@@ -302,6 +308,71 @@ export function createArticlesRouter(): Router {
   router.put('/:key', updateHandler);
   router.patch('/:key', updateHandler);
 
+  router.post(
+    '/:key/pdf',
+    express.raw({
+      type: ['application/pdf', 'application/octet-stream'],
+      limit: '50mb',
+    }),
+    async (req, res) => {
+      try {
+        const groupId = parseGroupId(req.params as Record<string, string | undefined>);
+        const key = parseKey(req.params as Record<string, string | undefined>);
+        if (groupId === null || !key) {
+          res.status(400).json({ error: 'ID de grupo ou chave inválidos' });
+          return;
+        }
+
+        const authReq = req as unknown as AuthenticatedRequest;
+        const store = storeFrom(req);
+        const existing = await store.getArticle(groupId, key);
+        const buffer = Buffer.isBuffer(req.body) ? req.body : Buffer.from([]);
+
+        const filePath = await saveArticlePdf(
+          authReq.activeWorkspace.id,
+          groupId,
+          key,
+          buffer,
+        );
+
+        if (
+          existing.caminho &&
+          existing.caminho !== filePath
+        ) {
+          await removeManagedPdf(authReq.activeWorkspace.id, existing.caminho);
+        }
+
+        const article = await store.updateArticle(groupId, key, {
+          caminho: filePath,
+          status: existing.status === 'duplicate' ? existing.status : 'exists',
+        });
+        res.json(article);
+      } catch (error) {
+        handleRouteError(error, res);
+      }
+    },
+  );
+
+  router.delete('/:key/pdf', async (req, res) => {
+    try {
+      const groupId = parseGroupId(req.params as Record<string, string | undefined>);
+      const key = parseKey(req.params as Record<string, string | undefined>);
+      if (groupId === null || !key) {
+        res.status(400).json({ error: 'ID de grupo ou chave inválidos' });
+        return;
+      }
+
+      const authReq = req as unknown as AuthenticatedRequest;
+      const store = storeFrom(req);
+      const existing = await store.getArticle(groupId, key);
+      await removeManagedPdf(authReq.activeWorkspace.id, existing.caminho);
+      const article = await store.updateArticle(groupId, key, { caminho: '' });
+      res.json(article);
+    } catch (error) {
+      handleRouteError(error, res);
+    }
+  });
+
   router.delete('/:key', async (req, res) => {
     try {
       const groupId = parseGroupId(req.params as Record<string, string | undefined>);
@@ -310,7 +381,15 @@ export function createArticlesRouter(): Router {
         res.status(400).json({ error: 'ID de grupo ou chave inválidos' });
         return;
       }
-      await storeFrom(req).deleteArticle(groupId, key);
+      const authReq = req as unknown as AuthenticatedRequest;
+      const store = storeFrom(req);
+      try {
+        const existing = await store.getArticle(groupId, key);
+        await removeManagedPdf(authReq.activeWorkspace.id, existing.caminho);
+      } catch {
+        // Artigo inexistente — deleteArticle abaixo responde 404.
+      }
+      await store.deleteArticle(groupId, key);
       res.status(204).send();
     } catch (error) {
       handleRouteError(error, res);

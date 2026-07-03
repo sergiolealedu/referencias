@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { api } from '../api/client';
-import { useUpdateArticle } from '../hooks/useApi';
+import { useUpdateArticle, useUploadArticlePdf } from '../hooks/useApi';
 import type { Article, SortColumn, SortDirection } from '../types/referencias';
 import {
   copyBibtexBulkToClipboard,
@@ -53,6 +53,11 @@ export function ArticleTable({
   onSortChange,
 }: ArticleTableProps) {
   const updateArticle = useUpdateArticle(groupId);
+  const uploadPdf = useUploadArticlePdf(groupId);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
+  const [pdfTargetKey, setPdfTargetKey] = useState<string | null>(null);
+  const [uploadingKey, setUploadingKey] = useState<string | null>(null);
+  const [pdfMessage, setPdfMessage] = useState<string | null>(null);
   const [checkedKeys, setCheckedKeys] = useState<Set<string>>(new Set());
   const [exportMessage, setExportMessage] = useState<string | null>(null);
 
@@ -95,6 +100,22 @@ export function ArticleTable({
       key: article.entry.key,
       patch: { [field]: !article[field] },
     });
+  };
+
+  const handleUploadPdf = (key: string) => {
+    setPdfTargetKey(key);
+    setPdfMessage(null);
+    pdfInputRef.current?.click();
+  };
+
+  const handleOpenPdf = async (article: Article) => {
+    if (!article.caminho.trim()) return;
+    setPdfMessage(null);
+    try {
+      await api.openPdf(article.caminho);
+    } catch (err) {
+      setPdfMessage((err as Error).message);
+    }
   };
 
   const toggleChecked = (key: string) => {
@@ -160,6 +181,32 @@ export function ArticleTable({
 
   return (
     <div className="article-table-panel">
+      <input
+        ref={pdfInputRef}
+        type="file"
+        accept="application/pdf,.pdf"
+        className="visually-hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          const key = pdfTargetKey;
+          e.target.value = '';
+          setPdfTargetKey(null);
+          if (!file || !key) return;
+          void (async () => {
+            setPdfMessage(null);
+            setUploadingKey(key);
+            try {
+              await uploadPdf.mutateAsync({ key, file });
+              setPdfMessage(`PDF enviado para ${key}.`);
+            } catch (err) {
+              setPdfMessage((err as Error).message);
+            } finally {
+              setUploadingKey(null);
+            }
+          })();
+        }}
+      />
+      {pdfMessage && <p className="hint pdf-table-message">{pdfMessage}</p>}
       {checkedKeys.size > 0 && (
         <div className="bulk-actions">
           <span className="bulk-actions-count">
@@ -247,6 +294,7 @@ export function ArticleTable({
                   </button>
                 </th>
               ))}
+              <th className="pdf-col">PDF</th>
             </tr>
           </thead>
           <tbody>
@@ -316,6 +364,28 @@ export function ArticleTable({
                     }}
                     onClick={(e) => e.stopPropagation()}
                   />
+                </td>
+                <td className="pdf-col" onClick={(e) => e.stopPropagation()}>
+                  <div className="pdf-row-actions">
+                    <button
+                      type="button"
+                      className="pdf-row-btn"
+                      title="Enviar PDF"
+                      disabled={uploadPdf.isPending}
+                      onClick={() => handleUploadPdf(article.entry.key)}
+                    >
+                      {uploadingKey === article.entry.key ? '…' : '↑'}
+                    </button>
+                    <button
+                      type="button"
+                      className="pdf-row-btn"
+                      title={article.caminho.trim() ? 'Abrir PDF' : 'Sem PDF'}
+                      disabled={!article.caminho.trim()}
+                      onClick={() => void handleOpenPdf(article)}
+                    >
+                      PDF
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
