@@ -163,6 +163,13 @@ export class RegistryStore {
     return row.count;
   }
 
+  countAllMemberships(): number {
+    const row = this.db
+      .prepare('SELECT COUNT(*) AS count FROM device_workspaces')
+      .get() as { count: number };
+    return row.count;
+  }
+
   createJoinToken(workspaceId: string, createdByDeviceId: string): JoinTokenRow {
     const token = `ws_${randomBytes(24).toString('base64url')}`;
     const createdAt = new Date().toISOString();

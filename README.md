@@ -113,7 +113,43 @@ Recomenda-se manter o `.db` em disco local (não sincronizar via Google Drive em
 - Toggle rápido de `usado` e `descartado` na tabela
 - Link para artigo original em entradas duplicadas
 - Importação BibTeX por grupo
-- **Exportar / importar grupo completo** — transferência de metadados e artigos entre servidores via arquivo JSON
+- Exportar / importar grupo completo entre servidores (JSON)
+- **Acesso ao workspace** — caminhos de dados, troca de workspace e convites por token
+
+## Acesso ao workspace
+
+O controle de acesso é por **dispositivo** (navegador), não por usuário/senha. Cada workspace tem seus próprios caminhos de banco e PDFs; quem tem acesso pode convidar outros dispositivos.
+
+### Primeiro acesso (servidor novo)
+
+Quando nenhum dispositivo ainda entrou no workspace:
+
+1. Ao iniciar a API, o servidor gera um **token de convite** e o exibe nos logs (`pm2 logs referencias-api`).
+2. Abra a aplicação no navegador — a tela inicial oferece **Obter acesso inicial**.
+3. Use o mesmo token em outros dispositivos (botão *Copiar token*) ou gere novos tokens em **Acesso** após entrar.
+
+Em servidor sem interface, gere um token manualmente:
+
+```bash
+sudo bash /opt/referencias/scripts/migrate/create-join-token.sh
+```
+
+### Convidar outro dispositivo
+
+1. Clique em **Acesso · &lt;workspace&gt;** no cabeçalho.
+2. Em *Convidar outro dispositivo*, gere um token e envie ao colega.
+3. No outro dispositivo: tela inicial → **Entrar com token** (ou onboarding).
+
+### API de acesso
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/api/workspaces/setup` | Status de onboarding e token inicial (se aplicável) |
+| POST | `/api/workspaces/join` | Entrar com token `{ "token": "ws_..." }` |
+| POST | `/api/workspaces/:id/tokens` | Gerar token de convite |
+| GET | `/api/workspaces/:id/tokens` | Listar tokens ativos |
+| DELETE | `/api/workspaces/:id/tokens/:token` | Revogar token |
+| GET/PUT | `/api/settings` | Caminhos do workspace ativo (membros) |
 
 ## Transferência de grupo entre servidores
 

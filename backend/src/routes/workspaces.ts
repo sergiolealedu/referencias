@@ -13,6 +13,7 @@ import {
   revokeJoinToken,
   setDeviceActiveWorkspace,
 } from '../deviceManager.js';
+import { getAccessSetup } from '../bootstrapAccess.js';
 import {
   DeviceHeaderMissingError,
   resolveDeviceForWorkspaces,
@@ -62,6 +63,18 @@ function handleDeviceError(error: unknown, res: import('express').Response): boo
 
 export function createWorkspacesRouter(): Router {
   const router = Router();
+
+  router.get('/setup', (req, res) => {
+    try {
+      const { session } = resolveDeviceForWorkspaces(req);
+      res.json(getAccessSetup(session));
+    } catch (error) {
+      if (!handleDeviceError(error, res)) {
+        console.error('Erro ao obter status de acesso:', error);
+        res.status(500).json({ error: 'Não foi possível obter status de acesso' });
+      }
+    }
+  });
 
   router.get('/', (req, res) => {
     try {
@@ -115,7 +128,16 @@ export function createWorkspacesRouter(): Router {
 
   router.post('/', async (req, res) => {
     try {
-      const { deviceId } = resolveDeviceForWorkspaces(req);
+      const { deviceId, session } = resolveDeviceForWorkspaces(req);
+      const access = getAccessSetup(session);
+      if (!access.canCreateWorkspace) {
+        res.status(403).json({
+          error:
+            'Este servidor já possui workspaces configurados. Entre com um token de acesso concedido por quem já tem acesso.',
+          inviteOnly: access.inviteOnly,
+        });
+        return;
+      }
       const body = workspaceInputSchema.parse(req.body ?? {});
       const workspace = await createWorkspace(body);
       addDeviceToNewWorkspace(deviceId, workspace.id);

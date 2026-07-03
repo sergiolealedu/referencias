@@ -12,9 +12,7 @@ import { GroupImportModal } from './components/GroupImportModal';
 
 import { Dashboard } from './components/Dashboard';
 
-import { SettingsModal } from './components/SettingsModal';
-
-import { WorkspaceModal } from './components/WorkspaceModal';
+import { WorkspaceAccessModal } from './components/WorkspaceAccessModal';
 
 import { UsadoBibtexExportModal } from './components/UsadoBibtexExportModal';
 
@@ -90,9 +88,9 @@ export default function App() {
 
   const [showUsadoExport, setShowUsadoExport] = useState(false);
 
-  const [showSettings, setShowSettings] = useState(false);
+  const [showWorkspaceAccess, setShowWorkspaceAccess] = useState(false);
 
-  const [showWorkspaces, setShowWorkspaces] = useState(false);
+  const [workspaceAccessTab, setWorkspaceAccessTab] = useState<'access' | 'workspaces'>('access');
 
   const [view, setView] = useState<AppView>('articles');
 
@@ -382,13 +380,19 @@ export default function App() {
 
             className="workspace-switcher"
 
-            onClick={() => setShowWorkspaces(true)}
+            onClick={() => {
 
-            title="Trocar ou gerenciar workspaces"
+              setWorkspaceAccessTab('access');
+
+              setShowWorkspaceAccess(true);
+
+            }}
+
+            title="Acesso ao workspace, caminhos de dados e convites"
 
           >
 
-            {activeWorkspace?.name ?? 'Workspace'}
+            Acesso · {activeWorkspace?.name ?? '…'}
 
           </button>
 
@@ -417,20 +421,6 @@ export default function App() {
           >
 
             Dashboard
-
-          </button>
-
-          <button
-
-            type="button"
-
-            onClick={() => setShowSettings(true)}
-
-            title="Configuração do workspace ativo"
-
-          >
-
-            Configuração
 
           </button>
 
@@ -808,27 +798,15 @@ export default function App() {
 
 
 
-      {showSettings && (
+      {showWorkspaceAccess && (
 
-        <SettingsModal
+        <WorkspaceAccessModal
 
-          onClose={() => setShowSettings(false)}
+          initialTab={workspaceAccessTab}
 
-          onSaved={resetViewState}
+          onClose={() => setShowWorkspaceAccess(false)}
 
-        />
-
-      )}
-
-
-
-      {showWorkspaces && (
-
-        <WorkspaceModal
-
-          onClose={() => setShowWorkspaces(false)}
-
-          onWorkspaceChanged={resetViewState}
+          onChanged={resetViewState}
 
         />
 

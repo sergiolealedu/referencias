@@ -3,10 +3,12 @@ import { backupSqliteDatabase } from './store/sqliteBackup.js';
 import { SqliteStore } from './store/sqliteStore.js';
 import { getRegistry } from './registry/registryStore.js';
 import { loadWorkspaces, getActiveWorkspace } from './workspaceManager.js';
+import { logBootstrapTokenIfNeeded } from './bootstrapAccess.js';
 
 await loadAppSettings();
 await loadWorkspaces();
 getRegistry();
+logBootstrapTokenIfNeeded();
 
 const storeCache = new Map<string, SqliteStore>();
 

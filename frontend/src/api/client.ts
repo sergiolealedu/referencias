@@ -24,7 +24,7 @@ import type {
   SearchResult,
 } from '../types/referencias';
 import type { DeviceSession, JoinTokenInfo } from '../types/device';
-import type { WorkspaceInput, WorkspaceSummary } from '../types/workspace';
+import type { WorkspaceInput, WorkspaceSummary, AccessSetup } from '../types/workspace';
 
 const API_BASE = '/api';
 
@@ -217,6 +217,8 @@ export const api = {
     }),
 
   listWorkspaces: () => request<WorkspaceSummary[]>('/workspaces'),
+
+  getAccessSetup: () => request<AccessSetup>('/workspaces/setup'),
 
   getActiveWorkspace: () => request<WorkspaceSummary>('/workspaces/active'),
 

@@ -247,6 +247,14 @@ export function useWorkspaces() {
   });
 }
 
+export function useAccessSetup(enabled = true) {
+  return useQuery({
+    queryKey: ['access-setup'],
+    queryFn: api.getAccessSetup,
+    enabled,
+  });
+}
+
 export function useActiveWorkspace() {
   return useQuery({
     queryKey: ['active-workspace'],

@@ -10,6 +10,17 @@ export interface WorkspaceSummary extends Workspace {
   isActive: boolean;
 }
 
+export interface AccessSetup {
+  hasAnyMember: boolean;
+  hasExistingWorkspaces: boolean;
+  needsOnboarding: boolean;
+  canCreateWorkspace: boolean;
+  inviteOnly: boolean;
+  bootstrapToken?: string;
+  bootstrapWorkspaceId?: string;
+  bootstrapWorkspaceName?: string;
+}
+
 export interface WorkspaceInput {
   name: string;
   sqliteDbPath?: string;
