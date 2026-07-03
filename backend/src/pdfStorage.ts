@@ -1,8 +1,10 @@
+import { randomUUID } from 'node:crypto';
 import { mkdir, unlink, writeFile } from 'node:fs/promises';
 import { dirname, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const MAX_PDF_BYTES = 50 * 1024 * 1024;
+const MAX_NAME_ATTEMPTS = 8;
 const DATA_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../data');
 
 export function workspacePdfRoot(workspaceId: string): string {
@@ -30,10 +32,11 @@ export function allowedPdfRootsForWorkspace(
 
 function safeEntryKey(entryKey: string): string {
   const safe = entryKey.replace(/[^a-zA-Z0-9._-]+/g, '_').replace(/^_+|_+$/g, '');
-  return (safe || 'article').slice(0, 120);
+  return (safe || 'article').slice(0, 80);
 }
 
-export function articlePdfPath(
+/** Nome único por upload: `<chave>_<uuid>.pdf` — nunca reutiliza o mesmo arquivo. */
+export function buildUniqueArticlePdfPath(
   workspaceId: string,
   groupId: number,
   entryKey: string,
@@ -41,7 +44,7 @@ export function articlePdfPath(
   return resolve(
     workspacePdfRoot(workspaceId),
     String(groupId),
-    `${safeEntryKey(entryKey)}.pdf`,
+    `${safeEntryKey(entryKey)}_${randomUUID()}.pdf`,
   );
 }
 
@@ -68,10 +71,28 @@ export async function saveArticlePdf(
   buffer: Buffer,
 ): Promise<string> {
   assertPdfBuffer(buffer);
-  const filePath = articlePdfPath(workspaceId, groupId, entryKey);
-  await mkdir(dirname(filePath), { recursive: true });
-  await writeFile(filePath, buffer);
-  return filePath;
+
+  let lastError: unknown;
+  for (let attempt = 0; attempt < MAX_NAME_ATTEMPTS; attempt++) {
+    const filePath = buildUniqueArticlePdfPath(workspaceId, groupId, entryKey);
+    await mkdir(dirname(filePath), { recursive: true });
+    try {
+      // flag 'wx': falha se o arquivo já existir (não sobrescreve).
+      await writeFile(filePath, buffer, { flag: 'wx' });
+      return filePath;
+    } catch (error) {
+      lastError = error;
+      if ((error as NodeJS.ErrnoException).code === 'EEXIST') {
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  throw new PdfStorageError(
+    `Não foi possível gerar nome único para o PDF (${String(lastError)}).`,
+    'VALIDATION',
+  );
 }
 
 export async function removeManagedPdf(

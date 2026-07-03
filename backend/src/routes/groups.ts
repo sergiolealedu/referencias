@@ -335,12 +335,8 @@ export function createArticlesRouter(): Router {
           buffer,
         );
 
-        if (
-          existing.caminho &&
-          existing.caminho !== filePath
-        ) {
-          await removeManagedPdf(authReq.activeWorkspace.id, existing.caminho);
-        }
+        // Novo arquivo sempre tem nome único; remove o PDF anterior deste artigo, se houver.
+        await removeManagedPdf(authReq.activeWorkspace.id, existing.caminho);
 
         const article = await store.updateArticle(groupId, key, {
           caminho: filePath,
