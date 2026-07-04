@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { api } from '../api/client';
 import {
@@ -78,73 +78,18 @@ const PUBLICATION_FIELDS = [
 
 const LINK_FIELDS = ['doi', 'url', 'howpublished'] as const;
 
-type FormSectionId =
-  | 'identificacao'
-  | 'citacao'
-  | 'publicacao'
-  | 'abstract'
-  | 'links'
-  | 'extras'
-  | 'controle'
-  | 'pdf'
-  | 'bibtex';
+type FormTabId = 'referencia' | 'abstract' | 'links' | 'gestao';
 
-const DEFAULT_SECTIONS_OPEN: Record<FormSectionId, boolean> = {
-  identificacao: true,
-  citacao: true,
-  publicacao: false,
-  abstract: true,
-  links: false,
-  extras: false,
-  controle: true,
-  pdf: true,
-  bibtex: false,
-};
-
-function FormSection({
-  id,
-  title,
-  open,
-  onToggle,
-  children,
-  hint,
-}: {
-  id: FormSectionId;
-  title: string;
-  open: boolean;
-  onToggle: () => void;
-  children: ReactNode;
-  hint?: string;
-}) {
-  return (
-    <section className={`form-section${open ? '' : ' is-collapsed'}`}>
-      <button
-        type="button"
-        className="form-section-toggle"
-        onClick={onToggle}
-        aria-expanded={open}
-        aria-controls={`form-section-${id}`}
-        id={`form-section-toggle-${id}`}
-      >
-        <span className="form-section-toggle-icon" aria-hidden>
-          ▸
-        </span>
-        <span className="form-section-title">{title}</span>
-        {hint && !open && <span className="form-section-hint">{hint}</span>}
-      </button>
-      {open && (
-        <div
-          id={`form-section-${id}`}
-          className="form-section-body"
-          role="region"
-          aria-labelledby={`form-section-toggle-${id}`}
-        >
-          {children}
-        </div>
-      )}
-    </section>
-  );
-}
+const FORM_TABS: {
+  id: FormTabId;
+  label: string;
+  icon: string;
+}[] = [
+  { id: 'referencia', label: 'Referência', icon: '📚' },
+  { id: 'abstract', label: 'Abstract', icon: '📝' },
+  { id: 'links', label: 'Links', icon: '🔗' },
+  { id: 'gestao', label: 'Gestão', icon: '⚙️' },
+];
 
 export function ArticleForm({
   groupId,
@@ -161,7 +106,7 @@ export function ArticleForm({
   const [exportMessage, setExportMessage] = useState<string | null>(null);
   const [pdfMessage, setPdfMessage] = useState<string | null>(null);
   const [abstractExpanded, setAbstractExpanded] = useState(false);
-  const [sectionsOpen, setSectionsOpen] = useState(DEFAULT_SECTIONS_OPEN);
+  const [activeTab, setActiveTab] = useState<FormTabId>('referencia');
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const { data: factorCatalog = [] } = useFactors();
   const createArticle = useCreateArticle(groupId);
@@ -180,13 +125,7 @@ export function ArticleForm({
     setExportMessage(null);
     setPdfMessage(null);
     setAbstractExpanded(false);
-    setSectionsOpen({
-      ...DEFAULT_SECTIONS_OPEN,
-      publicacao: PUBLICATION_FIELDS.some((key) => Boolean(next.entry.fields[key]?.trim())),
-      links: LINK_FIELDS.some((key) => Boolean(next.entry.fields[key]?.trim())),
-      extras: Object.keys(next.entry.fields).some((key) => !FIELD_KEYS.includes(key)),
-      pdf: Boolean(next.caminho.trim()),
-    });
+    setActiveTab('referencia');
   }, [article, isNew]);
 
   useEffect(() => {
@@ -219,10 +158,6 @@ export function ArticleForm({
 
   const setRoot = <K extends keyof Article>(key: K, value: Article[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const toggleSection = (id: FormSectionId) => {
-    setSectionsOpen((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
   const buildPayload = () => ({
@@ -396,15 +331,16 @@ export function ArticleForm({
             <>
               <button
                 type="button"
-                className="secondary-btn"
+                className="secondary-btn form-header-export"
                 onClick={() => handleExportBibtex('copy')}
                 title="Copiar BibTeX"
               >
-                Exportar BibTeX
+                <span className="label-full">Exportar BibTeX</span>
+                <span className="label-short">BibTeX</span>
               </button>
               <button
                 type="button"
-                className="secondary-btn"
+                className="secondary-btn form-header-export"
                 onClick={() => handleExportBibtex('download')}
                 title="Baixar arquivo .bib"
               >
@@ -414,7 +350,7 @@ export function ArticleForm({
           )}
           <button
             type="button"
-            className="primary"
+            className="primary form-header-save"
             onClick={handleSave}
             disabled={isSaving}
           >
@@ -426,332 +362,329 @@ export function ArticleForm({
         </div>
       </div>
 
+      <div
+        className="form-tabs"
+        role="tablist"
+        aria-label="Seções do artigo"
+      >
+        {FORM_TABS.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            id={`form-tab-${tab.id}`}
+            aria-selected={activeTab === tab.id}
+            aria-controls={`form-panel-${tab.id}`}
+            className={`form-tab${activeTab === tab.id ? ' is-active' : ''}`}
+            onClick={() => setActiveTab(tab.id)}
+            title={tab.label}
+          >
+            <span className="form-tab-icon" aria-hidden>
+              {tab.icon}
+            </span>
+            <span className="form-tab-label">{tab.label}</span>
+          </button>
+        ))}
+      </div>
+
       <div className="form-body">
-        <FormSection
-          id="identificacao"
-          title="Identificação"
-          open={sectionsOpen.identificacao}
-          onToggle={() => toggleSection('identificacao')}
-          hint={form.entry.key.trim() || undefined}
-        >
-          <label>
-            Chave (key)
-            <input
-              value={form.entry.key}
-              onChange={(e) =>
-                setForm((prev) => ({
-                  ...prev,
-                  entry: { ...prev.entry, key: e.target.value },
-                }))
-              }
-            />
-          </label>
+        {activeTab === 'referencia' && (
+          <div
+            id="form-panel-referencia"
+            className="form-tab-panel"
+            role="tabpanel"
+            aria-labelledby="form-tab-referencia"
+          >
+            <label>
+              Chave (key)
+              <input
+                value={form.entry.key}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    entry: { ...prev.entry, key: e.target.value },
+                  }))
+                }
+              />
+            </label>
 
-          <label>
-            Tipo
-            <FlexibleSelect
-              value={form.entry.type}
-              onChange={(type) =>
-                setForm((prev) => ({
-                  ...prev,
-                  entry: { ...prev.entry, type },
-                }))
-              }
-              options={ENTRY_TYPES}
-            />
-          </label>
-        </FormSection>
+            <label>
+              Tipo
+              <FlexibleSelect
+                value={form.entry.type}
+                onChange={(type) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    entry: { ...prev.entry, type },
+                  }))
+                }
+                options={ENTRY_TYPES}
+              />
+            </label>
 
-        <FormSection
-          id="citacao"
-          title="Citação"
-          open={sectionsOpen.citacao}
-          onToggle={() => toggleSection('citacao')}
-          hint={form.entry.fields.title?.trim() || undefined}
-        >
-          {CITATION_FIELDS.map((key) => renderEntryField(key))}
-        </FormSection>
+            {CITATION_FIELDS.map((key) => renderEntryField(key))}
+            {PUBLICATION_FIELDS.map((key) => renderEntryField(key))}
+          </div>
+        )}
 
-        <FormSection
-          id="publicacao"
-          title="Publicação"
-          open={sectionsOpen.publicacao}
-          onToggle={() => toggleSection('publicacao')}
-        >
-          {PUBLICATION_FIELDS.map((key) => renderEntryField(key))}
-        </FormSection>
+        {activeTab === 'abstract' && (
+          <div
+            id="form-panel-abstract"
+            className="form-tab-panel"
+            role="tabpanel"
+            aria-labelledby="form-tab-abstract"
+          >
+            {renderEntryField('abstract')}
+          </div>
+        )}
 
-        <FormSection
-          id="abstract"
-          title="Abstract"
-          open={sectionsOpen.abstract}
-          onToggle={() => toggleSection('abstract')}
-        >
-          {renderEntryField('abstract')}
-        </FormSection>
+        {activeTab === 'links' && (
+          <div
+            id="form-panel-links"
+            className="form-tab-panel"
+            role="tabpanel"
+            aria-labelledby="form-tab-links"
+          >
+            {LINK_FIELDS.map((key) => renderEntryField(key))}
 
-        <FormSection
-          id="links"
-          title="Links e identificadores"
-          open={sectionsOpen.links}
-          onToggle={() => toggleSection('links')}
-        >
-          {LINK_FIELDS.map((key) => renderEntryField(key))}
-        </FormSection>
+            {extraFields.length > 0 && (
+              <div className="extra-fields">
+                {extraFields.map(([key, value]) => (
+                  <label key={key}>
+                    {key}
+                    <input value={value} onChange={(e) => setField(key, e.target.value)} />
+                  </label>
+                ))}
+              </div>
+            )}
 
-        <FormSection
-          id="extras"
-          title="Campos extras"
-          open={sectionsOpen.extras}
-          onToggle={() => toggleSection('extras')}
-          hint={extraFields.length > 0 ? `${extraFields.length}` : undefined}
-        >
-          {extraFields.length > 0 && (
-            <div className="extra-fields">
-              {extraFields.map(([key, value]) => (
-                <label key={key}>
-                  {key}
-                  <input value={value} onChange={(e) => setField(key, e.target.value)} />
-                </label>
-              ))}
+            <div className="add-field">
+              <input
+                placeholder="Novo campo"
+                value={extraFieldKey}
+                onChange={(e) => setExtraFieldKey(e.target.value)}
+              />
+              <input
+                placeholder="Valor"
+                value={extraFieldValue}
+                onChange={(e) => setExtraFieldValue(e.target.value)}
+              />
+              <button type="button" onClick={addExtraField}>+</button>
             </div>
-          )}
-
-          <div className="add-field">
-            <input
-              placeholder="Novo campo"
-              value={extraFieldKey}
-              onChange={(e) => setExtraFieldKey(e.target.value)}
-            />
-            <input
-              placeholder="Valor"
-              value={extraFieldValue}
-              onChange={(e) => setExtraFieldValue(e.target.value)}
-            />
-            <button type="button" onClick={addExtraField}>+</button>
           </div>
-        </FormSection>
+        )}
 
-        <FormSection
-          id="controle"
-          title="Controle e anotações"
-          open={sectionsOpen.controle}
-          onToggle={() => toggleSection('controle')}
-          hint={form.status}
-        >
-          <label>
-            Status
-            <DomainSelect
-              value={form.status}
-              onChange={(status) => setRoot('status', status)}
-              options={ARTICLE_STATUSES}
-            />
-          </label>
+        {activeTab === 'gestao' && (
+          <div
+            id="form-panel-gestao"
+            className="form-tab-panel"
+            role="tabpanel"
+            aria-labelledby="form-tab-gestao"
+          >
+            <label>
+              Status
+              <DomainSelect
+                value={form.status}
+                onChange={(status) => setRoot('status', status)}
+                options={ARTICLE_STATUSES}
+              />
+            </label>
 
-          <label>
-            Source
-            <input value={form.source} onChange={(e) => setRoot('source', e.target.value)} />
-          </label>
+            <label>
+              Source
+              <input value={form.source} onChange={(e) => setRoot('source', e.target.value)} />
+            </label>
 
-          <label>
-            Location
+            <label>
+              Location
+              <input
+                value={form.location}
+                onChange={(e) => {
+                  const location = e.target.value;
+                  setForm((prev) => ({
+                    ...prev,
+                    location,
+                    usado: location.trim() ? true : prev.usado,
+                    status: location.trim() ? 'exists' : prev.status,
+                  }));
+                }}
+              />
+            </label>
+
+            <label>
+              Tags (vírgula)
+              <input
+                value={form.tags.join(', ')}
+                onChange={(e) =>
+                  setRoot(
+                    'tags',
+                    e.target.value
+                      .split(',')
+                      .map((t) => t.trim())
+                      .filter(Boolean),
+                  )
+                }
+              />
+            </label>
+
+            <label>
+              Notas
+              <textarea
+                rows={4}
+                value={form.notes}
+                onChange={(e) => setRoot('notes', e.target.value)}
+              />
+            </label>
+
+            <div className="checkbox-row">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={form.usado}
+                  onChange={(e) => setRoot('usado', e.target.checked)}
+                />
+                Usado
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={form.descartado}
+                  onChange={(e) => setRoot('descartado', e.target.checked)}
+                />
+                Descartado
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={form.revisaoLiteratura}
+                  onChange={(e) => setRoot('revisaoLiteratura', e.target.checked)}
+                />
+                Revisão da literatura
+              </label>
+            </div>
+
+            <div className="form-panel-divider" />
+
+            <label>
+              Caminho do PDF
+              <input
+                value={form.caminho}
+                onChange={(e) => setRoot('caminho', caminhoForStorage(e.target.value))}
+                placeholder="Preenchido automaticamente ao enviar um PDF"
+              />
+            </label>
             <input
-              value={form.location}
+              ref={pdfInputRef}
+              type="file"
+              accept="application/pdf,.pdf"
+              className="visually-hidden"
               onChange={(e) => {
-                const location = e.target.value;
-                setForm((prev) => ({
-                  ...prev,
-                  location,
-                  usado: location.trim() ? true : prev.usado,
-                  status: location.trim() ? 'exists' : prev.status,
-                }));
-              }}
-            />
-          </label>
-
-          <label>
-            Tags (vírgula)
-            <input
-              value={form.tags.join(', ')}
-              onChange={(e) =>
-                setRoot(
-                  'tags',
-                  e.target.value
-                    .split(',')
-                    .map((t) => t.trim())
-                    .filter(Boolean),
-                )
-              }
-            />
-          </label>
-
-          <label>
-            Notas
-            <textarea
-              rows={4}
-              value={form.notes}
-              onChange={(e) => setRoot('notes', e.target.value)}
-            />
-          </label>
-
-          <div className="checkbox-row">
-            <label>
-              <input
-                type="checkbox"
-                checked={form.usado}
-                onChange={(e) => setRoot('usado', e.target.checked)}
-              />
-              Usado
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={form.descartado}
-                onChange={(e) => setRoot('descartado', e.target.checked)}
-              />
-              Descartado
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={form.revisaoLiteratura}
-                onChange={(e) => setRoot('revisaoLiteratura', e.target.checked)}
-              />
-              Revisão da literatura
-            </label>
-          </div>
-        </FormSection>
-
-        <FormSection
-          id="pdf"
-          title="PDF"
-          open={sectionsOpen.pdf}
-          onToggle={() => toggleSection('pdf')}
-          hint={form.caminho.trim() ? 'anexado' : undefined}
-        >
-          <label>
-            Caminho do PDF
-            <input
-              value={form.caminho}
-              onChange={(e) => setRoot('caminho', caminhoForStorage(e.target.value))}
-              placeholder="Preenchido automaticamente ao enviar um PDF"
-            />
-          </label>
-          <input
-            ref={pdfInputRef}
-            type="file"
-            accept="application/pdf,.pdf"
-            className="visually-hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              e.target.value = '';
-              if (!file) return;
-              void (async () => {
-                if (isNew || !form.entry.key.trim()) {
-                  setPdfMessage('Salve o artigo antes de enviar o PDF.');
-                  return;
-                }
-                if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
-                  setPdfMessage('Selecione um arquivo PDF.');
-                  return;
-                }
-                setPdfMessage(null);
-                try {
-                  const updated = await uploadPdf.mutateAsync({
-                    key: form.entry.key,
-                    file,
-                  });
-                  setForm(normalizeArticleForForm(updated));
-                  setPdfMessage('PDF enviado com sucesso.');
-                  onSaved(updated.entry.key);
-                } catch (err) {
-                  setPdfMessage((err as Error).message);
-                }
-              })();
-            }}
-          />
-          <div className="pdf-actions">
-            <button
-              type="button"
-              className="open-pdf-btn"
-              disabled={isNew || isPdfBusy || !form.entry.key.trim()}
-              title={isNew ? 'Salve o artigo antes de enviar o PDF' : 'Enviar PDF do artigo'}
-              onClick={() => pdfInputRef.current?.click()}
-            >
-              {uploadPdf.isPending ? 'Enviando…' : 'Enviar PDF'}
-            </button>
-            <button
-              type="button"
-              className="open-pdf-btn"
-              disabled={!form.caminho.trim() || isPdfBusy}
-              onClick={() => {
-                if (!form.caminho.trim()) return;
+                const file = e.target.files?.[0];
+                e.target.value = '';
+                if (!file) return;
                 void (async () => {
-                  setPdfMessage(null);
-                  try {
-                    await api.openPdf(form.caminho);
-                  } catch (err) {
-                    setPdfMessage((err as Error).message);
+                  if (isNew || !form.entry.key.trim()) {
+                    setPdfMessage('Salve o artigo antes de enviar o PDF.');
+                    return;
                   }
-                })();
-              }}
-            >
-              Abrir PDF
-            </button>
-            <button
-              type="button"
-              className="danger"
-              disabled={isNew || !form.caminho.trim() || isPdfBusy}
-              onClick={() => {
-                if (isNew || !form.entry.key.trim() || !form.caminho.trim()) return;
-                if (!window.confirm('Remover o PDF deste artigo?')) return;
-                void (async () => {
+                  if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
+                    setPdfMessage('Selecione um arquivo PDF.');
+                    return;
+                  }
                   setPdfMessage(null);
                   try {
-                    const updated = await deletePdf.mutateAsync(form.entry.key);
+                    const updated = await uploadPdf.mutateAsync({
+                      key: form.entry.key,
+                      file,
+                    });
                     setForm(normalizeArticleForForm(updated));
-                    setPdfMessage('PDF removido.');
+                    setPdfMessage('PDF enviado com sucesso.');
                     onSaved(updated.entry.key);
                   } catch (err) {
                     setPdfMessage((err as Error).message);
                   }
                 })();
               }}
-            >
-              {deletePdf.isPending ? 'Removendo…' : 'Remover PDF'}
-            </button>
+            />
+            <div className="pdf-actions">
+              <button
+                type="button"
+                className="open-pdf-btn"
+                disabled={isNew || isPdfBusy || !form.entry.key.trim()}
+                title={isNew ? 'Salve o artigo antes de enviar o PDF' : 'Enviar PDF do artigo'}
+                onClick={() => pdfInputRef.current?.click()}
+              >
+                {uploadPdf.isPending ? 'Enviando…' : 'Enviar PDF'}
+              </button>
+              <button
+                type="button"
+                className="open-pdf-btn"
+                disabled={!form.caminho.trim() || isPdfBusy}
+                onClick={() => {
+                  if (!form.caminho.trim()) return;
+                  void (async () => {
+                    setPdfMessage(null);
+                    try {
+                      await api.openPdf(form.caminho);
+                    } catch (err) {
+                      setPdfMessage((err as Error).message);
+                    }
+                  })();
+                }}
+              >
+                Abrir PDF
+              </button>
+              <button
+                type="button"
+                className="danger"
+                disabled={isNew || !form.caminho.trim() || isPdfBusy}
+                onClick={() => {
+                  if (isNew || !form.entry.key.trim() || !form.caminho.trim()) return;
+                  if (!window.confirm('Remover o PDF deste artigo?')) return;
+                  void (async () => {
+                    setPdfMessage(null);
+                    try {
+                      const updated = await deletePdf.mutateAsync(form.entry.key);
+                      setForm(normalizeArticleForForm(updated));
+                      setPdfMessage('PDF removido.');
+                      onSaved(updated.entry.key);
+                    } catch (err) {
+                      setPdfMessage((err as Error).message);
+                    }
+                  })();
+                }}
+              >
+                {deletePdf.isPending ? 'Removendo…' : 'Remover PDF'}
+              </button>
+            </div>
+            {isNew && (
+              <p className="hint">Salve o artigo para liberar o envio de PDF.</p>
+            )}
+            {pdfMessage && (
+              <p className={pdfMessage.includes('sucesso') || pdfMessage.includes('removido') ? 'hint' : 'error'}>
+                {pdfMessage}
+              </p>
+            )}
+
+            {form.entry.key.trim() && (
+              <>
+                <div className="form-panel-divider" />
+                <div className="bibtex-preview">
+                  <div className="bibtex-preview-header">
+                    <h4>Pré-visualização BibTeX</h4>
+                    <button type="button" onClick={() => handleExportBibtex('copy')}>
+                      Copiar
+                    </button>
+                  </div>
+                  <pre>{bibtexPreview}</pre>
+                </div>
+              </>
+            )}
           </div>
-          {isNew && (
-            <p className="hint">Salve o artigo para liberar o envio de PDF.</p>
-          )}
-          {pdfMessage && (
-            <p className={pdfMessage.includes('sucesso') || pdfMessage.includes('removido') ? 'hint' : 'error'}>
-              {pdfMessage}
-            </p>
-          )}
-        </FormSection>
+        )}
 
         {saveError && <p className="error form-error">{saveError}</p>}
         {exportMessage && <p className="export-message">{exportMessage}</p>}
-
-        {form.entry.key.trim() && (
-          <FormSection
-            id="bibtex"
-            title="BibTeX"
-            open={sectionsOpen.bibtex}
-            onToggle={() => toggleSection('bibtex')}
-          >
-            <div className="bibtex-preview">
-              <div className="bibtex-preview-header">
-                <h4>Pré-visualização</h4>
-                <button type="button" onClick={() => handleExportBibtex('copy')}>
-                  Copiar
-                </button>
-              </div>
-              <pre>{bibtexPreview}</pre>
-            </div>
-          </FormSection>
-        )}
       </div>
 
       <div className="form-footer">

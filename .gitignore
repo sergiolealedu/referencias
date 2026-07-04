@@ -12,6 +12,7 @@ data/registry.db
 *.db-wal
 data/backups/
 data/pdfs/
+backups/
 release/
 .cursor/
 *.tsbuildinfo

@@ -5,3 +5,6 @@ usuario: root
 branch: main
 app_dir: /opt/referencias
 pm2_app: referencias-api
+# Opcionais (backup/restore):
+# app_user: referencias
+# pdf_dir: /var/lib/referencias/pdfs

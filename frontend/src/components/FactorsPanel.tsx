@@ -123,7 +123,7 @@ function FactorNameInput({
 export function FactorsPanel({ rows, catalog, onChange }: FactorsPanelProps) {
   const ensureFactor = useEnsureFactor();
   const updateFactor = useUpdateFactor();
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const [aliasesError, setAliasesError] = useState<string | null>(null);
   const dirtyAliasesRef = useRef(new Set<string>());
   const rowsRef = useRef(rows);

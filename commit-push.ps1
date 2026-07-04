@@ -1,17 +1,24 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  Wrapper de commit/push — funciona a partir de qualquer diretório.
+  Wrapper de commit/push — roda de qualquer pasta.
 
 .DESCRIPTION
-  Localiza a raiz do repositório (pelo caminho deste script ou subindo a partir
-  do diretório atual) e delega para scripts/deploy/commit-and-push.ps1.
+  Localiza o repositório pela pasta deste script (não pelo diretório atual)
+  e chama scripts/deploy/commit-and-push.ps1.
 
 .EXAMPLE
-  powershell -ExecutionPolicy Bypass -File C:\tmp2\exemplos\doutorado\refs\commit-push.ps1
+  # De qualquer pasta (caminho absoluto do wrapper):
+  powershell -ExecutionPolicy Bypass -File C:\tmp2\exemplos\doutorado\refs\commit-push.ps1 -Message "Adiciona wrapper de commit/push que roda de qualquer pasta."
 
 .EXAMPLE
-  powershell -ExecutionPolicy Bypass -File C:\tmp2\exemplos\doutorado\refs\commit-push.ps1 -Message "Corrige layout."
+  powershell -ExecutionPolicy Bypass -File .\commit-push.ps1 -Message "Adiciona wrapper de commit/push que roda de qualquer pasta."
+
+.EXAMPLE
+  powershell -ExecutionPolicy Bypass -File .\commit-push.ps1 -Message "Adiciona wrapper de commit/push que roda de qualquer pasta." -SkipPush
+
+.EXAMPLE
+  npm run commit:push -- -Message "Adiciona wrapper de commit/push que roda de qualquer pasta."
 #>
 param(
   [string] $Message = '',
@@ -22,41 +29,27 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-function Find-RepoRoot {
-  $scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
-  $marker = 'scripts\deploy\commit-and-push.ps1'
-
-  if (Test-Path -LiteralPath (Join-Path $scriptDir $marker)) {
-    return (Resolve-Path -LiteralPath $scriptDir).Path
-  }
-
-  $dir = (Get-Location).Path
-  while ($dir) {
-    if (Test-Path -LiteralPath (Join-Path $dir $marker)) {
-      return (Resolve-Path -LiteralPath $dir).Path
-    }
-    $parent = Split-Path -Parent $dir
-    if (-not $parent -or $parent -eq $dir) {
-      break
-    }
-    $dir = $parent
-  }
-
-  return $null
+$repoRoot = if ($PSScriptRoot) {
+  $PSScriptRoot
 }
-
-$repoRoot = Find-RepoRoot
-if (-not $repoRoot) {
-  throw "Não achei a raiz do repositório (scripts\deploy\commit-and-push.ps1). Rode de dentro do repo ou informe o caminho completo deste wrapper."
+else {
+  Split-Path -Parent $MyInvocation.MyCommand.Path
 }
 
 $target = Join-Path $repoRoot 'scripts\deploy\commit-and-push.ps1'
+if (-not (Test-Path -LiteralPath $target)) {
+  throw "Script de commit não encontrado: $target"
+}
+
 $forward = @{
   RepoRoot = $repoRoot
 }
-if ($Message) { $forward.Message = $Message }
-if ($SkipPush) { $forward.SkipPush = $true }
-if ($SkipConfirm) { $forward.SkipConfirm = $true }
+
+if ($Message) { $forward['Message'] = $Message }
+if ($SkipPush) { $forward['SkipPush'] = $true }
+if ($SkipConfirm) { $forward['SkipConfirm'] = $true }
 
 & $target @forward
-exit $LASTEXITCODE
+if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) {
+  exit $LASTEXITCODE
+}

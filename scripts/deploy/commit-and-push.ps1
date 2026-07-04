@@ -22,10 +22,11 @@
   Raiz do repositório (padrão: dois níveis acima deste script).
 
 .EXAMPLE
-  powershell -ExecutionPolicy Bypass -File .\scripts\deploy\commit-and-push.ps1
+  # Preferir o wrapper na raiz (roda de qualquer pasta):
+  powershell -ExecutionPolicy Bypass -File C:\tmp2\exemplos\doutorado\refs\commit-push.ps1
 
 .EXAMPLE
-  powershell -ExecutionPolicy Bypass -File .\scripts\deploy\commit-and-push.ps1 -Message "Corrige layout mobile."
+  powershell -ExecutionPolicy Bypass -File .\commit-push.ps1 -Message "Corrige layout mobile."
 
 .EXAMPLE
   npm run commit:push -- -Message "Adiciona script de commit e push."
