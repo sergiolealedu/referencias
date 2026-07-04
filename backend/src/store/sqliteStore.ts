@@ -16,6 +16,8 @@ import type {
   BibtexImportOptions,
   BibtexImportResult,
   FactorDefinition,
+  FactorOccurrence,
+  FactorOverview,
   GroupMeta,
   GroupSummary,
   PaginatedArticles,
@@ -178,6 +180,83 @@ export class SqliteStore {
 
   async listFactors(): Promise<FactorDefinition[]> {
     return this.readFactorCatalog();
+  }
+
+  /** Catálogo de fatores com ocorrências em todos os artigos do workspace. */
+  async listFactorOverviews(): Promise<FactorOverview[]> {
+    const catalog = this.readFactorCatalog();
+    const byId = new Map<string, FactorOverview>(
+      catalog.map((factor) => [
+        factor.id,
+        {
+          id: factor.id,
+          name: factor.name,
+          aliases: [...factor.aliases],
+          articleCount: 0,
+          positiveCount: 0,
+          negativeCount: 0,
+          occurrences: [],
+        },
+      ]),
+    );
+
+    const rows = this.db
+      .prepare(
+        `SELECT g.id AS group_id, g.title AS group_title, a.*
+         FROM articles a
+         JOIN groups g ON g.id = a.group_id
+         WHERE a.factors_json IS NOT NULL AND a.factors_json != '[]'
+         ORDER BY g.title COLLATE NOCASE, a.entry_key COLLATE NOCASE`,
+      )
+      .all() as Array<ArticleRow & { group_id: number; group_title: string }>;
+
+    for (const row of rows) {
+      const article = rowToArticle(row);
+      const title = article.entry.fields.title?.trim() || article.entry.key;
+      const author = article.entry.fields.author?.trim() ?? '';
+      const year = article.entry.fields.year?.trim() ?? '';
+
+      for (const factor of article.factors) {
+        let overview = byId.get(factor.factorId);
+        if (!overview) {
+          overview = {
+            id: factor.factorId,
+            name: factor.label,
+            aliases: [],
+            articleCount: 0,
+            positiveCount: 0,
+            negativeCount: 0,
+            occurrences: [],
+          };
+          byId.set(factor.factorId, overview);
+        }
+
+        const occurrence: FactorOccurrence = {
+          groupId: row.group_id,
+          groupTitle: row.group_title,
+          articleKey: article.entry.key,
+          articleTitle: title,
+          articleAuthor: author,
+          articleYear: year,
+          polarity: factor.polarity,
+          description: factor.description,
+          label: factor.label,
+          usado: article.usado,
+          descartado: article.descartado,
+        };
+        overview.occurrences.push(occurrence);
+        overview.articleCount += 1;
+        if (factor.polarity === 'positive') {
+          overview.positiveCount += 1;
+        } else {
+          overview.negativeCount += 1;
+        }
+      }
+    }
+
+    return [...byId.values()].sort((a, b) =>
+      a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }),
+    );
   }
 
   /**

@@ -23,7 +23,9 @@
     "android:assemble": "node scripts/android-gradle.mjs assembleRelease",
     "android:assemble:debug": "node scripts/android-gradle.mjs assembleDebug",
     "android:bundle": "node scripts/android-gradle.mjs bundleRelease",
-    "android:release": "npm run build:android && npm run android:bundle && npm run android:assemble"
+    "android:release": "npm run build:android && npm run android:bundle && npm run android:assemble",
+    "commit:push": "powershell -ExecutionPolicy Bypass -File ./scripts/deploy/commit-and-push.ps1",
+    "publish:server": "powershell -ExecutionPolicy Bypass -File ./scripts/deploy/publish-to-server.ps1 -SkipConfirm"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

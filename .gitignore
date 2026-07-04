@@ -1,6 +1,9 @@
 node_modules/
 dist/
+__pycache__/
+*.pyc
 .env
+deploy.txt
 app.config.json
 data/workspaces.json
 data/registry.db

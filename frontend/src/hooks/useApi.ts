@@ -69,6 +69,13 @@ export function useFactors() {
   });
 }
 
+export function useFactorOverviews() {
+  return useQuery({
+    queryKey: ['factors', 'overview'],
+    queryFn: api.listFactorOverviews,
+  });
+}
+
 export function useEnsureFactor() {
   const queryClient = useQueryClient();
   return useMutation({

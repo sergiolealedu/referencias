@@ -19,6 +19,7 @@ import type {
   GroupImportResult,
   GroupInput,
   FactorDefinition,
+  FactorOverview,
   GroupMeta,
   GroupSummary,
   PaginatedArticles,
@@ -140,6 +141,8 @@ export const api = {
   listGroupTags: (groupId: number) => request<string[]>(`/groups/${groupId}/tags`),
 
   listFactors: () => request<FactorDefinition[]>('/factors'),
+
+  listFactorOverviews: () => request<FactorOverview[]>('/factors/overview'),
 
   ensureFactor: (input: { id?: string; name: string; aliases?: string[] }) =>
     request<FactorDefinition>('/factors', {

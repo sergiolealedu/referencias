@@ -54,6 +54,15 @@ export function createFactorsRouter(): Router {
     }
   });
 
+  router.get('/overview', async (req, res) => {
+    try {
+      const factors = await storeFrom(req).listFactorOverviews();
+      res.json(factors);
+    } catch (error) {
+      handleRouteError(error, res);
+    }
+  });
+
   router.post('/', async (req, res) => {
     try {
       const body = ensureFactorSchema.parse(req.body ?? {});

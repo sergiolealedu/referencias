@@ -56,6 +56,32 @@ export interface ArticleFactor {
   label: string;
 }
 
+/** Uso de um fator em um artigo específico (visão consolidada). */
+export interface FactorOccurrence {
+  groupId: number;
+  groupTitle: string;
+  articleKey: string;
+  articleTitle: string;
+  articleAuthor: string;
+  articleYear: string;
+  polarity: FactorPolarity;
+  description: string;
+  label: string;
+  usado: boolean;
+  descartado: boolean;
+}
+
+/** Fator do catálogo com todas as ocorrências nos artigos. */
+export interface FactorOverview {
+  id: string;
+  name: string;
+  aliases: string[];
+  articleCount: number;
+  positiveCount: number;
+  negativeCount: number;
+  occurrences: FactorOccurrence[];
+}
+
 export interface ArticleFactorInput {
   factorId?: string;
   label: string;

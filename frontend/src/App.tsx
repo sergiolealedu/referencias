@@ -11,6 +11,7 @@ import { BibtexImportModal } from './components/BibtexImportModal';
 import { GroupImportModal } from './components/GroupImportModal';
 
 import { Dashboard } from './components/Dashboard';
+import { FactorsView } from './components/FactorsView';
 
 import { SettingsModal } from './components/SettingsModal';
 
@@ -55,7 +56,7 @@ import { showGlobalSettings } from './utils/platform';
 
 type ArticleTarget = { groupId: number; key: string };
 
-type AppView = 'articles' | 'dashboard';
+type AppView = 'articles' | 'dashboard' | 'factors';
 
 
 
@@ -273,6 +274,8 @@ export default function App() {
 
     setFindKey(key);
 
+    setView('articles');
+
   };
 
 
@@ -428,6 +431,20 @@ export default function App() {
 
           </button>
 
+          <button
+
+            type="button"
+
+            className={view === 'factors' ? 'active-view' : ''}
+
+            onClick={() => setView('factors')}
+
+          >
+
+            Fatores
+
+          </button>
+
           {showGlobalSettings() && deviceSession?.isServerAdmin && (
             <button
               type="button"
@@ -465,6 +482,14 @@ export default function App() {
           <main className="main-panel dashboard-panel">
 
             <Dashboard />
+
+          </main>
+
+        ) : view === 'factors' ? (
+
+          <main className="main-panel factors-view-panel">
+
+            <FactorsView onOpenArticle={handleNavigateToArticle} />
 
           </main>
 

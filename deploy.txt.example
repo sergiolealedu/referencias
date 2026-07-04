@@ -1,0 +1,7 @@
+# Copie para deploy.txt e preencha (deploy.txt não vai para o Git).
+senha: SUA_SENHA
+ip do servidor: 159.223.130.39
+usuario: root
+branch: main
+app_dir: /opt/referencias
+pm2_app: referencias-api
