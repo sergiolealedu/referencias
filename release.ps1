@@ -5,7 +5,7 @@
 
 .DESCRIPTION
   Localiza o repositório pela pasta deste script (não pelo diretório atual)
-  e executa o pipeline release: commit/push → build local → mobile → publicar no servidor.
+  e executa o pipeline release: build local → mobile → commit/push → publicar no servidor.
 
 .EXAMPLE
   # De qualquer pasta (caminho absoluto do wrapper):

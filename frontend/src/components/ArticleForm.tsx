@@ -325,39 +325,47 @@ export function ArticleForm({
   return (
     <aside className="article-form">
       <div className="form-header">
-        <h3>{isNew ? 'Novo artigo' : 'Editar artigo'}</h3>
         <div className="form-header-actions">
           {form.entry.key.trim() && (
             <>
               <button
                 type="button"
-                className="secondary-btn form-header-export"
+                className="form-header-icon-btn"
                 onClick={() => handleExportBibtex('copy')}
                 title="Copiar BibTeX"
+                aria-label="Copiar BibTeX"
               >
-                <span className="label-full">Exportar BibTeX</span>
-                <span className="label-short">BibTeX</span>
+                📋
               </button>
               <button
                 type="button"
-                className="secondary-btn form-header-export"
+                className="form-header-icon-btn"
                 onClick={() => handleExportBibtex('download')}
                 title="Baixar arquivo .bib"
+                aria-label="Baixar arquivo .bib"
               >
-                .bib
+                ⬇
               </button>
             </>
           )}
           <button
             type="button"
-            className="primary form-header-save"
+            className="form-header-icon-btn form-header-icon-btn--primary"
             onClick={handleSave}
             disabled={isSaving}
+            title={isSaving ? 'Salvando…' : 'Salvar'}
+            aria-label={isSaving ? 'Salvando…' : 'Salvar'}
           >
-            {isSaving ? 'Salvando…' : 'Salvar'}
+            ✓
           </button>
-          <button type="button" className="form-close" onClick={onClose} title="Fechar">
-            ×
+          <button
+            type="button"
+            className="form-header-icon-btn"
+            onClick={onClose}
+            title="Fechar"
+            aria-label="Fechar"
+          >
+            ✕
           </button>
         </div>
       </div>
