@@ -5,13 +5,20 @@ import {
   useCreateArticle,
   useDeleteArticle,
   useDeleteArticlePdf,
+  useFactors,
   useUpdateArticle,
   useUploadArticlePdf,
 } from '../hooks/useApi';
 import { ARTICLE_STATUSES, ENTRY_TYPES, type Article } from '../types/referencias';
 import { emptyArticle } from '../types/referencias';
 import { articleToBibtex, copyBibtexToClipboard, downloadBibtex } from '../utils/bibtexExport';
+import {
+  articleFactorsToDrafts,
+  draftsToArticleFactorInputs,
+  type FactorRowDraft,
+} from '../utils/factors';
 import { DomainSelect } from './DomainSelect';
+import { FactorsPanel } from './FactorsPanel';
 import { FlexibleSelect } from './FlexibleSelect';
 import {
   caminhoForStorage,
@@ -57,6 +64,7 @@ export function ArticleForm({
   onSaved,
 }: ArticleFormProps) {
   const [form, setForm] = useState<Article>(article ?? emptyArticle());
+  const [factorRows, setFactorRows] = useState<FactorRowDraft[]>([]);
   const [extraFieldKey, setExtraFieldKey] = useState('');
   const [extraFieldValue, setExtraFieldValue] = useState('');
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -64,6 +72,7 @@ export function ArticleForm({
   const [pdfMessage, setPdfMessage] = useState<string | null>(null);
   const [abstractExpanded, setAbstractExpanded] = useState(false);
   const pdfInputRef = useRef<HTMLInputElement>(null);
+  const { data: factorCatalog = [] } = useFactors();
   const createArticle = useCreateArticle(groupId);
   const updateArticle = useUpdateArticle(groupId);
   const deleteArticle = useDeleteArticle(groupId);
@@ -73,12 +82,30 @@ export function ArticleForm({
   const isPdfBusy = uploadPdf.isPending || deletePdf.isPending;
 
   useEffect(() => {
-    setForm(normalizeArticleForForm(article ?? emptyArticle()));
+    const next = normalizeArticleForForm(article ?? emptyArticle());
+    setForm(next);
+    setFactorRows(articleFactorsToDrafts(next.factors, factorCatalog));
     setSaveError(null);
     setExportMessage(null);
     setPdfMessage(null);
     setAbstractExpanded(false);
   }, [article, isNew]);
+
+  useEffect(() => {
+    setFactorRows((prev) => {
+      if (prev.length === 0 && (article?.factors?.length ?? 0) > 0) {
+        return articleFactorsToDrafts(article?.factors, factorCatalog);
+      }
+      return prev;
+    });
+  }, [factorCatalog, article?.factors]);
+
+  useEffect(() => {
+    document.body.classList.add('factors-panel-open');
+    return () => {
+      document.body.classList.remove('factors-panel-open');
+    };
+  }, []);
 
   useEffect(() => {
     if (!abstractExpanded) return;
@@ -103,6 +130,11 @@ export function ArticleForm({
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
+  const buildPayload = () => ({
+    ...normalizeArticleForForm(form),
+    factors: draftsToArticleFactorInputs(factorRows),
+  });
+
   const handleSave = async () => {
     if (!form.entry.key.trim()) {
       window.alert('A chave (key) do artigo é obrigatória.');
@@ -110,11 +142,14 @@ export function ArticleForm({
     }
     setSaveError(null);
     try {
-      const payload = normalizeArticleForForm(form);
+      const payload = buildPayload();
       if (isNew) {
         await createArticle.mutateAsync(payload);
       } else if (article) {
-        await updateArticle.mutateAsync({ key: article.entry.key, patch: payload });
+        await updateArticle.mutateAsync({
+          key: article.entry.key,
+          patch: payload,
+        });
       }
       onSaved(form.entry.key);
     } catch (error) {
@@ -144,7 +179,10 @@ export function ArticleForm({
 
     setSaveError(null);
     try {
-      const payload = normalizeArticleForForm(updated);
+      const payload = {
+        ...normalizeArticleForForm(updated),
+        factors: draftsToArticleFactorInputs(factorRows),
+      };
       await updateArticle.mutateAsync({ key: article.entry.key, patch: payload });
     } catch (error) {
       setSaveError((error as Error).message);
@@ -555,6 +593,12 @@ export function ArticleForm({
           </button>
         )}
       </div>
+
+      <FactorsPanel
+        rows={factorRows}
+        catalog={factorCatalog}
+        onChange={setFactorRows}
+      />
 
       {abstractExpanded && (
         <div

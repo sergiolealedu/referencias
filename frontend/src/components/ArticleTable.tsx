@@ -60,6 +60,8 @@ export function ArticleTable({
   const [pdfMessage, setPdfMessage] = useState<string | null>(null);
   const [checkedKeys, setCheckedKeys] = useState<Set<string>>(new Set());
   const [exportMessage, setExportMessage] = useState<string | null>(null);
+  const [copiedTitleKey, setCopiedTitleKey] = useState<string | null>(null);
+  const copiedTitleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
@@ -74,7 +76,14 @@ export function ArticleTable({
   useEffect(() => {
     setCheckedKeys(new Set());
     setExportMessage(null);
+    setCopiedTitleKey(null);
   }, [groupId]);
+
+  useEffect(() => {
+    return () => {
+      if (copiedTitleTimerRef.current) clearTimeout(copiedTitleTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!selectedKey) return;
@@ -158,6 +167,20 @@ export function ArticleTable({
       );
     } catch (err) {
       setExportMessage((err as Error).message);
+    }
+  };
+
+  const handleCopyTitle = async (key: string, title: string) => {
+    try {
+      await navigator.clipboard.writeText(title);
+      setCopiedTitleKey(key);
+      if (copiedTitleTimerRef.current) clearTimeout(copiedTitleTimerRef.current);
+      copiedTitleTimerRef.current = setTimeout(() => {
+        setCopiedTitleKey(null);
+        copiedTitleTimerRef.current = null;
+      }, 1500);
+    } catch {
+      setExportMessage('Não foi possível copiar o título.');
     }
   };
 
@@ -315,7 +338,27 @@ export function ArticleTable({
                   />
                 </td>
                 <td className="title-cell">
-                  {article.entry.fields.title || article.entry.key}
+                  <span className="title-cell-row">
+                    <span className="title-cell-text">
+                      {article.entry.fields.title || article.entry.key}
+                    </span>
+                    <button
+                      type="button"
+                      className="title-copy-btn"
+                      title="Copiar título"
+                      aria-label="Copiar título"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        void handleCopyTitle(
+                          article.entry.key,
+                          article.entry.fields.title || article.entry.key,
+                        );
+                      }}
+                    >
+                      {copiedTitleKey === article.entry.key ? '✓' : '⧉'}
+                    </button>
+                  </span>
                   {article.status === 'duplicate' && article.duplicateOf && (
                     <button
                       type="button"

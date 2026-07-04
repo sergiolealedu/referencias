@@ -72,8 +72,9 @@ const insertGroup = db.prepare(
 const insertArticle = db.prepare(
   `INSERT INTO articles (
     group_id, entry_key, entry_type, fields_json, status, source, location,
-    caminho, notes, tags_json, descartado, usado, duplicate_group_id, duplicate_key
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    caminho, notes, tags_json, factors_json, descartado, usado,
+    duplicate_group_id, duplicate_key
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 );
 
 let articleCount = 0;
@@ -106,6 +107,7 @@ const tx = db.transaction(() => {
         values.caminho,
         values.notes,
         values.tags_json,
+        values.factors_json ?? '[]',
         values.descartado,
         values.usado,
         values.duplicate_group_id,

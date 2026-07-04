@@ -502,34 +502,6 @@ export default function App() {
 
                       </h2>
 
-                      {group && (group.mecanismo || group.stringBusca) && (
-
-                        <div className="panel-group-meta">
-
-                          {group.mecanismo && (
-
-                            <span>
-
-                              <strong>Mecanismo:</strong> {group.mecanismo}
-
-                            </span>
-
-                          )}
-
-                          {group.stringBusca && (
-
-                            <span>
-
-                              <strong>Busca:</strong> {group.stringBusca}
-
-                            </span>
-
-                          )}
-
-                        </div>
-
-                      )}
-
                     </div>
 
 

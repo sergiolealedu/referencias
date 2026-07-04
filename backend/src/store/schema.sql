@@ -21,11 +21,18 @@ CREATE TABLE IF NOT EXISTS articles (
   caminho TEXT NOT NULL DEFAULT '',
   notes TEXT NOT NULL DEFAULT '',
   tags_json TEXT NOT NULL DEFAULT '[]',
+  factors_json TEXT NOT NULL DEFAULT '[]',
   descartado INTEGER NOT NULL DEFAULT 0,
   usado INTEGER NOT NULL DEFAULT 0,
   duplicate_group_id INTEGER,
   duplicate_key TEXT,
   UNIQUE(group_id, entry_key)
+);
+
+CREATE TABLE IF NOT EXISTS factors (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  aliases_json TEXT NOT NULL DEFAULT '[]'
 );
 
 CREATE INDEX IF NOT EXISTS idx_articles_group ON articles(group_id);

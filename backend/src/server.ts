@@ -9,6 +9,7 @@ import {
   createGroupsRouter,
   createSearchRouter,
 } from './routes/groups.js';
+import { createFactorsRouter } from './routes/factors.js';
 import { createFilesRouter } from './routes/files.js';
 import { createSettingsRouter } from './routes/settings.js';
 import { createStatsRouter } from './routes/stats.js';
@@ -37,6 +38,7 @@ app.use('/api', requireDevice);
 app.use('/api/settings', createSettingsRouter());
 app.use('/api/groups', createGroupsRouter());
 app.use('/api/groups/:groupId/articles', createArticlesRouter());
+app.use('/api/factors', createFactorsRouter());
 app.use('/api/search', createSearchRouter());
 app.use('/api/files', createFilesRouter());
 app.use('/api/stats', createStatsRouter());

@@ -11,6 +11,22 @@ export const entrySchema = z.object({
   fields: z.record(z.string(), z.string()),
 });
 
+export const factorPolaritySchema = z.enum(['positive', 'negative']);
+
+export const articleFactorSchema = z.object({
+  factorId: z.string().optional(),
+  label: z.string().min(1),
+  polarity: factorPolaritySchema,
+  description: z.string().optional().default(''),
+  aliases: z.array(z.string()).optional(),
+});
+
+export const factorDefinitionSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  aliases: z.array(z.string()).default([]),
+});
+
 export const articleSchema = z.object({
   entry: entrySchema,
   status: z.string().default('exists'),
@@ -19,6 +35,7 @@ export const articleSchema = z.object({
   caminho: z.string().default(''),
   notes: z.string().default(''),
   tags: z.array(z.string()).default([]),
+  factors: z.array(articleFactorSchema).default([]),
   descartado: z.boolean().default(false),
   usado: z.boolean().default(false),
   duplicateOf: duplicateRefSchema.optional(),

@@ -11,9 +11,11 @@ import { openDatabase } from './sqliteDb.js';
 import { StoreError } from './storeError.js';
 import type {
   Article,
+  ArticleFactor,
   ArticleListParams,
   BibtexImportOptions,
   BibtexImportResult,
+  FactorDefinition,
   GroupMeta,
   GroupSummary,
   PaginatedArticles,
@@ -27,6 +29,12 @@ import type {
   SortColumn,
   YearArticleStats,
 } from '../types/referencias.js';
+import {
+  ensureFactorInCatalog,
+  replaceSpellings,
+  resolveArticleFactors,
+  type ArticleFactorInput,
+} from '../utils/factors.js';
 
 interface FilterClause {
   sql: string;
@@ -129,6 +137,88 @@ export class SqliteStore {
       createdAt: row.created_at,
       articleCount: row.article_count,
     };
+  }
+
+  private readFactorCatalog(): FactorDefinition[] {
+    const rows = this.db
+      .prepare('SELECT id, name, aliases_json FROM factors ORDER BY name COLLATE NOCASE')
+      .all() as Array<{ id: string; name: string; aliases_json: string }>;
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      aliases: JSON.parse(row.aliases_json) as string[],
+    }));
+  }
+
+  private writeFactorCatalog(catalog: FactorDefinition[]): void {
+    const upsert = this.db.prepare(
+      `INSERT INTO factors (id, name, aliases_json) VALUES (?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET name = excluded.name, aliases_json = excluded.aliases_json`,
+    );
+    for (const factor of catalog) {
+      upsert.run(factor.id, factor.name, JSON.stringify(factor.aliases));
+    }
+  }
+
+  private persistArticleFactors(
+    factorsInput: ArticleFactorInput[] | ArticleFactor[] | undefined,
+  ): ArticleFactor[] {
+    const catalog = this.readFactorCatalog();
+    const { factors, catalog: nextCatalog } = resolveArticleFactors(
+      factorsInput ?? [],
+      catalog,
+    );
+    this.writeFactorCatalog(nextCatalog);
+    return factors;
+  }
+
+  async listFactors(): Promise<FactorDefinition[]> {
+    return this.readFactorCatalog();
+  }
+
+  /**
+   * Garante um fator no catálogo compartilhado do workspace
+   * (nome + grafias/traduções reutilizados por todos os artigos).
+   */
+  async ensureFactor(input: {
+    id?: string;
+    name: string;
+    aliases?: string[];
+  }): Promise<FactorDefinition> {
+    if (!input.name.trim()) {
+      throw new StoreError('Nome do fator é obrigatório', 'VALIDATION');
+    }
+    const catalog = this.readFactorCatalog();
+    const { factor, catalog: nextCatalog } = ensureFactorInCatalog(catalog, input);
+    this.writeFactorCatalog(nextCatalog);
+    return structuredClone(factor);
+  }
+
+  /** Atualiza grafias/traduções de um fator já existente no workspace. */
+  async updateFactor(
+    id: string,
+    patch: { name?: string; aliases?: string[]; spellings?: string[] },
+  ): Promise<FactorDefinition> {
+    const catalog = this.readFactorCatalog();
+    const current = catalog.find((factor) => factor.id === id);
+    if (!current) {
+      throw new StoreError(`Fator "${id}" não encontrado`, 'NOT_FOUND');
+    }
+
+    let next: FactorDefinition = { ...current, aliases: [...current.aliases] };
+    if (patch.name?.trim()) {
+      next = { ...next, name: patch.name.trim() };
+    }
+    if (patch.spellings) {
+      next = replaceSpellings(next, patch.spellings);
+    } else if (patch.aliases) {
+      next = { ...next, aliases: patch.aliases.map((a) => a.trim()).filter(Boolean) };
+    }
+
+    this.writeFactorCatalog(
+      catalog.map((factor) => (factor.id === id ? next : factor)),
+    );
+    return structuredClone(next);
   }
 
   async listGroups(): Promise<GroupSummary[]> {
@@ -360,7 +450,9 @@ export class SqliteStore {
     };
   }
 
-  private sanitizeArticleForImport(article: Article): Article {
+  private sanitizeArticleForImport(
+    article: Omit<Article, 'factors'> & { factors?: ArticleFactorInput[] },
+  ): Omit<Article, 'factors'> & { factors?: ArticleFactorInput[] } {
     const copy = structuredClone(article);
     if (copy.duplicateOf) {
       delete copy.duplicateOf;
@@ -372,7 +464,9 @@ export class SqliteStore {
   }
 
   async importGroup(
-    data: GroupExport,
+    data: Omit<GroupExport, 'articles'> & {
+      articles: Array<Omit<Article, 'factors'> & { factors?: ArticleFactorInput[] }>;
+    },
     options: GroupImportOptions = {},
   ): Promise<GroupImportResult> {
     const onConflict = options.onConflict ?? 'skip';
@@ -426,21 +520,26 @@ export class SqliteStore {
       const insert = this.db.prepare(
         `INSERT INTO articles (
           group_id, entry_key, entry_type, fields_json, status, source, location,
-          caminho, notes, tags_json, descartado, usado, duplicate_group_id, duplicate_key
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          caminho, notes, tags_json, factors_json, descartado, usado,
+          duplicate_group_id, duplicate_key
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       );
 
       const update = this.db.prepare(
         `UPDATE articles SET
           entry_type = ?, fields_json = ?, status = ?, source = ?, location = ?,
-          caminho = ?, notes = ?, tags_json = ?, descartado = ?,
+          caminho = ?, notes = ?, tags_json = ?, factors_json = ?, descartado = ?,
           usado = ?, duplicate_group_id = ?, duplicate_key = ?
          WHERE group_id = ? AND entry_key = ?`,
       );
 
       for (const rawArticle of data.articles) {
         const article = this.sanitizeArticleForImport(rawArticle);
-        const values = articleToRowValues(groupId, article);
+        const resolved: Article = {
+          ...article,
+          factors: this.persistArticleFactors(article.factors),
+        };
+        const values = articleToRowValues(groupId, resolved);
         const exists = this.db
           .prepare('SELECT 1 FROM articles WHERE group_id = ? AND entry_key = ?')
           .get(groupId, article.entry.key);
@@ -459,6 +558,7 @@ export class SqliteStore {
             values.caminho,
             values.notes,
             values.tags_json,
+            values.factors_json,
             values.descartado,
             values.usado,
             values.duplicate_group_id,
@@ -481,6 +581,7 @@ export class SqliteStore {
           values.caminho,
           values.notes,
           values.tags_json,
+          values.factors_json,
           values.descartado,
           values.usado,
           values.duplicate_group_id,
@@ -510,7 +611,10 @@ export class SqliteStore {
     return rowToArticle(row);
   }
 
-  async createArticle(groupId: number, article: Article): Promise<Article> {
+  async createArticle(
+    groupId: number,
+    article: Omit<Article, 'factors'> & { factors?: ArticleFactorInput[] },
+  ): Promise<Article> {
     this.getGroupRow(groupId);
     const exists = this.db
       .prepare('SELECT 1 FROM articles WHERE group_id = ? AND entry_key = ?')
@@ -521,13 +625,18 @@ export class SqliteStore {
         'CONFLICT',
       );
     }
-    const values = articleToRowValues(groupId, article);
+    const resolved: Article = {
+      ...article,
+      factors: this.persistArticleFactors(article.factors),
+    };
+    const values = articleToRowValues(groupId, resolved);
     this.db
       .prepare(
         `INSERT INTO articles (
           group_id, entry_key, entry_type, fields_json, status, source, location,
-          caminho, notes, tags_json, descartado, usado, duplicate_group_id, duplicate_key
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          caminho, notes, tags_json, factors_json, descartado, usado,
+          duplicate_group_id, duplicate_key
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         values.group_id,
@@ -540,12 +649,13 @@ export class SqliteStore {
         values.caminho,
         values.notes,
         values.tags_json,
+        values.factors_json,
         values.descartado,
         values.usado,
         values.duplicate_group_id,
         values.duplicate_key,
       );
-    return structuredClone(article);
+    return structuredClone(resolved);
   }
 
   private updateDuplicateRefsForKeyRename(
@@ -564,7 +674,10 @@ export class SqliteStore {
   async updateArticle(
     groupId: number,
     key: string,
-    patch: Partial<Article> & { entry?: Partial<Article['entry']> },
+    patch: Partial<Omit<Article, 'factors'>> & {
+      entry?: Partial<Article['entry']>;
+      factors?: ArticleFactorInput[];
+    },
   ): Promise<Article> {
     const current = await this.getArticle(groupId, key);
     const newKey = patch.entry?.key;
@@ -595,6 +708,10 @@ export class SqliteStore {
           ...patch.entry?.fields,
         },
       },
+      factors:
+        patch.factors !== undefined
+          ? this.persistArticleFactors(patch.factors)
+          : current.factors,
     };
 
     const values = articleToRowValues(groupId, merged);
@@ -602,8 +719,8 @@ export class SqliteStore {
       .prepare(
         `UPDATE articles SET
           entry_key = ?, entry_type = ?, fields_json = ?, status = ?, source = ?,
-          location = ?, caminho = ?, notes = ?, tags_json = ?, descartado = ?,
-          usado = ?, duplicate_group_id = ?, duplicate_key = ?
+          location = ?, caminho = ?, notes = ?, tags_json = ?, factors_json = ?,
+          descartado = ?, usado = ?, duplicate_group_id = ?, duplicate_key = ?
          WHERE group_id = ? AND entry_key = ?`,
       )
       .run(
@@ -616,6 +733,7 @@ export class SqliteStore {
         values.caminho,
         values.notes,
         values.tags_json,
+        values.factors_json,
         values.descartado,
         values.usado,
         values.duplicate_group_id,

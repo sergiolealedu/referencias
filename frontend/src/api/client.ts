@@ -8,6 +8,7 @@ import {
 import type {
   AppSettings,
   Article,
+  ArticleFactorInput,
   ArticleListParams,
   BibtexImportInput,
   BibtexImportResult,
@@ -17,12 +18,17 @@ import type {
   GroupImportOptions,
   GroupImportResult,
   GroupInput,
+  FactorDefinition,
   GroupMeta,
   GroupSummary,
   PaginatedArticles,
   PaginatedSearchResults,
   SearchResult,
 } from '../types/referencias';
+
+type ArticleWritePayload = Omit<Article, 'factors'> & {
+  factors?: ArticleFactorInput[];
+};
 import type { DeviceSession, JoinTokenInfo } from '../types/device';
 import type { WorkspaceInput, WorkspaceSummary, AccessSetup } from '../types/workspace';
 import { resolveApiBaseUrl } from '../utils/platform';
@@ -132,6 +138,23 @@ export const api = {
 
   listGroupTags: (groupId: number) => request<string[]>(`/groups/${groupId}/tags`),
 
+  listFactors: () => request<FactorDefinition[]>('/factors'),
+
+  ensureFactor: (input: { id?: string; name: string; aliases?: string[] }) =>
+    request<FactorDefinition>('/factors', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+
+  updateFactor: (
+    id: string,
+    patch: { name?: string; aliases?: string[]; spellings?: string[] },
+  ) =>
+    request<FactorDefinition>(`/factors/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    }),
+
   createGroup: (input: GroupInput) =>
     request<GroupMeta>('/groups', {
       method: 'POST',
@@ -167,13 +190,17 @@ export const api = {
   getArticle: (groupId: number, key: string) =>
     request<Article>(`/groups/${groupId}/articles/${encodeURIComponent(key)}`),
 
-  createArticle: (groupId: number, article: Article) =>
+  createArticle: (groupId: number, article: ArticleWritePayload) =>
     request<Article>(`/groups/${groupId}/articles`, {
       method: 'POST',
       body: JSON.stringify(article),
     }),
 
-  updateArticle: (groupId: number, key: string, patch: Partial<Article>) =>
+  updateArticle: (
+    groupId: number,
+    key: string,
+    patch: Partial<Omit<Article, 'factors'>> & { factors?: ArticleFactorInput[] },
+  ) =>
     request<Article>(`/groups/${groupId}/articles/${encodeURIComponent(key)}`, {
       method: 'PATCH',
       body: JSON.stringify(patch),

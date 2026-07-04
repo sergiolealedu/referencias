@@ -9,6 +9,24 @@ export interface Entry {
   fields: Record<string, string>;
 }
 
+export type FactorPolarity = 'positive' | 'negative';
+
+/** Fator canônico do workspace, com múltiplas grafias (PT/EN). */
+export interface FactorDefinition {
+  id: string;
+  name: string;
+  aliases: string[];
+}
+
+/** Ocorrência de um fator em um artigo. */
+export interface ArticleFactor {
+  factorId: string;
+  polarity: FactorPolarity;
+  description: string;
+  /** Grafia usada neste artigo. */
+  label: string;
+}
+
 export interface Article {
   entry: Entry;
   status: string;
@@ -17,6 +35,7 @@ export interface Article {
   caminho: string;
   notes: string;
   tags: string[];
+  factors: ArticleFactor[];
   descartado: boolean;
   usado: boolean;
   duplicateOf?: DuplicateRef;

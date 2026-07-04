@@ -29,6 +29,20 @@ CREATE TRIGGER articles_au AFTER UPDATE ON articles BEGIN
 END;
 `;
 
+function ensureFactorsMigration(db: Database.Database): void {
+  const columns = db.prepare('PRAGMA table_info(articles)').all() as Array<{ name: string }>;
+  if (!columns.some((column) => column.name === 'factors_json')) {
+    db.exec(`ALTER TABLE articles ADD COLUMN factors_json TEXT NOT NULL DEFAULT '[]'`);
+  }
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS factors (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      aliases_json TEXT NOT NULL DEFAULT '[]'
+    );
+  `);
+}
+
 export function openDatabase(dbPath: string): Database.Database {
   mkdirSync(dirname(dbPath), { recursive: true });
   const db = new Database(dbPath);
@@ -37,6 +51,7 @@ export function openDatabase(dbPath: string): Database.Database {
   const schema = readFileSync(join(__dirname, 'schema.sql'), 'utf-8');
   db.exec(schema);
   db.exec(FTS_TRIGGER_MIGRATION);
+  ensureFactorsMigration(db);
   return db;
 }
 

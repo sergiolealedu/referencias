@@ -1,7 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '../api/client';
-import type { Article, ArticleListParams, GroupInput } from '../types/referencias';
+import type {
+  Article,
+  ArticleFactorInput,
+  ArticleListParams,
+  GroupInput,
+} from '../types/referencias';
+
+type ArticleWritePayload = Omit<Article, 'factors'> & {
+  factors?: ArticleFactorInput[];
+};
 
 export function useGroups() {
   return useQuery({
@@ -50,6 +59,42 @@ export function useGroupTags(groupId: number | null) {
     queryKey: ['group-tags', groupId],
     queryFn: () => api.listGroupTags(groupId!),
     enabled: groupId !== null,
+  });
+}
+
+export function useFactors() {
+  return useQuery({
+    queryKey: ['factors'],
+    queryFn: api.listFactors,
+  });
+}
+
+export function useEnsureFactor() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { id?: string; name: string; aliases?: string[] }) =>
+      api.ensureFactor(input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['factors'] });
+    },
+  });
+}
+
+export function useUpdateFactor() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      ...patch
+    }: {
+      id: string;
+      name?: string;
+      aliases?: string[];
+      spellings?: string[];
+    }) => api.updateFactor(id, patch),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['factors'] });
+    },
   });
 }
 
@@ -112,11 +157,12 @@ export function useDeleteGroup() {
 export function useCreateArticle(groupId: number | null) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (article: Article) => api.createArticle(groupId!, article),
+    mutationFn: (article: ArticleWritePayload) => api.createArticle(groupId!, article),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['articles', groupId] });
       queryClient.invalidateQueries({ queryKey: ['groups'] });
       queryClient.invalidateQueries({ queryKey: ['group-tags', groupId] });
+      queryClient.invalidateQueries({ queryKey: ['factors'] });
       queryClient.invalidateQueries({ queryKey: ['usado-articles'] });
       queryClient.invalidateQueries({ queryKey: ['stats'] });
       if (groupId) queryClient.invalidateQueries({ queryKey: ['groups', groupId] });
@@ -127,14 +173,20 @@ export function useCreateArticle(groupId: number | null) {
 export function useUpdateArticle(groupId: number | null) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ key, patch }: { key: string; patch: Partial<Article> }) =>
-      api.updateArticle(groupId!, key, patch),
+    mutationFn: ({
+      key,
+      patch,
+    }: {
+      key: string;
+      patch: Partial<Omit<Article, 'factors'>> & { factors?: ArticleFactorInput[] };
+    }) => api.updateArticle(groupId!, key, patch),
     onSuccess: (data, { key }) => {
       queryClient.invalidateQueries({ queryKey: ['articles', groupId] });
       queryClient.invalidateQueries({ queryKey: ['article', groupId, key] });
       if (data.entry.key !== key) {
         queryClient.invalidateQueries({ queryKey: ['article', groupId, data.entry.key] });
       }
+      queryClient.invalidateQueries({ queryKey: ['factors'] });
       queryClient.invalidateQueries({ queryKey: ['usado-articles'] });
       queryClient.invalidateQueries({ queryKey: ['stats'] });
       if (groupId) queryClient.invalidateQueries({ queryKey: ['groups', groupId] });

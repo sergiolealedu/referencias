@@ -1,4 +1,4 @@
-import type { Article } from '../types/referencias.js';
+import type { Article, ArticleFactor } from '../types/referencias.js';
 
 export interface ArticleRow {
   id: number;
@@ -12,10 +12,36 @@ export interface ArticleRow {
   caminho: string;
   notes: string;
   tags_json: string;
+  factors_json?: string | null;
   descartado: number;
   usado: number;
   duplicate_group_id: number | null;
   duplicate_key: string | null;
+}
+
+function parseFactors(raw: string | null | undefined): ArticleFactor[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((item) => {
+        if (!item || typeof item !== 'object') return null;
+        const row = item as Record<string, unknown>;
+        const factorId = typeof row.factorId === 'string' ? row.factorId : '';
+        const label = typeof row.label === 'string' ? row.label : '';
+        if (!factorId || !label) return null;
+        return {
+          factorId,
+          label,
+          polarity: row.polarity === 'negative' ? 'negative' as const : 'positive' as const,
+          description: typeof row.description === 'string' ? row.description : '',
+        };
+      })
+      .filter((item): item is ArticleFactor => item !== null);
+  } catch {
+    return [];
+  }
 }
 
 export function rowToArticle(row: ArticleRow): Article {
@@ -31,6 +57,7 @@ export function rowToArticle(row: ArticleRow): Article {
     caminho: row.caminho,
     notes: row.notes,
     tags: JSON.parse(row.tags_json) as string[],
+    factors: parseFactors(row.factors_json),
     descartado: row.descartado === 1,
     usado: row.usado === 1,
     ...(row.duplicate_group_id != null && row.duplicate_key
@@ -54,6 +81,7 @@ export function articleToRowValues(
     caminho: article.caminho,
     notes: article.notes,
     tags_json: JSON.stringify(article.tags),
+    factors_json: JSON.stringify(article.factors ?? []),
     descartado: article.descartado ? 1 : 0,
     usado: article.usado ? 1 : 0,
     duplicate_group_id: article.duplicateOf?.groupId ?? null,
