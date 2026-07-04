@@ -24,9 +24,10 @@
     "android:assemble:debug": "node scripts/android-gradle.mjs assembleDebug",
     "android:bundle": "node scripts/android-gradle.mjs bundleRelease",
     "android:release": "npm run build:android && npm run android:bundle && npm run android:assemble",
-    "build:android:copy": "powershell -ExecutionPolicy Bypass -File ./build-android-apk.ps1",
+    "build:android:copy": "node scripts/run-build-android-copy.mjs",
     "commit:push": "powershell -ExecutionPolicy Bypass -File ./commit-push.ps1",
     "publish:server": "powershell -ExecutionPolicy Bypass -File ./scripts/deploy/publish-to-server.ps1 -SkipConfirm",
+    "release:server": "powershell -ExecutionPolicy Bypass -File ./release.ps1",
     "backup:server": "powershell -ExecutionPolicy Bypass -File ./scripts/backup/server-data.ps1 -Action Backup -SkipConfirm",
     "restore:server": "powershell -ExecutionPolicy Bypass -File ./scripts/backup/server-data.ps1 -Action Restore -Latest -SkipConfirm",
     "backup:server:list": "powershell -ExecutionPolicy Bypass -File ./scripts/backup/server-data.ps1 -Action List"

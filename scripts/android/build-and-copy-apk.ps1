@@ -23,10 +23,11 @@
   Raiz do repositório (padrão: dois níveis acima deste script).
 
 .EXAMPLE
-  powershell -ExecutionPolicy Bypass -File .\scripts\android\build-and-copy-apk.ps1
+  # Preferir o wrapper na raiz (roda de qualquer pasta):
+  powershell -ExecutionPolicy Bypass -File C:\tmp2\exemplos\doutorado\refs\build-android-apk.ps1
 
 .EXAMPLE
-  npm run build:android:copy
+  npm --prefix C:\tmp2\exemplos\doutorado\refs run build:android:copy
 #>
 param(
   [string] $Destination = 'G:\Meu Drive\doutorado\app',
@@ -40,7 +41,10 @@ $ErrorActionPreference = 'Stop'
 
 if (-not $RepoRoot) {
   $scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
-  $RepoRoot = (Resolve-Path (Join-Path $scriptDir '../..')).Path
+  $RepoRoot = (Resolve-Path -LiteralPath (Join-Path $scriptDir '../..')).Path
+}
+else {
+  $RepoRoot = (Resolve-Path -LiteralPath $RepoRoot).Path
 }
 
 function Write-Step([string] $Text) {

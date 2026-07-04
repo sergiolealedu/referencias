@@ -1,17 +1,21 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  Wrapper — compila o APK Android e copia para o Google Drive.
+  Wrapper de build Android — roda de qualquer pasta.
 
 .DESCRIPTION
-  Localiza o repositório pela pasta deste script e chama
-  scripts/android/build-and-copy-apk.ps1.
+  Localiza o repositório pela pasta deste script (não pelo diretório atual)
+  e chama scripts/android/build-and-copy-apk.ps1.
 
 .EXAMPLE
-  powershell -ExecutionPolicy Bypass -File .\build-android-apk.ps1
+  # De qualquer pasta (caminho absoluto do wrapper):
+  powershell -ExecutionPolicy Bypass -File C:\tmp2\exemplos\doutorado\refs\build-android-apk.ps1
 
 .EXAMPLE
-  npm run build:android:copy
+  powershell -ExecutionPolicy Bypass -File .\build-android-apk.ps1 -SkipSync
+
+.EXAMPLE
+  npm --prefix C:\tmp2\exemplos\doutorado\refs run build:android:copy
 #>
 param(
   [string] $Destination = 'G:\Meu Drive\doutorado\app',
@@ -22,12 +26,13 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$repoRoot = if ($PSScriptRoot) {
+$scriptPath = if ($PSScriptRoot) {
   $PSScriptRoot
 }
 else {
   Split-Path -Parent $MyInvocation.MyCommand.Path
 }
+$repoRoot = (Resolve-Path -LiteralPath $scriptPath).Path
 
 $target = Join-Path $repoRoot 'scripts\android\build-and-copy-apk.ps1'
 if (-not (Test-Path -LiteralPath $target)) {
