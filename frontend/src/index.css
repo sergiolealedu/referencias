@@ -1216,12 +1216,66 @@ button {
   cursor: pointer;
 }
 
-.article-table tbody tr:hover {
+.article-table tbody tr.article-row--title:hover,
+.article-table tbody tr.article-row--title:has(+ .article-row--meta:hover),
+.article-table tbody tr.article-row--meta:hover {
   background: #f8fafc;
 }
 
-.article-table tbody tr.selected {
+.article-table tbody tr.article-row--title.selected,
+.article-table tbody tr.article-row--title.selected + .article-row--meta,
+.article-table tbody tr.article-row--meta.selected {
   background: #eff6ff;
+}
+
+.article-row--title td {
+  border-bottom: none;
+  padding-bottom: 0.25rem;
+}
+
+.article-row--meta td {
+  padding-top: 0.25rem;
+  font-size: 0.8125rem;
+}
+
+.article-row--title .row-num-col,
+.article-row--title .select-col {
+  vertical-align: middle;
+}
+
+.article-row--meta .status-badge,
+.article-row--meta .tag {
+  font-size: inherit;
+}
+
+.article-row--meta .tags-cell {
+  max-width: none;
+}
+
+.title-cell-spacer {
+  padding: 0;
+  width: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.title-cell {
+  max-width: none;
+}
+
+.title-cell-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  max-width: 100%;
+}
+
+.title-cell-text {
+  min-width: 0;
+  flex: 1;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.35;
 }
 
 .factor-chips {
@@ -1256,21 +1310,6 @@ button {
   background: #fef2f2;
   color: #b91c1c;
   border: 1px solid #fecaca;
-}
-
-.title-cell {
-  max-width: 320px;
-}
-
-.title-cell-row {
-  display: inline-flex;
-  align-items: flex-start;
-  gap: 0.25rem;
-  max-width: 100%;
-}
-
-.title-cell-text {
-  min-width: 0;
 }
 
 .title-copy-btn {
@@ -1376,17 +1415,26 @@ button {
 .form-header {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
+  gap: 0.5rem;
   padding: 0.4rem 0.5rem;
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.form-header-start {
+  display: flex;
+  align-items: center;
   flex-shrink: 0;
 }
 
 .form-header-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.2rem;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .form-header-icon-btn {
@@ -1668,16 +1716,6 @@ button {
 
 .mark-descartado-btn:hover {
   background: #fef2f2;
-}
-
-.form-footer {
-  padding: 0.4rem 0.5rem calc(0.4rem + env(safe-area-inset-bottom));
-  border-top: 1px solid var(--border);
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.2rem;
-  flex-shrink: 0;
-  background: var(--surface);
 }
 
 .open-pdf-btn {
@@ -2370,6 +2408,10 @@ body.dashboard-fullscreen-open {
 /* ── Mobile / Capacitor ───────────────────────────────────────────────────── */
 
 @media (max-width: 900px) {
+  :root {
+    --app-header-height: 118px;
+  }
+
   .app {
     min-width: 0;
     overflow-x: hidden;
@@ -2480,13 +2522,36 @@ body.dashboard-fullscreen-open {
     min-height: 0;
   }
 
+  .factors-view-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .factors-view-search {
+    min-width: 0;
+    width: 100%;
+  }
+
   .factors-view-layout {
     grid-template-columns: 1fr;
-    grid-template-rows: minmax(140px, 34vh) minmax(0, 1fr);
+    grid-template-rows: minmax(120px, 28vh) minmax(0, 1fr);
   }
 
   .factors-view-detail {
     min-height: 0;
+  }
+
+  .factors-view-list button {
+    min-height: 2.5rem;
+    padding: 0.55rem 0.7rem;
+  }
+
+  .factors-view-detail-header {
+    padding: 0.7rem 0.85rem;
+  }
+
+  .factors-view-occurrences {
+    padding: 0.5rem;
   }
 
   .panel-header {
@@ -2527,12 +2592,142 @@ body.dashboard-fullscreen-open {
   }
 
   .table-wrap {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow-x: visible;
+    border: none;
+    background: transparent;
   }
 
   .article-table {
-    min-width: 640px;
+    min-width: 0;
+    display: block;
+    font-size: 0.8125rem;
+  }
+
+  .article-table thead {
+    display: none;
+  }
+
+  .article-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .article-table tbody tr {
+    display: block;
+    width: 100%;
+  }
+
+  .article-table tbody td {
+    border: none;
+  }
+
+  .article-row--title {
+    display: grid;
+    grid-template-columns: 2rem 2.25rem minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    gap: 0.35rem 0.5rem;
+    align-items: start;
+    padding: 0.65rem 0.75rem 0.35rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px 10px 0 0;
+    border-bottom: none;
+  }
+
+  .article-row--title td {
+    padding: 0;
+  }
+
+  .article-row--title .row-num-col {
+    grid-column: 1;
+    grid-row: 1;
+    width: auto;
+    text-align: center;
+    padding-top: 0.1rem;
+  }
+
+  .article-row--title .select-col {
+    grid-column: 2;
+    grid-row: 1;
+    width: auto;
+    padding: 0;
+  }
+
+  .article-row--title .title-cell {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    padding: 0;
+  }
+
+  .article-row--meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem 0.75rem;
+    padding: 0.35rem 0.75rem 0.65rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 1px dashed var(--border);
+    border-radius: 0 0 10px 10px;
+  }
+
+  .article-row--meta td {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0;
+    font-size: 0.78rem;
+    min-width: 0;
+  }
+
+  .article-row--meta td::before {
+    content: attr(data-label);
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  .title-cell-spacer {
+    display: none;
+  }
+
+  .article-row--meta .tags-cell {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+  }
+
+  .article-row--meta .pdf-col {
+    margin-left: auto;
+  }
+
+  .article-row--meta .pdf-col::before {
+    content: none;
+  }
+
+  .article-table tbody tr.article-row--title:hover,
+  .article-table tbody tr.article-row--title:has(+ .article-row--meta:hover),
+  .article-table tbody tr.article-row--meta:hover {
+    background: #f8fafc;
+  }
+
+  .article-table tbody tr.article-row--title.selected,
+  .article-table tbody tr.article-row--title.selected + .article-row--meta,
+  .article-table tbody tr.article-row--meta.selected {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+  }
+
+  .article-pagination {
+    gap: 0.5rem;
+  }
+
+  .article-page-nav {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .article-form {
@@ -2550,31 +2745,37 @@ body.dashboard-fullscreen-open {
   }
 
   .form-header {
-    padding: 0.35rem 0.45rem;
+    padding: calc(0.35rem + env(safe-area-inset-top, 0px)) 0.45rem 0.35rem;
+    gap: 0.35rem;
   }
 
+  .form-header-start,
   .form-header-actions {
-    gap: 0.2rem;
+    gap: 0.25rem;
   }
 
   .form-header-icon-btn {
-    width: 1.75rem;
-    height: 1.75rem;
-    font-size: 0.8rem;
+    width: 2rem;
+    height: 2rem;
+    font-size: 0.85rem;
+  }
+
+  .form-tabs {
+    padding: 0 0.15rem;
   }
 
   .form-tab {
-    min-height: 1.5rem;
-    padding: 0.2rem 0.1rem;
-    gap: 0.08rem;
+    min-height: 2.25rem;
+    padding: 0.35rem 0.15rem;
+    gap: 0;
   }
 
   .form-tab-icon {
-    font-size: 0.75rem;
+    font-size: 1rem;
   }
 
   .form-tab-label {
-    font-size: 0.5rem;
+    display: none;
   }
 
   .form-body {
@@ -2616,11 +2817,6 @@ body.dashboard-fullscreen-open {
   .pdf-actions button {
     flex: 1 1 calc(50% - 0.2rem);
     min-height: 2.5rem;
-  }
-
-  .form-footer {
-    padding: 0.35rem 0.45rem calc(0.35rem + env(safe-area-inset-bottom));
-    gap: 0.2rem;
   }
 
   .bibtex-preview pre {
@@ -2674,6 +2870,10 @@ body.dashboard-fullscreen-open {
 }
 
 @media (max-width: 480px) {
+  :root {
+    --app-header-height: 132px;
+  }
+
   .app-header-actions button {
     flex: 1 1 calc(50% - 0.2rem);
   }
@@ -2682,16 +2882,29 @@ body.dashboard-fullscreen-open {
     min-width: 100%;
   }
 
+  .article-row--meta {
+    gap: 0.4rem 0.55rem;
+  }
+
+  .article-row--meta td {
+    flex: 1 1 calc(50% - 0.55rem);
+  }
+
+  .article-row--meta .tags-cell,
+  .article-row--meta .pdf-col {
+    flex: 1 1 100%;
+  }
+
   .pdf-col {
     width: auto;
   }
 
-  .form-tab-label {
-    font-size: 0.48rem;
-  }
-
   .pdf-actions button {
     flex: 1 1 100%;
+  }
+
+  .factors-view-layout {
+    grid-template-rows: minmax(110px, 24vh) minmax(0, 1fr);
   }
 }
 

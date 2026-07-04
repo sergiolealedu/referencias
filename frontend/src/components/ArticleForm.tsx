@@ -325,6 +325,19 @@ export function ArticleForm({
   return (
     <aside className="article-form">
       <div className="form-header">
+        <div className="form-header-start">
+          {!isNew && (
+            <button
+              type="button"
+              className="form-header-icon-btn form-header-icon-btn--danger"
+              onClick={handleDelete}
+              title="Excluir artigo"
+              aria-label="Excluir artigo"
+            >
+              🗑
+            </button>
+          )}
+        </div>
         <div className="form-header-actions">
           {form.entry.key.trim() && (
             <>
@@ -693,30 +706,6 @@ export function ArticleForm({
 
         {saveError && <p className="error form-error">{saveError}</p>}
         {exportMessage && <p className="export-message">{exportMessage}</p>}
-      </div>
-
-      <div className="form-footer">
-        <button
-          type="button"
-          className="form-header-icon-btn form-header-icon-btn--primary"
-          onClick={handleSave}
-          disabled={isSaving}
-          title={isSaving ? 'Salvando…' : 'Salvar alterações'}
-          aria-label={isSaving ? 'Salvando…' : 'Salvar alterações'}
-        >
-          ✓
-        </button>
-        {!isNew && (
-          <button
-            type="button"
-            className="form-header-icon-btn form-header-icon-btn--danger"
-            onClick={handleDelete}
-            title="Excluir artigo"
-            aria-label="Excluir artigo"
-          >
-            🗑
-          </button>
-        )}
       </div>
 
       <FactorsPanel

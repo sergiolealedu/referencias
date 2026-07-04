@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 
 import { api } from '../api/client';
 import { useUpdateArticle, useUploadArticlePdf } from '../hooks/useApi';
@@ -325,146 +325,168 @@ export function ArticleTable({
             </tr>
           </thead>
           <tbody>
-            {articles.map((article, index) => (
-              <tr
-                key={article.entry.key}
-                data-article-key={article.entry.key}
-                className={selectedKey === article.entry.key ? 'selected' : ''}
-                onClick={() => onSelect(article.entry.key)}
-              >
-                <td className="row-num-col">{(page - 1) * pageSize + index + 1}</td>
-                <td className="select-col" onClick={(e) => e.stopPropagation()}>
-                  <input
-                    type="checkbox"
-                    checked={checkedKeys.has(article.entry.key)}
-                    onChange={() => toggleChecked(article.entry.key)}
-                    aria-label={`Selecionar ${article.entry.fields.title || article.entry.key}`}
-                  />
-                </td>
-                <td className="title-cell">
-                  <span className="title-cell-row">
-                    <span className="title-cell-text">
-                      {article.entry.fields.title || article.entry.key}
-                    </span>
-                    <button
-                      type="button"
-                      className="title-copy-btn"
-                      title="Copiar título"
-                      aria-label="Copiar título"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        void handleCopyTitle(
-                          article.entry.key,
-                          article.entry.fields.title || article.entry.key,
-                        );
-                      }}
+            {articles.map((article, index) => {
+              const articleKey = article.entry.key;
+              const selected = selectedKey === articleKey;
+              const rowClass = selected ? 'selected' : '';
+
+              return (
+                <Fragment key={articleKey}>
+                  <tr
+                    data-article-key={articleKey}
+                    className={`article-row article-row--title ${rowClass}`}
+                    onClick={() => onSelect(articleKey)}
+                  >
+                    <td className="row-num-col" rowSpan={2}>
+                      {(page - 1) * pageSize + index + 1}
+                    </td>
+                    <td
+                      className="select-col"
+                      rowSpan={2}
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      {copiedTitleKey === article.entry.key ? '✓' : '⧉'}
-                    </button>
-                  </span>
-                  {(article.factors?.length ?? 0) > 0 && (
-                    <span className="factor-chips" aria-label="Fatores do artigo">
-                      {article.factors.map((factor) => (
-                        <span
-                          key={`${factor.factorId}-${factor.label}-${factor.polarity}`}
-                          className={`factor-chip polarity-${factor.polarity}`}
-                          title={
-                            factor.description
-                              ? `${factor.label}: ${factor.description}`
-                              : factor.label
-                          }
+                      <input
+                        type="checkbox"
+                        checked={checkedKeys.has(articleKey)}
+                        onChange={() => toggleChecked(articleKey)}
+                        aria-label={`Selecionar ${article.entry.fields.title || articleKey}`}
+                      />
+                    </td>
+                    <td className="title-cell" colSpan={COLUMNS.length + 1}>
+                      <span className="title-cell-row">
+                        <span className="title-cell-text">
+                          {article.entry.fields.title || articleKey}
+                        </span>
+                        <button
+                          type="button"
+                          className="title-copy-btn"
+                          title="Copiar título"
+                          aria-label="Copiar título"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            void handleCopyTitle(
+                              articleKey,
+                              article.entry.fields.title || articleKey,
+                            );
+                          }}
                         >
-                          {factor.polarity === 'positive' ? '+' : '−'}
-                          {factor.label}
+                          {copiedTitleKey === articleKey ? '✓' : '⧉'}
+                        </button>
+                      </span>
+                      {(article.factors?.length ?? 0) > 0 && (
+                        <span className="factor-chips" aria-label="Fatores do artigo">
+                          {article.factors.map((factor) => (
+                            <span
+                              key={`${factor.factorId}-${factor.label}-${factor.polarity}`}
+                              className={`factor-chip polarity-${factor.polarity}`}
+                              title={
+                                factor.description
+                                  ? `${factor.label}: ${factor.description}`
+                                  : factor.label
+                              }
+                            >
+                              {factor.polarity === 'positive' ? '+' : '−'}
+                              {factor.label}
+                            </span>
+                          ))}
+                        </span>
+                      )}
+                      {article.status === 'duplicate' && article.duplicateOf && (
+                        <button
+                          type="button"
+                          className="duplicate-link"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            const { groupId: dupGroupId, key } = article.duplicateOf!;
+                            onNavigateToArticle?.(dupGroupId, key);
+                          }}
+                        >
+                          dup → {article.duplicateOf.key}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                  <tr
+                    data-article-key={articleKey}
+                    className={`article-row article-row--meta ${rowClass}`}
+                    onClick={() => onSelect(articleKey)}
+                  >
+                    <td className="title-cell-spacer" aria-hidden="true" />
+                    <td data-label="Autor">{article.entry.fields.author ?? ''}</td>
+                    <td data-label="Ano">{article.entry.fields.year ?? ''}</td>
+                    <td data-label="Status">
+                      <span className={`status-badge status-${article.status}`}>
+                        {article.status}
+                      </span>
+                    </td>
+                    <td className="tags-cell" data-label="Tags">
+                      {article.tags.map((tag) => (
+                        <span key={tag} className="tag">
+                          {tag}
                         </span>
                       ))}
-                    </span>
-                  )}
-                  {article.status === 'duplicate' && article.duplicateOf && (
-                    <button
-                      type="button"
-                      className="duplicate-link"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        const { groupId: dupGroupId, key } = article.duplicateOf!;
-                        onNavigateToArticle?.(dupGroupId, key);
-                      }}
-                    >
-                      dup → {article.duplicateOf.key}
-                    </button>
-                  )}
-                </td>
-                <td>{article.entry.fields.author ?? ''}</td>
-                <td>{article.entry.fields.year ?? ''}</td>
-                <td>
-                  <span className={`status-badge status-${article.status}`}>
-                    {article.status}
-                  </span>
-                </td>
-                <td className="tags-cell">
-                  {article.tags.map((tag) => (
-                    <span key={tag} className="tag">{tag}</span>
-                  ))}
-                </td>
-                <td>
-                  <input
-                    type="checkbox"
-                    checked={article.usado}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      toggleField(article, 'usado');
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </td>
-                <td>
-                  <input
-                    type="checkbox"
-                    checked={article.descartado}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      toggleField(article, 'descartado');
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </td>
-                <td>
-                  <input
-                    type="checkbox"
-                    checked={article.revisaoLiteratura ?? false}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      toggleField(article, 'revisaoLiteratura');
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </td>
-                <td className="pdf-col" onClick={(e) => e.stopPropagation()}>
-                  <div className="pdf-row-actions">
-                    <button
-                      type="button"
-                      className="pdf-row-btn"
-                      title="Enviar PDF"
-                      disabled={uploadPdf.isPending}
-                      onClick={() => handleUploadPdf(article.entry.key)}
-                    >
-                      {uploadingKey === article.entry.key ? '…' : '↑'}
-                    </button>
-                    <button
-                      type="button"
-                      className="pdf-row-btn"
-                      title={article.caminho.trim() ? 'Abrir PDF' : 'Sem PDF'}
-                      disabled={!article.caminho.trim()}
-                      onClick={() => void handleOpenPdf(article)}
-                    >
-                      PDF
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                    </td>
+                    <td data-label="Usado">
+                      <input
+                        type="checkbox"
+                        checked={article.usado}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          toggleField(article, 'usado');
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </td>
+                    <td data-label="Desc.">
+                      <input
+                        type="checkbox"
+                        checked={article.descartado}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          toggleField(article, 'descartado');
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </td>
+                    <td data-label="Rev. lit.">
+                      <input
+                        type="checkbox"
+                        checked={article.revisaoLiteratura ?? false}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          toggleField(article, 'revisaoLiteratura');
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </td>
+                    <td className="pdf-col" data-label="PDF" onClick={(e) => e.stopPropagation()}>
+                      <div className="pdf-row-actions">
+                        <button
+                          type="button"
+                          className="pdf-row-btn"
+                          title="Enviar PDF"
+                          disabled={uploadPdf.isPending}
+                          onClick={() => handleUploadPdf(articleKey)}
+                        >
+                          {uploadingKey === articleKey ? '…' : '↑'}
+                        </button>
+                        <button
+                          type="button"
+                          className="pdf-row-btn"
+                          title={article.caminho.trim() ? 'Abrir PDF' : 'Sem PDF'}
+                          disabled={!article.caminho.trim()}
+                          onClick={() => void handleOpenPdf(article)}
+                        >
+                          PDF
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </Fragment>
+              );
+            })}
           </tbody>
         </table>
       </div>
