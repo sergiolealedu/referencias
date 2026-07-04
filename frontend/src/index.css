@@ -1377,7 +1377,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding: 0.2rem 0.35rem;
+  padding: 0.4rem 0.5rem;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
@@ -1385,7 +1385,7 @@ button {
 .form-header-actions {
   display: flex;
   align-items: center;
-  gap: 0.15rem;
+  gap: 0.2rem;
   flex-shrink: 0;
 }
 
@@ -1393,13 +1393,13 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 0.8125rem;
-  height: 0.8125rem;
+  width: 1.625rem;
+  height: 1.625rem;
   padding: 0;
   border: 1px solid var(--border);
-  border-radius: 3px;
+  border-radius: 5px;
   background: var(--surface);
-  font-size: 0.55rem;
+  font-size: 0.75rem;
   line-height: 1;
   color: var(--text);
   flex-shrink: 0;
@@ -1417,6 +1417,17 @@ button {
 
 .form-header-icon-btn--primary:hover:not(:disabled) {
   background: var(--primary-hover);
+}
+
+.form-header-icon-btn--danger {
+  color: var(--danger);
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.form-header-icon-btn--danger:hover:not(:disabled) {
+  background: #fee2e2;
+  border-color: var(--danger);
 }
 
 .form-header-icon-btn:disabled {
@@ -1447,10 +1458,10 @@ button {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.2rem;
-  padding: 0.55rem 0.35rem;
+  gap: 0.1rem;
+  padding: 0.28rem 0.15rem;
   border: none;
-  border-bottom: 2px solid transparent;
+  border-bottom: 1px solid transparent;
   background: transparent;
   color: var(--muted);
   font: inherit;
@@ -1471,13 +1482,13 @@ button {
 }
 
 .form-tab-icon {
-  font-size: 1.15rem;
+  font-size: 0.75rem;
   line-height: 1;
 }
 
 .form-tab-label {
-  font-size: 0.7rem;
-  line-height: 1.1;
+  font-size: 0.55rem;
+  line-height: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1660,24 +1671,13 @@ button {
 }
 
 .form-footer {
-  padding: 0.55rem 0.85rem;
+  padding: 0.4rem 0.5rem calc(0.4rem + env(safe-area-inset-bottom));
   border-top: 1px solid var(--border);
   display: flex;
-  gap: 0.4rem;
+  justify-content: flex-end;
+  gap: 0.2rem;
   flex-shrink: 0;
   background: var(--surface);
-}
-
-.form-footer .primary,
-.form-footer .danger {
-  padding: 0.38rem 0.7rem;
-  font-size: 0.8125rem;
-  line-height: 1.25;
-}
-
-.form-save-btn {
-  flex: 1;
-  min-width: 0;
 }
 
 .open-pdf-btn {
@@ -2550,31 +2550,31 @@ body.dashboard-fullscreen-open {
   }
 
   .form-header {
-    padding: 0.18rem 0.3rem;
+    padding: 0.35rem 0.45rem;
   }
 
   .form-header-actions {
-    gap: 0.15rem;
+    gap: 0.2rem;
   }
 
   .form-header-icon-btn {
-    width: 0.875rem;
-    height: 0.875rem;
-    font-size: 0.6rem;
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 0.8rem;
   }
 
   .form-tab {
-    min-height: 3rem;
-    padding: 0.4rem 0.2rem;
-    gap: 0.15rem;
+    min-height: 1.5rem;
+    padding: 0.2rem 0.1rem;
+    gap: 0.08rem;
   }
 
   .form-tab-icon {
-    font-size: 1.2rem;
+    font-size: 0.75rem;
   }
 
   .form-tab-label {
-    font-size: 0.65rem;
+    font-size: 0.5rem;
   }
 
   .form-body {
@@ -2619,15 +2619,8 @@ body.dashboard-fullscreen-open {
   }
 
   .form-footer {
-    padding: 0.45rem 0.65rem calc(0.45rem + env(safe-area-inset-bottom));
-    gap: 0.35rem;
-  }
-
-  .form-footer .primary,
-  .form-footer .danger {
-    min-height: 2.125rem;
-    padding: 0.32rem 0.55rem;
-    font-size: 0.8125rem;
+    padding: 0.35rem 0.45rem calc(0.35rem + env(safe-area-inset-bottom));
+    gap: 0.2rem;
   }
 
   .bibtex-preview pre {
@@ -2694,20 +2687,11 @@ body.dashboard-fullscreen-open {
   }
 
   .form-tab-label {
-    font-size: 0.6rem;
+    font-size: 0.48rem;
   }
 
   .pdf-actions button {
     flex: 1 1 100%;
-  }
-
-  .form-footer {
-    flex-direction: column;
-  }
-
-  .form-footer .primary,
-  .form-footer .danger {
-    width: 100%;
   }
 }
 

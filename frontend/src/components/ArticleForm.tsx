@@ -698,15 +698,23 @@ export function ArticleForm({
       <div className="form-footer">
         <button
           type="button"
-          className="primary form-save-btn"
+          className="form-header-icon-btn form-header-icon-btn--primary"
           onClick={handleSave}
           disabled={isSaving}
+          title={isSaving ? 'Salvando…' : 'Salvar alterações'}
+          aria-label={isSaving ? 'Salvando…' : 'Salvar alterações'}
         >
-          {isSaving ? 'Salvando…' : 'Salvar alterações'}
+          ✓
         </button>
         {!isNew && (
-          <button type="button" className="danger" onClick={handleDelete}>
-            Excluir
+          <button
+            type="button"
+            className="form-header-icon-btn form-header-icon-btn--danger"
+            onClick={handleDelete}
+            title="Excluir artigo"
+            aria-label="Excluir artigo"
+          >
+            🗑
           </button>
         )}
       </div>
