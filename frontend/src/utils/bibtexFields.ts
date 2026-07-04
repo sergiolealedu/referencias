@@ -72,6 +72,7 @@ export function normalizeArticleForForm(article: Article): Article {
     ...article,
     caminho: caminhoForStorage(article.caminho ?? ''),
     factors: article.factors ?? [],
+    revisaoLiteratura: article.revisaoLiteratura ?? false,
     entry: {
       ...article.entry,
       fields: normalizeFieldsForForm(article.entry.fields),
