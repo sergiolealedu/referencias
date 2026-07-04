@@ -23,13 +23,13 @@
 
 .EXAMPLE
   # Preferir o wrapper na raiz (roda de qualquer pasta):
-  powershell -ExecutionPolicy Bypass -File C:\tmp2\exemplos\doutorado\refs\commit-push.ps1
+  powershell -ExecutionPolicy Bypass -File C:\tmp2\exemplos\doutorado\refs\commit-push.ps1 -Message "Adiciona wrapper de commit/push que roda de qualquer pasta."
 
 .EXAMPLE
-  powershell -ExecutionPolicy Bypass -File .\commit-push.ps1 -Message "Corrige layout mobile."
+  powershell -ExecutionPolicy Bypass -File .\commit-push.ps1 -Message "Adiciona wrapper de commit/push que roda de qualquer pasta."
 
 .EXAMPLE
-  npm run commit:push -- -Message "Adiciona script de commit e push."
+  npm run commit:push -- -Message "Adiciona wrapper de commit/push que roda de qualquer pasta."
 #>
 param(
   [string] $Message = '',
@@ -85,15 +85,16 @@ function Test-SensitivePath([string] $Path) {
 }
 
 function Get-StagedPaths {
-  $raw = git diff --cached --name-only --diff-filter=ACMRTUXB
-  if (-not $raw) {
-    return @()
-  }
-  return @($raw | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+  # Pipe direto do git: cada linha vira um item (evita iterar caracteres de string única).
+  # Vírgula prefixada força retorno como array mesmo com um único elemento (PowerShell desempacota @('x')).
+  $paths = @(git diff --cached --name-only --diff-filter=ACMRTUXB |
+    ForEach-Object { $_.Trim() } |
+    Where-Object { $_ })
+  return ,$paths
 }
 
 function Assert-NoSensitiveStaged {
-  $staged = Get-StagedPaths
+  $staged = @(Get-StagedPaths)
   $sensitive = @($staged | Where-Object { Test-SensitivePath $_ })
   if ($sensitive.Count -gt 0) {
     $list = ($sensitive | ForEach-Object { "  - $_" }) -join "`n"
@@ -222,7 +223,7 @@ try {
 
   Assert-NoSensitiveStaged
 
-  $staged = Get-StagedPaths
+  $staged = @(Get-StagedPaths)
   if ($staged.Count -eq 0) {
     throw 'Nenhum arquivo no stage após git add (tudo ignorado pelo .gitignore?).'
   }
