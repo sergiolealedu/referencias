@@ -123,10 +123,19 @@ function FactorNameInput({
 export function FactorsPanel({ rows, catalog, onChange }: FactorsPanelProps) {
   const ensureFactor = useEnsureFactor();
   const updateFactor = useUpdateFactor();
+  const [open, setOpen] = useState(true);
   const [aliasesError, setAliasesError] = useState<string | null>(null);
   const dirtyAliasesRef = useRef(new Set<string>());
   const rowsRef = useRef(rows);
   rowsRef.current = rows;
+
+  useEffect(() => {
+    const className = open ? 'factors-panel-open' : 'factors-panel-collapsed';
+    document.body.classList.add(className);
+    return () => {
+      document.body.classList.remove('factors-panel-open', 'factors-panel-collapsed');
+    };
+  }, [open]);
 
   useEffect(() => {
     const current = rowsRef.current;
@@ -255,115 +264,156 @@ export function FactorsPanel({ rows, catalog, onChange }: FactorsPanelProps) {
     onChange(rows.filter((row) => row.rowId !== rowId));
   };
 
+  const filledCount = rows.filter((row) => row.label.trim()).length;
+  const titleSuffix =
+    filledCount > 0 ? ` (${filledCount})` : rows.length > 0 ? ` (${rows.length})` : '';
+
   return (
-    <section className="factors-panel" aria-label="Fatores do artigo">
+    <section
+      className={`factors-panel${open ? '' : ' is-collapsed'}`}
+      aria-label="Fatores do artigo"
+    >
       <div className="factors-panel-header">
-        <div>
-          <h3>Fatores</h3>
-          <p>
-            Catálogo compartilhado no workspace. Grafias e traduções separadas por
-            vírgula — qualquer uma delas, se digitada como fator, representa o mesmo
-            item analítico (<code>factorId</code>). Polaridade e descrição são deste
-            artigo.
-          </p>
-        </div>
-        <button type="button" className="secondary-btn" onClick={addRow}>
-          Adicionar fator
-        </button>
-      </div>
-
-      {aliasesError && <p className="factors-panel-error">{aliasesError}</p>}
-
-      <div className="factors-panel-table-wrap">
-        <table className="factors-table">
-          <thead>
-            <tr>
-              <th className="factor-col-name">Fator</th>
-              <th className="factor-col-polarity">Polaridade</th>
-              <th className="factor-col-description">Descrição (artigo)</th>
-              <th className="factor-col-aliases">Grafias / traduções (workspace)</th>
-              <th className="factor-col-actions" aria-label="Ações" />
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="factors-empty">
-                  Nenhum fator neste artigo. Informe o nome e as grafias separadas por
-                  vírgula (ex.: usability, usabilidade). Qualquer token identifica o
-                  mesmo fator no workspace.
-                </td>
-              </tr>
+        <button
+          type="button"
+          className="factors-panel-toggle"
+          onClick={() => setOpen((value) => !value)}
+          aria-expanded={open}
+          aria-controls="factors-panel-body"
+          title={open ? 'Recolher painel de fatores' : 'Expandir painel de fatores'}
+        >
+          <span className="factors-panel-toggle-icon" aria-hidden="true">
+            {open ? '▾' : '▴'}
+          </span>
+          <span className="factors-panel-toggle-text">
+            <strong>Fatores{titleSuffix}</strong>
+            {open ? (
+              <>
+                <span className="factors-panel-help-desktop">
+                  Catálogo compartilhado no workspace. Grafias e traduções separadas por
+                  vírgula — qualquer uma delas, se digitada como fator, representa o mesmo
+                  item analítico (<code>factorId</code>). Polaridade e descrição são deste
+                  artigo.
+                </span>
+                <span className="factors-panel-help-mobile">
+                  Catálogo do workspace. Grafias separadas por vírgula identificam o mesmo
+                  fator.
+                </span>
+              </>
             ) : (
-              rows.map((row) => (
-                <tr key={row.rowId}>
-                  <td>
-                    <FactorNameInput
-                      value={row.label}
-                      catalog={catalog}
-                      onChange={(label) =>
-                        updateRow(row.rowId, { label, factorId: undefined })
-                      }
-                      onSelectFactor={(factor, spelling) => {
-                        applySharedFactor(row.rowId, factor, spelling);
-                      }}
-                      onBlurResolve={(label) => {
-                        void linkToWorkspaceCatalog(row.rowId, label);
-                      }}
-                    />
-                  </td>
-                  <td>
-                    <select
-                      value={row.polarity}
-                      onChange={(e) =>
-                        updateRow(row.rowId, {
-                          polarity: e.target.value as FactorRowDraft['polarity'],
-                        })
-                      }
-                    >
-                      <option value="positive">Positivo</option>
-                      <option value="negative">Negativo</option>
-                    </select>
-                  </td>
-                  <td>
-                    <input
-                      value={row.description}
-                      onChange={(e) =>
-                        updateRow(row.rowId, { description: e.target.value })
-                      }
-                      placeholder="Como o fator aparece neste artigo"
-                    />
-                  </td>
-                  <td>
-                    <input
-                      value={row.aliasesText}
-                      onChange={(e) => {
-                        dirtyAliasesRef.current.add(row.rowId);
-                        updateRow(row.rowId, { aliasesText: e.target.value });
-                      }}
-                      onBlur={(e) => {
-                        void persistSharedSpellings(row.rowId, e.target.value);
-                      }}
-                      placeholder="usability, usabilidade, ease of use"
-                      title="Grafias e traduções do workspace, separadas por vírgula"
-                    />
-                  </td>
-                  <td>
-                    <button
-                      type="button"
-                      className="factor-remove-btn"
-                      onClick={() => removeRow(row.rowId)}
-                      title="Remover fator deste artigo"
-                    >
-                      ×
-                    </button>
-                  </td>
-                </tr>
-              ))
+              <span className="factors-panel-collapsed-hint">
+                {filledCount > 0
+                  ? 'Abrir para editar os fatores deste artigo'
+                  : 'Abrir para adicionar fatores'}
+              </span>
             )}
-          </tbody>
-        </table>
+          </span>
+        </button>
+        {open && (
+          <button type="button" className="secondary-btn factors-add-btn" onClick={addRow}>
+            Adicionar fator
+          </button>
+        )}
       </div>
+
+      {open && (
+        <div id="factors-panel-body" className="factors-panel-body">
+          {aliasesError && <p className="factors-panel-error">{aliasesError}</p>}
+
+          <div className="factors-panel-table-wrap">
+            <table className="factors-table">
+              <thead>
+                <tr>
+                  <th className="factor-col-name">Fator</th>
+                  <th className="factor-col-polarity">Polaridade</th>
+                  <th className="factor-col-description">Descrição (artigo)</th>
+                  <th className="factor-col-aliases">Grafias / traduções (workspace)</th>
+                  <th className="factor-col-actions" aria-label="Ações" />
+                </tr>
+              </thead>
+              <tbody>
+                {rows.length === 0 ? (
+                  <tr className="factors-empty-row">
+                    <td colSpan={5} className="factors-empty">
+                      Nenhum fator neste artigo. Informe o nome e as grafias separadas por
+                      vírgula (ex.: usability, usabilidade). Qualquer token identifica o
+                      mesmo fator no workspace.
+                    </td>
+                  </tr>
+                ) : (
+                  rows.map((row) => (
+                    <tr key={row.rowId} className="factor-row">
+                      <td data-label="Fator">
+                        <FactorNameInput
+                          value={row.label}
+                          catalog={catalog}
+                          onChange={(label) =>
+                            updateRow(row.rowId, { label, factorId: undefined })
+                          }
+                          onSelectFactor={(factor, spelling) => {
+                            applySharedFactor(row.rowId, factor, spelling);
+                          }}
+                          onBlurResolve={(label) => {
+                            void linkToWorkspaceCatalog(row.rowId, label);
+                          }}
+                        />
+                      </td>
+                      <td data-label="Polaridade">
+                        <select
+                          className={`factor-polarity-select polarity-${row.polarity}`}
+                          value={row.polarity}
+                          onChange={(e) =>
+                            updateRow(row.rowId, {
+                              polarity: e.target.value as FactorRowDraft['polarity'],
+                            })
+                          }
+                        >
+                          <option value="positive">Positivo</option>
+                          <option value="negative">Negativo</option>
+                        </select>
+                      </td>
+                      <td data-label="Descrição">
+                        <input
+                          value={row.description}
+                          onChange={(e) =>
+                            updateRow(row.rowId, { description: e.target.value })
+                          }
+                          placeholder="Como o fator aparece neste artigo"
+                        />
+                      </td>
+                      <td data-label="Grafias">
+                        <input
+                          value={row.aliasesText}
+                          onChange={(e) => {
+                            dirtyAliasesRef.current.add(row.rowId);
+                            updateRow(row.rowId, { aliasesText: e.target.value });
+                          }}
+                          onBlur={(e) => {
+                            void persistSharedSpellings(row.rowId, e.target.value);
+                          }}
+                          placeholder="usability, usabilidade, ease of use"
+                          title="Grafias e traduções do workspace, separadas por vírgula"
+                        />
+                      </td>
+                      <td className="factor-col-actions" data-label="">
+                        <button
+                          type="button"
+                          className="factor-remove-btn"
+                          onClick={() => removeRow(row.rowId)}
+                          title="Remover fator deste artigo"
+                          aria-label="Remover fator deste artigo"
+                        >
+                          ×
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

@@ -16,6 +16,12 @@ export function matchesFilters(article: Article, filters: ArticleFilters): boole
   if (filters.status && article.status !== filters.status) return false;
   if (filters.usado !== undefined && article.usado !== filters.usado) return false;
   if (filters.descartado !== undefined && article.descartado !== filters.descartado) return false;
+  if (
+    filters.revisaoLiteratura !== undefined
+    && article.revisaoLiteratura !== filters.revisaoLiteratura
+  ) {
+    return false;
+  }
 
   if (filters.tags && filters.tags.length > 0) {
     const hasAllTags = filters.tags.every((tag) => article.tags.includes(tag));
@@ -61,6 +67,8 @@ function getSortValue(article: Article, column: SortColumn): string | number | b
       return article.usado;
     case 'descartado':
       return article.descartado;
+    case 'revisaoLiteratura':
+      return article.revisaoLiteratura;
   }
 }
 
@@ -104,6 +112,7 @@ export function normalizeListParams(params: ArticleListParams = {}): {
       status: params.status,
       usado: params.usado,
       descartado: params.descartado,
+      revisaoLiteratura: params.revisaoLiteratura,
     },
     page,
     pageSize,
@@ -179,4 +188,5 @@ export const SORT_COLUMN_SQL: Record<SortColumn, string> = {
   tags: 'tags_json',
   usado: 'usado',
   descartado: 'descartado',
+  revisaoLiteratura: 'revisao_literatura',
 };

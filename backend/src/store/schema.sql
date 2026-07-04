@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS articles (
   factors_json TEXT NOT NULL DEFAULT '[]',
   descartado INTEGER NOT NULL DEFAULT 0,
   usado INTEGER NOT NULL DEFAULT 0,
+  revisao_literatura INTEGER NOT NULL DEFAULT 0,
   duplicate_group_id INTEGER,
   duplicate_key TEXT,
   UNIQUE(group_id, entry_key)

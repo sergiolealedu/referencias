@@ -101,13 +101,6 @@ export function ArticleForm({
   }, [factorCatalog, article?.factors]);
 
   useEffect(() => {
-    document.body.classList.add('factors-panel-open');
-    return () => {
-      document.body.classList.remove('factors-panel-open');
-    };
-  }, []);
-
-  useEffect(() => {
     if (!abstractExpanded) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setAbstractExpanded(false);
@@ -559,6 +552,14 @@ export function ArticleForm({
               onChange={(e) => setRoot('descartado', e.target.checked)}
             />
             Descartado
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={form.revisaoLiteratura}
+              onChange={(e) => setRoot('revisaoLiteratura', e.target.checked)}
+            />
+            Revisão da literatura
           </label>
         </div>
 

@@ -38,6 +38,7 @@ export const articleSchema = z.object({
   factors: z.array(articleFactorSchema).default([]),
   descartado: z.boolean().default(false),
   usado: z.boolean().default(false),
+  revisaoLiteratura: z.boolean().default(false),
   duplicateOf: duplicateRefSchema.optional(),
 });
 

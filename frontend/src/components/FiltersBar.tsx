@@ -73,6 +73,16 @@ export function FiltersBar({ filters, availableTags, onChange }: FiltersBarProps
         <option value="true">Descartado</option>
         <option value="false">Não descartado</option>
       </select>
+      <select
+        value={filters.revisaoLiteratura ?? ''}
+        onChange={(e) =>
+          onChange({ ...filters, revisaoLiteratura: e.target.value || undefined })
+        }
+      >
+        <option value="">Rev. literatura: todos</option>
+        <option value="true">Revisão da literatura</option>
+        <option value="false">Não é revisão</option>
+      </select>
     </div>
   );
 }

@@ -38,6 +38,7 @@ export interface Article {
   factors: ArticleFactor[];
   descartado: boolean;
   usado: boolean;
+  revisaoLiteratura: boolean;
   duplicateOf?: DuplicateRef;
 }
 
@@ -76,6 +77,7 @@ export interface ArticleFilters {
   status?: string;
   usado?: boolean;
   descartado?: boolean;
+  revisaoLiteratura?: boolean;
 }
 
 export type SortColumn =
@@ -85,7 +87,8 @@ export type SortColumn =
   | 'status'
   | 'tags'
   | 'usado'
-  | 'descartado';
+  | 'descartado'
+  | 'revisaoLiteratura';
 
 export type SortDirection = 'asc' | 'desc';
 

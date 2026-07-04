@@ -19,6 +19,7 @@ const COLUMNS: { key: SortColumn; label: string }[] = [
   { key: 'tags', label: 'Tags' },
   { key: 'usado', label: 'Usado' },
   { key: 'descartado', label: 'Desc.' },
+  { key: 'revisaoLiteratura', label: 'Rev. lit.' },
 ];
 
 interface ArticleTableProps {
@@ -104,7 +105,10 @@ export function ArticleTable({
     onPageChange(1);
   };
 
-  const toggleField = async (article: Article, field: 'usado' | 'descartado') => {
+  const toggleField = async (
+    article: Article,
+    field: 'usado' | 'descartado' | 'revisaoLiteratura',
+  ) => {
     await updateArticle.mutateAsync({
       key: article.entry.key,
       patch: { [field]: !article[field] },
@@ -359,6 +363,24 @@ export function ArticleTable({
                       {copiedTitleKey === article.entry.key ? '✓' : '⧉'}
                     </button>
                   </span>
+                  {(article.factors?.length ?? 0) > 0 && (
+                    <span className="factor-chips" aria-label="Fatores do artigo">
+                      {article.factors.map((factor) => (
+                        <span
+                          key={`${factor.factorId}-${factor.label}-${factor.polarity}`}
+                          className={`factor-chip polarity-${factor.polarity}`}
+                          title={
+                            factor.description
+                              ? `${factor.label}: ${factor.description}`
+                              : factor.label
+                          }
+                        >
+                          {factor.polarity === 'positive' ? '+' : '−'}
+                          {factor.label}
+                        </span>
+                      ))}
+                    </span>
+                  )}
                   {article.status === 'duplicate' && article.duplicateOf && (
                     <button
                       type="button"
@@ -404,6 +426,17 @@ export function ArticleTable({
                     onChange={(e) => {
                       e.stopPropagation();
                       toggleField(article, 'descartado');
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="checkbox"
+                    checked={article.revisaoLiteratura ?? false}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      toggleField(article, 'revisaoLiteratura');
                     }}
                     onClick={(e) => e.stopPropagation()}
                   />

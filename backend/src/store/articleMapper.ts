@@ -15,6 +15,7 @@ export interface ArticleRow {
   factors_json?: string | null;
   descartado: number;
   usado: number;
+  revisao_literatura: number;
   duplicate_group_id: number | null;
   duplicate_key: string | null;
 }
@@ -60,6 +61,7 @@ export function rowToArticle(row: ArticleRow): Article {
     factors: parseFactors(row.factors_json),
     descartado: row.descartado === 1,
     usado: row.usado === 1,
+    revisaoLiteratura: row.revisao_literatura === 1,
     ...(row.duplicate_group_id != null && row.duplicate_key
       ? { duplicateOf: { groupId: row.duplicate_group_id, key: row.duplicate_key } }
       : {}),
@@ -84,6 +86,7 @@ export function articleToRowValues(
     factors_json: JSON.stringify(article.factors ?? []),
     descartado: article.descartado ? 1 : 0,
     usado: article.usado ? 1 : 0,
+    revisao_literatura: article.revisaoLiteratura ? 1 : 0,
     duplicate_group_id: article.duplicateOf?.groupId ?? null,
     duplicate_key: article.duplicateOf?.key ?? null,
   };

@@ -43,6 +43,13 @@ function ensureFactorsMigration(db: Database.Database): void {
   `);
 }
 
+function ensureRevisaoLiteraturaMigration(db: Database.Database): void {
+  const columns = db.prepare('PRAGMA table_info(articles)').all() as Array<{ name: string }>;
+  if (!columns.some((column) => column.name === 'revisao_literatura')) {
+    db.exec(`ALTER TABLE articles ADD COLUMN revisao_literatura INTEGER NOT NULL DEFAULT 0`);
+  }
+}
+
 export function openDatabase(dbPath: string): Database.Database {
   mkdirSync(dirname(dbPath), { recursive: true });
   const db = new Database(dbPath);
@@ -52,6 +59,7 @@ export function openDatabase(dbPath: string): Database.Database {
   db.exec(schema);
   db.exec(FTS_TRIGGER_MIGRATION);
   ensureFactorsMigration(db);
+  ensureRevisaoLiteraturaMigration(db);
   return db;
 }
 

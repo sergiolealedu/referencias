@@ -13,6 +13,7 @@ const sortColumns = [
   'tags',
   'usado',
   'descartado',
+  'revisaoLiteratura',
 ] as const satisfies readonly SortColumn[];
 
 export function parseArticleFilters(query: Request['query']) {
@@ -34,6 +35,12 @@ export function parseArticleListParams(query: Request['query']): ArticleListPara
       : query.descartado === 'false'
         ? false
         : undefined;
+  const revisaoLiteratura =
+    query.revisaoLiteratura === 'true'
+      ? true
+      : query.revisaoLiteratura === 'false'
+        ? false
+        : undefined;
 
   const pageRaw = typeof query.page === 'string' ? Number(query.page) : undefined;
   const pageSizeRaw =
@@ -53,6 +60,7 @@ export function parseArticleListParams(query: Request['query']): ArticleListPara
     status: typeof query.status === 'string' ? query.status : undefined,
     usado,
     descartado,
+    revisaoLiteratura,
     page: pageRaw !== undefined && !Number.isNaN(pageRaw) ? Math.max(1, pageRaw) : undefined,
     pageSize:
       pageSizeRaw !== undefined && !Number.isNaN(pageSizeRaw)

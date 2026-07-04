@@ -60,6 +60,10 @@ function buildArticleFilters(
     conditions.push(`${alias}.descartado = ?`);
     params.push(filters.descartado ? 1 : 0);
   }
+  if (filters.revisaoLiteratura !== undefined) {
+    conditions.push(`${alias}.revisao_literatura = ?`);
+    params.push(filters.revisaoLiteratura ? 1 : 0);
+  }
   if (filters.tags && filters.tags.length > 0) {
     const placeholders = filters.tags.map(() => '?').join(', ');
     conditions.push(
@@ -520,16 +524,16 @@ export class SqliteStore {
       const insert = this.db.prepare(
         `INSERT INTO articles (
           group_id, entry_key, entry_type, fields_json, status, source, location,
-          caminho, notes, tags_json, factors_json, descartado, usado,
+          caminho, notes, tags_json, factors_json, descartado, usado, revisao_literatura,
           duplicate_group_id, duplicate_key
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       );
 
       const update = this.db.prepare(
         `UPDATE articles SET
           entry_type = ?, fields_json = ?, status = ?, source = ?, location = ?,
           caminho = ?, notes = ?, tags_json = ?, factors_json = ?, descartado = ?,
-          usado = ?, duplicate_group_id = ?, duplicate_key = ?
+          usado = ?, revisao_literatura = ?, duplicate_group_id = ?, duplicate_key = ?
          WHERE group_id = ? AND entry_key = ?`,
       );
 
@@ -561,6 +565,7 @@ export class SqliteStore {
             values.factors_json,
             values.descartado,
             values.usado,
+            values.revisao_literatura,
             values.duplicate_group_id,
             values.duplicate_key,
             groupId,
@@ -584,6 +589,7 @@ export class SqliteStore {
           values.factors_json,
           values.descartado,
           values.usado,
+          values.revisao_literatura,
           values.duplicate_group_id,
           values.duplicate_key,
         );
@@ -634,9 +640,9 @@ export class SqliteStore {
       .prepare(
         `INSERT INTO articles (
           group_id, entry_key, entry_type, fields_json, status, source, location,
-          caminho, notes, tags_json, factors_json, descartado, usado,
+          caminho, notes, tags_json, factors_json, descartado, usado, revisao_literatura,
           duplicate_group_id, duplicate_key
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         values.group_id,
@@ -652,6 +658,7 @@ export class SqliteStore {
         values.factors_json,
         values.descartado,
         values.usado,
+        values.revisao_literatura,
         values.duplicate_group_id,
         values.duplicate_key,
       );
@@ -720,7 +727,8 @@ export class SqliteStore {
         `UPDATE articles SET
           entry_key = ?, entry_type = ?, fields_json = ?, status = ?, source = ?,
           location = ?, caminho = ?, notes = ?, tags_json = ?, factors_json = ?,
-          descartado = ?, usado = ?, duplicate_group_id = ?, duplicate_key = ?
+          descartado = ?, usado = ?, revisao_literatura = ?,
+          duplicate_group_id = ?, duplicate_key = ?
          WHERE group_id = ? AND entry_key = ?`,
       )
       .run(
@@ -736,6 +744,7 @@ export class SqliteStore {
         values.factors_json,
         values.descartado,
         values.usado,
+        values.revisao_literatura,
         values.duplicate_group_id,
         values.duplicate_key,
         groupId,
