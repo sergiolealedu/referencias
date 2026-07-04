@@ -5,7 +5,7 @@
 
 .DESCRIPTION
   Localiza o repositório pela pasta deste script (não pelo diretório atual)
-  e executa o pipeline release: commit/push → build local → publicar no servidor.
+  e executa o pipeline release: commit/push → build local → mobile → publicar no servidor.
 
 .EXAMPLE
   # De qualquer pasta (caminho absoluto do wrapper):
@@ -22,6 +22,8 @@ param(
   [switch] $SkipConfirm,
   [switch] $SkipCommit,
   [switch] $SkipBuild,
+  [switch] $SkipMobile,
+  [string] $ApkDestination = 'G:\Meu Drive\doutorado\app',
   [switch] $SkipPublish,
   [string] $DeployFile = '',
   [switch] $AllowDirty
@@ -50,6 +52,8 @@ if ($Message) { $forward['Message'] = $Message }
 if ($SkipConfirm) { $forward['SkipConfirm'] = $true }
 if ($SkipCommit) { $forward['SkipCommit'] = $true }
 if ($SkipBuild) { $forward['SkipBuild'] = $true }
+if ($SkipMobile) { $forward['SkipMobile'] = $true }
+if ($ApkDestination) { $forward['ApkDestination'] = $ApkDestination }
 if ($SkipPublish) { $forward['SkipPublish'] = $true }
 if ($DeployFile) { $forward['DeployFile'] = $DeployFile }
 if ($AllowDirty) { $forward['AllowDirty'] = $true }

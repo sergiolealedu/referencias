@@ -1,13 +1,14 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  Pipeline de release: commit/push → build local → publicar no servidor.
+  Pipeline de release: commit/push → build local → mobile → publicar no servidor.
 
 .DESCRIPTION
   Orquestra os scripts existentes na ordem correta para uma nova versão:
     1. commit-and-push — grava alterações e envia para origin
     2. npm run build — valida build local (backend + frontend)
-    3. publish-to-server — pull, build e restart no servidor
+    3. build-and-copy-apk — gera APK Android e copia para o destino
+    4. publish-to-server — pull, build e restart no servidor
 
   Após o passo 1, a publicação usa -SkipPush para não repetir o git push.
 
@@ -23,8 +24,14 @@
 .PARAMETER SkipBuild
   Pula npm run build local.
 
+.PARAMETER SkipMobile
+  Pula build do APK Android.
+
+.PARAMETER ApkDestination
+  Pasta de destino do APK (padrão: G:\Meu Drive\doutorado\app).
+
 .PARAMETER SkipPublish
-  Pula publicação no servidor (só commit e build).
+  Pula publicação no servidor (só commit, build e mobile).
 
 .PARAMETER DeployFile
   Arquivo de credenciais para o deploy (padrão: deploy.txt na raiz do repo).
@@ -49,6 +56,8 @@ param(
   [switch] $SkipConfirm,
   [switch] $SkipCommit,
   [switch] $SkipBuild,
+  [switch] $SkipMobile,
+  [string] $ApkDestination = 'G:\Meu Drive\doutorado\app',
   [switch] $SkipPublish,
   [string] $DeployFile = '',
   [switch] $AllowDirty,
@@ -84,7 +93,11 @@ function Confirm-ReleaseStart {
   Write-Host 'Pipeline de release:' -ForegroundColor White
   Write-Host "  1. Commit/push: $(if ($SkipCommit) { 'pular' } else { 'sim' })"
   Write-Host "  2. Build local: $(if ($SkipBuild) { 'pular' } else { 'npm run build' })"
-  Write-Host "  3. Publicar servidor: $(if ($SkipPublish) { 'pular' } else { 'sim' })"
+  Write-Host "  3. Mobile (APK): $(if ($SkipMobile) { 'pular' } else { 'sim' })"
+  Write-Host "  4. Publicar servidor: $(if ($SkipPublish) { 'pular' } else { 'sim' })"
+  if (-not $SkipMobile) {
+    Write-Host "  APK destino: $ApkDestination"
+  }
   if ($Message) {
     Write-Host "  Mensagem: $Message"
   }
@@ -129,6 +142,7 @@ function Invoke-NpmBuild {
 }
 
 $commitScript = Join-Path $RepoRoot 'scripts\deploy\commit-and-push.ps1'
+$androidScript = Join-Path $RepoRoot 'scripts\android\build-and-copy-apk.ps1'
 $publishScript = Join-Path $RepoRoot 'scripts\deploy\publish-to-server.ps1'
 
 Write-Step "Repositório: $RepoRoot"
@@ -136,7 +150,7 @@ Confirm-ReleaseStart
 
 if (-not $SkipCommit) {
   Write-Host ''
-  Write-Host '=== 1/3 — Commit e push ===' -ForegroundColor Magenta
+  Write-Host '=== 1/4 — Commit e push ===' -ForegroundColor Magenta
 
   $commitArgs = @{
     RepoRoot = $RepoRoot
@@ -152,16 +166,31 @@ else {
 
 if (-not $SkipBuild) {
   Write-Host ''
-  Write-Host '=== 2/3 — Build local ===' -ForegroundColor Magenta
+  Write-Host '=== 2/4 — Build local ===' -ForegroundColor Magenta
   Invoke-NpmBuild
 }
 else {
   Write-WarnStep 'Pulando build local (-SkipBuild).'
 }
 
+if (-not $SkipMobile) {
+  Write-Host ''
+  Write-Host '=== 3/4 — Mobile (APK Android) ===' -ForegroundColor Magenta
+
+  $androidArgs = @{
+    RepoRoot    = $RepoRoot
+    Destination = $ApkDestination
+  }
+
+  Invoke-ChildScript -Path $androidScript -Arguments $androidArgs
+}
+else {
+  Write-WarnStep 'Pulando build mobile (-SkipMobile).'
+}
+
 if (-not $SkipPublish) {
   Write-Host ''
-  Write-Host '=== 3/3 — Publicar no servidor ===' -ForegroundColor Magenta
+  Write-Host '=== 4/4 — Publicar no servidor ===' -ForegroundColor Magenta
 
   $publishArgs = @{
     RepoRoot = $RepoRoot
