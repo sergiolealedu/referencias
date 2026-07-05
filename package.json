@@ -34,6 +34,6 @@
     "install:server": "powershell -ExecutionPolicy Bypass -File ./install-server.ps1 -SkipConfirm"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "concurrently": "^10.0.3"
   }
 }
