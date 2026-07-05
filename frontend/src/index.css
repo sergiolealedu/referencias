@@ -1275,8 +1275,8 @@ button {
 
 .title-cell-row {
   display: flex;
-  align-items: flex-start;
-  gap: 0.35rem;
+  align-items: center;
+  gap: 0.5rem;
   max-width: 100%;
 }
 
@@ -1328,29 +1328,31 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.15rem;
-  height: 1.15rem;
-  margin-top: 0.1rem;
-  padding: 0;
-  border: none;
-  border-radius: 3px;
-  background: transparent;
-  color: var(--muted, #64748b);
-  font-size: 0.7rem;
+  min-width: 3.25rem;
+  min-height: 1.75rem;
+  padding: 0.25rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.6875rem;
+  font-weight: 600;
   line-height: 1;
-  opacity: 0.45;
+  white-space: nowrap;
   cursor: pointer;
 }
 
-.title-cell:hover .title-copy-btn,
+.title-copy-btn:hover,
 .title-copy-btn:focus-visible {
-  opacity: 0.85;
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: var(--primary);
 }
 
-.title-copy-btn:hover {
-  opacity: 1;
-  background: #e2e8f0;
-  color: var(--primary);
+.title-copy-btn.is-copied {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #047857;
 }
 
 .tags-cell {
@@ -2669,6 +2671,13 @@ body.dashboard-fullscreen-open {
     grid-column: 1 / -1;
     grid-row: 2;
     padding: 0;
+  }
+
+  .title-copy-btn {
+    min-width: 3.75rem;
+    min-height: 2.25rem;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.75rem;
   }
 
   .article-row--meta {

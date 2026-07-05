@@ -176,7 +176,22 @@ export function ArticleTable({
 
   const handleCopyTitle = async (key: string, title: string) => {
     try {
-      await navigator.clipboard.writeText(title);
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(title);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = title;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(textarea);
+        if (!ok) {
+          throw new Error('Clipboard indisponível');
+        }
+      }
       setCopiedTitleKey(key);
       if (copiedTitleTimerRef.current) clearTimeout(copiedTitleTimerRef.current);
       copiedTitleTimerRef.current = setTimeout(() => {
@@ -359,8 +374,8 @@ export function ArticleTable({
                         </span>
                         <button
                           type="button"
-                          className="title-copy-btn"
-                          title="Copiar título"
+                          className={`title-copy-btn${copiedTitleKey === articleKey ? ' is-copied' : ''}`}
+                          title="Copiar título para a área de transferência"
                           aria-label="Copiar título"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -371,7 +386,7 @@ export function ArticleTable({
                             );
                           }}
                         >
-                          {copiedTitleKey === articleKey ? '✓' : '⧉'}
+                          {copiedTitleKey === articleKey ? 'Copiado!' : 'Copiar'}
                         </button>
                       </span>
                       {(article.factors?.length ?? 0) > 0 && (
