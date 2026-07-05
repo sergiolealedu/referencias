@@ -4,7 +4,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import App from './App';
 import { DeviceGate } from './components/DeviceGate';
+import { getDocumentTitle } from './buildInfo';
 import './index.css';
+
+document.title = getDocumentTitle();
 
 const queryClient = new QueryClient({
   defaultOptions: {

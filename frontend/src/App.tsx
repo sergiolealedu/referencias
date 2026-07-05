@@ -49,6 +49,7 @@ import type { ArticleFilters, SortColumn, SortDirection } from './types/referenc
 
 import { api } from './api/client';
 
+import { APP_TITLE, BUILD_ID, BUILD_LABEL } from './buildInfo';
 import { downloadGroupExport } from './utils/groupExport';
 import { showGlobalSettings } from './utils/platform';
 
@@ -503,7 +504,12 @@ export default function App() {
 
         <div className="app-header-text">
 
-          <h1>Referências — Doutorado</h1>
+          <h1>
+            {APP_TITLE}
+            <span className="app-build-version" title={`Build: ${BUILD_ID}`}>
+              {BUILD_LABEL}
+            </span>
+          </h1>
 
           <p
             className="subtitle"
