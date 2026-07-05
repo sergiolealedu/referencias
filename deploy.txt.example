@@ -9,4 +9,5 @@ pm2_app: referencias-api
 # Opcionais (backup/restore):
 # app_user: referencias
 # pdf_dir: /var/lib/referencias/pdfs
+# domain: ref.sergioleal.org
 # GitHub Actions (Settings → Variables): DEPLOY_ENABLED=true

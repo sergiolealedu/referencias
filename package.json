@@ -1,6 +1,6 @@
 {
   "name": "referencias-app",
-  "version": "1.1.23",
+  "version": "1.1.24",
   "private": true,
   "description": "Gerenciamento bibliográfico para doutorado — monorepo full-stack",
   "repository": {
@@ -30,7 +30,8 @@
     "release:server": "powershell -ExecutionPolicy Bypass -File ./release.ps1",
     "backup:server": "powershell -ExecutionPolicy Bypass -File ./scripts/backup/server-data.ps1 -Action Backup -SkipConfirm",
     "restore:server": "powershell -ExecutionPolicy Bypass -File ./scripts/backup/server-data.ps1 -Action Restore -Latest -SkipConfirm",
-    "backup:server:list": "powershell -ExecutionPolicy Bypass -File ./scripts/backup/server-data.ps1 -Action List"
+    "backup:server:list": "powershell -ExecutionPolicy Bypass -File ./scripts/backup/server-data.ps1 -Action List",
+    "install:server": "powershell -ExecutionPolicy Bypass -File ./install-server.ps1 -SkipConfirm"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
