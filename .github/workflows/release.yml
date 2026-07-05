@@ -162,6 +162,7 @@ jobs:
             echo
             echo "- \`referencias-${{ steps.version.outputs.version }}.aab\` — bundle para Google Play"
             echo "- \`referencias-${{ steps.version.outputs.version }}.apk\` — instalação direta (sideload)"
+            echo "- \`/downloads/referencias-latest.apk\` — APK publicado no servidor (após deploy automático)"
             echo
             if [ "$ANDROID_SIGNING_CONFIGURED" = "true" ]; then
               echo "Build assinado com o keystore de release configurado nos secrets do repositório."
@@ -187,3 +188,19 @@ jobs:
           generate_release_notes: false
           draft: false
           prerelease: ${{ contains(steps.version.outputs.version, '-') }}
+
+      - name: Deploy to production server
+        if: ${{ vars.DEPLOY_ENABLED == 'true' }}
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PASS: ${{ secrets.DEPLOY_PASSWORD }}
+          DEPLOY_TAG: ${{ github.ref_name }}
+          DEPLOY_VERSION: ${{ steps.version.outputs.version }}
+          DEPLOY_APP_DIR: ${{ vars.DEPLOY_APP_DIR }}
+          DEPLOY_PM2_APP: ${{ vars.DEPLOY_PM2_APP }}
+          DEPLOY_APP_USER: ${{ vars.DEPLOY_APP_USER }}
+          DEPLOY_APK_PATH: release/referencias-${{ steps.version.outputs.version }}.apk
+        run: |
+          pip install paramiko
+          python scripts/deploy/publish-release-to-server-remote.py

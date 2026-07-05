@@ -24,3 +24,22 @@ createRoot(document.getElementById('root')!).render(
     </QueryClientProvider>
   </StrictMode>,
 );
+
+// #region agent log
+fetch('http://127.0.0.1:7564/ingest/3b190956-9a72-49a4-a911-5f9d4ca65594', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Debug-Session-Id': 'd8e57d',
+  },
+  body: JSON.stringify({
+    sessionId: 'd8e57d',
+    runId: 'pre-fix',
+    hypothesisId: 'B',
+    location: 'main.tsx:boot',
+    message: 'react root render invoked',
+    data: { hasRoot: !!document.getElementById('root') },
+    timestamp: Date.now(),
+  }),
+}).catch(() => {});
+// #endregion

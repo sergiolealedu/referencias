@@ -265,9 +265,36 @@ git push origin v1.0.0
    - compilar backend e frontend;
    - publicar `@sergiolealedu/referencias-backend` e `@sergiolealedu/referencias-frontend` no [GitHub Packages](https://github.com/sergiolealedu/referencias/pkgs/npm/referencias-backend);
    - gerar o app Android (`.aab` e `.apk`) com Capacitor;
-   - gerar um ZIP de deploy e anexar tudo à [GitHub Release](https://github.com/sergiolealedu/referencias/releases).
+   - gerar um ZIP de deploy e anexar tudo à [GitHub Release](https://github.com/sergiolealedu/referencias/releases);
+   - **publicar no servidor de produção** (checkout da tag, build, restart PM2) e copiar o APK para `/downloads/` (quando `DEPLOY_ENABLED=true`).
 
 Tags pré-release (ex.: `v1.1.0-beta.1`) são marcadas como *pre-release* automaticamente.
+
+#### Deploy automático no servidor
+
+Configure em *Settings → Secrets and variables → Actions*:
+
+**Secrets**:
+
+| Secret | Descrição |
+|--------|-----------|
+| `DEPLOY_HOST` | IP ou hostname do servidor (obrigatório) |
+| `DEPLOY_PASSWORD` | Senha SSH — mesmo valor de `senha` em `deploy.txt` (obrigatório) |
+| `DEPLOY_USER` | Usuário SSH (opcional; padrão: `root`) |
+
+**Variables** (repositório):
+
+| Variable | Descrição |
+|----------|-----------|
+| `DEPLOY_ENABLED` | Defina como `true` para ativar deploy automático em cada release |
+| `DEPLOY_APP_DIR` | Diretório da app (padrão: `/opt/referencias`) |
+| `DEPLOY_PM2_APP` | Nome do processo PM2 (padrão: `referencias-api`) |
+| `DEPLOY_APP_USER` | Usuário da aplicação no servidor (padrão: `referencias`) |
+
+Após cada release, o APK fica disponível em:
+
+- `https://SEU_DOMINIO/downloads/referencias-latest.apk`
+- `https://SEU_DOMINIO/downloads/referencias-VERSÃO.apk`
 
 ### Instalar pacotes da registry
 

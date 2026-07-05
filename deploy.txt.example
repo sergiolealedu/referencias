@@ -1,4 +1,5 @@
 # Copie para deploy.txt e preencha (deploy.txt não vai para o Git).
+# Para deploy automático via GitHub Actions, use os secrets DEPLOY_* (ver README).
 senha: SUA_SENHA
 ip do servidor: 159.223.130.39
 usuario: root
@@ -8,3 +9,4 @@ pm2_app: referencias-api
 # Opcionais (backup/restore):
 # app_user: referencias
 # pdf_dir: /var/lib/referencias/pdfs
+# GitHub Actions (Settings → Variables): DEPLOY_ENABLED=true

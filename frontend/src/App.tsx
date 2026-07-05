@@ -100,6 +100,88 @@ export default function App() {
 
   const [view, setView] = useState<AppView>('articles');
 
+  // #region agent log
+  useEffect(() => {
+    const log = (
+      hypothesisId: string,
+      message: string,
+      data: Record<string, unknown>,
+    ) => {
+      fetch('http://127.0.0.1:7564/ingest/3b190956-9a72-49a4-a911-5f9d4ca65594', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Debug-Session-Id': 'd8e57d',
+        },
+        body: JSON.stringify({
+          sessionId: 'd8e57d',
+          runId: 'pre-fix',
+          hypothesisId,
+          location: 'App.tsx:debug',
+          message,
+          data,
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+    };
+
+    const sampleStack = (x: number, y: number) => {
+      const stack = document.elementsFromPoint(x, y).slice(0, 5).map((el) => ({
+        tag: el.tagName,
+        className: typeof el.className === 'string' ? el.className : '',
+        id: el.id,
+      }));
+      return stack;
+    };
+
+    log('A', 'app mounted', {
+      innerWidth: window.innerWidth,
+      innerHeight: window.innerHeight,
+      headerStack: sampleStack(window.innerWidth / 2, 80),
+      centerStack: sampleStack(window.innerWidth / 2, window.innerHeight / 2),
+      bodyClasses: document.body.className,
+    });
+
+    const onError = (event: ErrorEvent) => {
+      log('B', 'window error', {
+        message: event.message,
+        filename: event.filename,
+        lineno: event.lineno,
+      });
+    };
+
+    const onUnhandled = (event: PromiseRejectionEvent) => {
+      log('B', 'unhandled rejection', {
+        reason: String(event.reason),
+      });
+    };
+
+    const onClickCapture = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      const top = document.elementFromPoint(event.clientX, event.clientY);
+      log('C', 'document click capture', {
+        targetTag: target?.tagName ?? null,
+        targetClass: target?.className ?? null,
+        topTag: top?.tagName ?? null,
+        topClass: typeof top?.className === 'string' ? top.className : null,
+        clientX: event.clientX,
+        clientY: event.clientY,
+        defaultPrevented: event.defaultPrevented,
+      });
+    };
+
+    window.addEventListener('error', onError);
+    window.addEventListener('unhandledrejection', onUnhandled);
+    document.addEventListener('click', onClickCapture, true);
+
+    return () => {
+      window.removeEventListener('error', onError);
+      window.removeEventListener('unhandledrejection', onUnhandled);
+      document.removeEventListener('click', onClickCapture, true);
+    };
+  }, []);
+  // #endregion
+
 
 
   const { data: settings } = useSettings();
@@ -223,6 +305,55 @@ export default function App() {
     formArticle !== undefined &&
 
     formArticle.entry.key === formTarget.key;
+
+  // #region agent log
+  useEffect(() => {
+    fetch('http://127.0.0.1:7564/ingest/3b190956-9a72-49a4-a911-5f9d4ca65594', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Debug-Session-Id': 'd8e57d',
+      },
+      body: JSON.stringify({
+        sessionId: 'd8e57d',
+        runId: 'pre-fix',
+        hypothesisId: 'D',
+        location: 'App.tsx:ui-state',
+        message: 'ui overlay state',
+        data: {
+          showForm,
+          showImport,
+          showGroupImport,
+          showUsadoExport,
+          showWorkspaceAccess,
+          showSettings,
+          view,
+          selectedKey,
+          isNewArticle,
+          hasFormTarget: formTarget !== null,
+          formPending,
+          formFetching,
+          formArticleReady,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+  }, [
+    showForm,
+    showImport,
+    showGroupImport,
+    showUsadoExport,
+    showWorkspaceAccess,
+    showSettings,
+    view,
+    selectedKey,
+    isNewArticle,
+    formTarget,
+    formPending,
+    formFetching,
+    formArticleReady,
+  ]);
+  // #endregion
 
 
 
@@ -423,7 +554,27 @@ export default function App() {
 
             className={view === 'dashboard' ? 'active-view' : ''}
 
-            onClick={() => setView('dashboard')}
+            onClick={() => {
+              // #region agent log
+              fetch('http://127.0.0.1:7564/ingest/3b190956-9a72-49a4-a911-5f9d4ca65594', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-Debug-Session-Id': 'd8e57d',
+                },
+                body: JSON.stringify({
+                  sessionId: 'd8e57d',
+                  runId: 'pre-fix',
+                  hypothesisId: 'E',
+                  location: 'App.tsx:dashboard-btn',
+                  message: 'dashboard button handler fired',
+                  data: { previousView: view },
+                  timestamp: Date.now(),
+                }),
+              }).catch(() => {});
+              // #endregion
+              setView('dashboard');
+            }}
 
           >
 
