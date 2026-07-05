@@ -229,6 +229,24 @@ try {
     [void] [Console]::ReadLine()
   }
 
+  Write-Step 'Sincronizando versão semver (git tags + commits)...'
+  & node (Join-Path $RepoRoot 'scripts/sync-package-version.mjs')
+  $versionFiles = @(
+    'package.json',
+    'backend/package.json',
+    'frontend/package.json',
+    'frontend/android/app/build.gradle'
+  )
+  $versionStatus = git status --porcelain -- @versionFiles
+  if ($versionStatus) {
+    git add -- @versionFiles
+    $syncedVersion = (Get-Content (Join-Path $RepoRoot 'package.json') -Raw | ConvertFrom-Json).version
+    git commit -m "chore: sync version to v$syncedVersion"
+    if ($LASTEXITCODE -ne 0) {
+      throw 'Commit de versão falhou.'
+    }
+  }
+
   if (-not $SkipPush) {
     Write-Step "Enviando branch $($config.branch) para origin..."
     git push origin $config.branch

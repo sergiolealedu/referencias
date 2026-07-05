@@ -368,7 +368,7 @@ export function ArticleTable({
                       />
                     </td>
                     <td className="title-cell" colSpan={COLUMNS.length + 1}>
-                      <span className="title-cell-row">
+                      <div className="title-cell-leading">
                         <span className="title-cell-text">
                           {article.entry.fields.title || articleKey}
                         </span>
@@ -388,7 +388,7 @@ export function ArticleTable({
                         >
                           {copiedTitleKey === articleKey ? 'Copiado!' : 'Copiar'}
                         </button>
-                      </span>
+                      </div>
                       {(article.factors?.length ?? 0) > 0 && (
                         <span className="factor-chips" aria-label="Fatores do artigo">
                           {article.factors.map((factor) => (

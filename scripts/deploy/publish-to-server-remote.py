@@ -38,6 +38,8 @@ sudo -u referencias git checkout '{branch}'
 sudo -u referencias git pull --ff-only origin '{branch}'
 echo '=== commit ==='
 sudo -u referencias git log -1 --oneline
+echo '=== version ==='
+sudo -u referencias node scripts/resolve-build-version.mjs || true
 echo '=== build ==='
 sudo -u referencias npm ci --no-fund --no-audit
 sudo -u referencias npm run build

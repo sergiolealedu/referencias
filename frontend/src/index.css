@@ -1273,16 +1273,15 @@ button {
   max-width: none;
 }
 
-.title-cell-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.title-cell-leading {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.45rem;
   max-width: 100%;
 }
 
 .title-cell-text {
   min-width: 0;
-  flex: 1;
   font-size: 0.9375rem;
   font-weight: 600;
   color: var(--text);

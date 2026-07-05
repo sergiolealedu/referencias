@@ -195,6 +195,9 @@ if (-not $SkipCommit) {
   Write-Host ''
   Write-Host '=== 3/4 — Commit e push ===' -ForegroundColor Magenta
 
+  Write-Step 'Sincronizando versão semver (git tags + commits)...'
+  & node (Join-Path $RepoRoot 'scripts/sync-package-version.mjs')
+
   $commitArgs = @{
     RepoRoot = $RepoRoot
   }
