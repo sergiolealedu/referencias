@@ -1,6 +1,6 @@
 {
   "name": "referencias-app",
-  "version": "1.1.22",
+  "version": "1.1.23",
   "private": true,
   "description": "Gerenciamento bibliográfico para doutorado — monorepo full-stack",
   "repository": {
