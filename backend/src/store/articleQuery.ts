@@ -22,6 +22,12 @@ export function matchesFilters(article: Article, filters: ArticleFilters): boole
   ) {
     return false;
   }
+  if (
+    filters.pdfNaoEncontrado !== undefined
+    && article.pdfNaoEncontrado !== filters.pdfNaoEncontrado
+  ) {
+    return false;
+  }
 
   if (filters.tags && filters.tags.length > 0) {
     const hasAllTags = filters.tags.every((tag) => article.tags.includes(tag));
@@ -69,6 +75,8 @@ function getSortValue(article: Article, column: SortColumn): string | number | b
       return article.descartado;
     case 'revisaoLiteratura':
       return article.revisaoLiteratura;
+    case 'pdfNaoEncontrado':
+      return article.pdfNaoEncontrado;
   }
 }
 
@@ -113,6 +121,7 @@ export function normalizeListParams(params: ArticleListParams = {}): {
       usado: params.usado,
       descartado: params.descartado,
       revisaoLiteratura: params.revisaoLiteratura,
+      pdfNaoEncontrado: params.pdfNaoEncontrado,
     },
     page,
     pageSize,
@@ -189,4 +198,5 @@ export const SORT_COLUMN_SQL: Record<SortColumn, string> = {
   usado: 'usado',
   descartado: 'descartado',
   revisaoLiteratura: 'revisao_literatura',
+  pdfNaoEncontrado: 'pdf_nao_encontrado',
 };

@@ -40,6 +40,7 @@ export interface FactorOccurrence {
   label: string;
   usado: boolean;
   descartado: boolean;
+  pdfNaoEncontrado: boolean;
 }
 
 /** Fator do catálogo com todas as ocorrências nos artigos. */
@@ -65,6 +66,7 @@ export interface Article {
   descartado: boolean;
   usado: boolean;
   revisaoLiteratura: boolean;
+  pdfNaoEncontrado: boolean;
   duplicateOf?: DuplicateRef;
 }
 
@@ -104,6 +106,7 @@ export interface ArticleFilters {
   usado?: boolean;
   descartado?: boolean;
   revisaoLiteratura?: boolean;
+  pdfNaoEncontrado?: boolean;
 }
 
 export type SortColumn =
@@ -114,7 +117,8 @@ export type SortColumn =
   | 'tags'
   | 'usado'
   | 'descartado'
-  | 'revisaoLiteratura';
+  | 'revisaoLiteratura'
+  | 'pdfNaoEncontrado';
 
 export type SortDirection = 'asc' | 'desc';
 

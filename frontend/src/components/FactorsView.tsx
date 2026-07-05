@@ -202,6 +202,11 @@ export function FactorsView({ onOpenArticle }: FactorsViewProps) {
                                   Descartado
                                 </span>
                               )}
+                              {occurrence.pdfNaoEncontrado && (
+                                <span className="factors-view-badge is-muted">
+                                  PDF n/enc.
+                                </span>
+                              )}
                             </div>
 
                             <button

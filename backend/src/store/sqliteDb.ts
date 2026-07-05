@@ -50,6 +50,13 @@ function ensureRevisaoLiteraturaMigration(db: Database.Database): void {
   }
 }
 
+function ensurePdfNaoEncontradoMigration(db: Database.Database): void {
+  const columns = db.prepare('PRAGMA table_info(articles)').all() as Array<{ name: string }>;
+  if (!columns.some((column) => column.name === 'pdf_nao_encontrado')) {
+    db.exec(`ALTER TABLE articles ADD COLUMN pdf_nao_encontrado INTEGER NOT NULL DEFAULT 0`);
+  }
+}
+
 export function openDatabase(dbPath: string): Database.Database {
   mkdirSync(dirname(dbPath), { recursive: true });
   const db = new Database(dbPath);
@@ -60,6 +67,7 @@ export function openDatabase(dbPath: string): Database.Database {
   db.exec(FTS_TRIGGER_MIGRATION);
   ensureFactorsMigration(db);
   ensureRevisaoLiteraturaMigration(db);
+  ensurePdfNaoEncontradoMigration(db);
   return db;
 }
 

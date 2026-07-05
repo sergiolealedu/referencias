@@ -74,6 +74,16 @@ export function FiltersBar({ filters, availableTags, onChange }: FiltersBarProps
         <option value="false">Não descartado</option>
       </select>
       <select
+        value={filters.pdfNaoEncontrado ?? ''}
+        onChange={(e) =>
+          onChange({ ...filters, pdfNaoEncontrado: e.target.value || undefined })
+        }
+      >
+        <option value="">PDF n/enc.: todos</option>
+        <option value="true">PDF não encontrado</option>
+        <option value="false">PDF encontrado / N/A</option>
+      </select>
+      <select
         value={filters.revisaoLiteratura ?? ''}
         onChange={(e) =>
           onChange({ ...filters, revisaoLiteratura: e.target.value || undefined })

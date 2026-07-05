@@ -39,6 +39,7 @@ export const articleSchema = z.object({
   descartado: z.boolean().default(false),
   usado: z.boolean().default(false),
   revisaoLiteratura: z.boolean().default(false),
+  pdfNaoEncontrado: z.boolean().default(false),
   duplicateOf: duplicateRefSchema.optional(),
 });
 

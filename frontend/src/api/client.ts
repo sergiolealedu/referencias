@@ -108,6 +108,7 @@ function toQuery(params: ArticleListParams): string {
   if (params.usado) search.set('usado', params.usado);
   if (params.descartado) search.set('descartado', params.descartado);
   if (params.revisaoLiteratura) search.set('revisaoLiteratura', params.revisaoLiteratura);
+  if (params.pdfNaoEncontrado) search.set('pdfNaoEncontrado', params.pdfNaoEncontrado);
   if (params.page) search.set('page', String(params.page));
   if (params.pageSize) search.set('pageSize', String(params.pageSize));
   if (params.sortBy) search.set('sortBy', params.sortBy);

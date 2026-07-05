@@ -16,6 +16,7 @@ export interface ArticleRow {
   descartado: number;
   usado: number;
   revisao_literatura: number;
+  pdf_nao_encontrado: number;
   duplicate_group_id: number | null;
   duplicate_key: string | null;
 }
@@ -62,6 +63,7 @@ export function rowToArticle(row: ArticleRow): Article {
     descartado: row.descartado === 1,
     usado: row.usado === 1,
     revisaoLiteratura: row.revisao_literatura === 1,
+    pdfNaoEncontrado: row.pdf_nao_encontrado === 1,
     ...(row.duplicate_group_id != null && row.duplicate_key
       ? { duplicateOf: { groupId: row.duplicate_group_id, key: row.duplicate_key } }
       : {}),
@@ -87,6 +89,7 @@ export function articleToRowValues(
     descartado: article.descartado ? 1 : 0,
     usado: article.usado ? 1 : 0,
     revisao_literatura: article.revisaoLiteratura ? 1 : 0,
+    pdf_nao_encontrado: article.pdfNaoEncontrado ? 1 : 0,
     duplicate_group_id: article.duplicateOf?.groupId ?? null,
     duplicate_key: article.duplicateOf?.key ?? null,
   };

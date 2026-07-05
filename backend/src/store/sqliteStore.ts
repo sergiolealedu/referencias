@@ -66,6 +66,10 @@ function buildArticleFilters(
     conditions.push(`${alias}.revisao_literatura = ?`);
     params.push(filters.revisaoLiteratura ? 1 : 0);
   }
+  if (filters.pdfNaoEncontrado !== undefined) {
+    conditions.push(`${alias}.pdf_nao_encontrado = ?`);
+    params.push(filters.pdfNaoEncontrado ? 1 : 0);
+  }
   if (filters.tags && filters.tags.length > 0) {
     const placeholders = filters.tags.map(() => '?').join(', ');
     conditions.push(
@@ -243,6 +247,7 @@ export class SqliteStore {
           label: factor.label,
           usado: article.usado,
           descartado: article.descartado,
+          pdfNaoEncontrado: article.pdfNaoEncontrado,
         };
         overview.occurrences.push(occurrence);
         overview.articleCount += 1;
@@ -604,15 +609,16 @@ export class SqliteStore {
         `INSERT INTO articles (
           group_id, entry_key, entry_type, fields_json, status, source, location,
           caminho, notes, tags_json, factors_json, descartado, usado, revisao_literatura,
-          duplicate_group_id, duplicate_key
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          pdf_nao_encontrado, duplicate_group_id, duplicate_key
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       );
 
       const update = this.db.prepare(
         `UPDATE articles SET
           entry_type = ?, fields_json = ?, status = ?, source = ?, location = ?,
           caminho = ?, notes = ?, tags_json = ?, factors_json = ?, descartado = ?,
-          usado = ?, revisao_literatura = ?, duplicate_group_id = ?, duplicate_key = ?
+          usado = ?, revisao_literatura = ?, pdf_nao_encontrado = ?,
+          duplicate_group_id = ?, duplicate_key = ?
          WHERE group_id = ? AND entry_key = ?`,
       );
 
@@ -645,6 +651,7 @@ export class SqliteStore {
             values.descartado,
             values.usado,
             values.revisao_literatura,
+            values.pdf_nao_encontrado,
             values.duplicate_group_id,
             values.duplicate_key,
             groupId,
@@ -669,6 +676,7 @@ export class SqliteStore {
           values.descartado,
           values.usado,
           values.revisao_literatura,
+          values.pdf_nao_encontrado,
           values.duplicate_group_id,
           values.duplicate_key,
         );
@@ -720,8 +728,8 @@ export class SqliteStore {
         `INSERT INTO articles (
           group_id, entry_key, entry_type, fields_json, status, source, location,
           caminho, notes, tags_json, factors_json, descartado, usado, revisao_literatura,
-          duplicate_group_id, duplicate_key
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          pdf_nao_encontrado, duplicate_group_id, duplicate_key
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         values.group_id,
@@ -738,6 +746,7 @@ export class SqliteStore {
         values.descartado,
         values.usado,
         values.revisao_literatura,
+        values.pdf_nao_encontrado,
         values.duplicate_group_id,
         values.duplicate_key,
       );
@@ -806,7 +815,7 @@ export class SqliteStore {
         `UPDATE articles SET
           entry_key = ?, entry_type = ?, fields_json = ?, status = ?, source = ?,
           location = ?, caminho = ?, notes = ?, tags_json = ?, factors_json = ?,
-          descartado = ?, usado = ?, revisao_literatura = ?,
+          descartado = ?, usado = ?, revisao_literatura = ?, pdf_nao_encontrado = ?,
           duplicate_group_id = ?, duplicate_key = ?
          WHERE group_id = ? AND entry_key = ?`,
       )
@@ -824,6 +833,7 @@ export class SqliteStore {
         values.descartado,
         values.usado,
         values.revisao_literatura,
+        values.pdf_nao_encontrado,
         values.duplicate_group_id,
         values.duplicate_key,
         groupId,

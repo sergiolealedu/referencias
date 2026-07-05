@@ -19,6 +19,7 @@ const COLUMNS: { key: SortColumn; label: string }[] = [
   { key: 'tags', label: 'Tags' },
   { key: 'usado', label: 'Usado' },
   { key: 'descartado', label: 'Desc.' },
+  { key: 'pdfNaoEncontrado', label: 'PDF n/enc.' },
   { key: 'revisaoLiteratura', label: 'Rev. lit.' },
 ];
 
@@ -107,7 +108,7 @@ export function ArticleTable({
 
   const toggleField = async (
     article: Article,
-    field: 'usado' | 'descartado' | 'revisaoLiteratura',
+    field: 'usado' | 'descartado' | 'pdfNaoEncontrado' | 'revisaoLiteratura',
   ) => {
     await updateArticle.mutateAsync({
       key: article.entry.key,
@@ -461,6 +462,17 @@ export function ArticleTable({
                         onChange={(e) => {
                           e.stopPropagation();
                           toggleField(article, 'descartado');
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </td>
+                    <td data-label="PDF n/enc.">
+                      <input
+                        type="checkbox"
+                        checked={article.pdfNaoEncontrado ?? false}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          toggleField(article, 'pdfNaoEncontrado');
                         }}
                         onClick={(e) => e.stopPropagation()}
                       />

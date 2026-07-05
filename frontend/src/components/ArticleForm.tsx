@@ -577,6 +577,14 @@ export function ArticleForm({
               <label>
                 <input
                   type="checkbox"
+                  checked={form.pdfNaoEncontrado}
+                  onChange={(e) => setRoot('pdfNaoEncontrado', e.target.checked)}
+                />
+                PDF não encontrado
+              </label>
+              <label>
+                <input
+                  type="checkbox"
                   checked={form.revisaoLiteratura}
                   onChange={(e) => setRoot('revisaoLiteratura', e.target.checked)}
                 />
