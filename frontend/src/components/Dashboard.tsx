@@ -544,7 +544,9 @@ export function Dashboard() {
   const [versaoFilter, setVersaoFilter] = useState('');
   const [versaoFilterInitialized, setVersaoFilterInitialized] = useState(false);
   const [expandedChart, setExpandedChart] = useState<'consolidated' | number | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('year');
+  const [viewMode, setViewMode] = useState<ViewMode>(() =>
+    window.matchMedia('(max-width: 900px)').matches ? 'total' : 'year',
+  );
   const [chartVisibility, setChartVisibility] = useState<
     Record<string, Record<ChartSegment, boolean>>
   >({});
@@ -599,7 +601,7 @@ export function Dashboard() {
         <div className="dashboard-toolbar-text">
           <h2>Dashboard por grupo</h2>
           <p className="dashboard-subtitle">
-            Artigos por ano com barras empilhadas. O consolidado mostra únicos e repetidos entre grupos.
+            Artigos por ano com barras empilhadas. O consolidado soma todos os grupos, com os mesmos agrupamentos.
           </p>
         </div>
         <div className="dashboard-toolbar-actions">
@@ -682,9 +684,8 @@ export function Dashboard() {
             versao={versaoFilter || 'Todas'}
             extraMeta={`${stats.length} ${stats.length === 1 ? 'grupo' : 'grupos'}`}
             series={consolidatedSeries}
-            chartMode="duplicates"
             viewMode={viewMode}
-            visibleSegments={getChartVisibility('consolidated', 'duplicates')}
+            visibleSegments={getChartVisibility('consolidated', 'usage')}
             onVisibleSegmentsChange={(next) => setChartVisibilityFor('consolidated', next)}
             onToggleExpand={() => setExpandedChart('consolidated')}
           />
@@ -719,9 +720,8 @@ export function Dashboard() {
             versao={versaoFilter || 'Todas'}
             extraMeta={`${stats.length} ${stats.length === 1 ? 'grupo' : 'grupos'}`}
             series={consolidatedSeries}
-            chartMode="duplicates"
             viewMode={viewMode}
-            visibleSegments={getChartVisibility('consolidated', 'duplicates')}
+            visibleSegments={getChartVisibility('consolidated', 'usage')}
             onVisibleSegmentsChange={(next) => setChartVisibilityFor('consolidated', next)}
             expanded
             onToggleExpand={() => setExpandedChart(null)}
