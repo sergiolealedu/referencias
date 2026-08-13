@@ -224,12 +224,10 @@ function ChartSegmentToggles({
 
 function GroupChartContent({
   chartData,
-  chartHeight,
   chartMode = 'usage',
   visibleSegments,
 }: {
   chartData: ChartPoint[];
-  chartHeight: number;
   chartMode?: ChartMode;
   visibleSegments: Record<ChartSegment, boolean>;
 }) {
@@ -259,7 +257,7 @@ function GroupChartContent({
         : undefined;
 
   return (
-    <ResponsiveContainer width="100%" height={chartHeight}>
+    <ResponsiveContainer width="100%" height="100%">
       <BarChart
         data={chartData}
         margin={{ top: 16, right: 24, left: 8, bottom: 8 }}
@@ -407,10 +405,6 @@ function GroupChart({
     [series],
   );
 
-  const chartHeight = expanded
-    ? Math.max(window.innerHeight - 160, 420)
-    : Math.max(Math.min(window.innerHeight - 240, 560), 360);
-
   const handleCopyPng = async () => {
     const container = chartContainerRef.current;
     if (!container) return;
@@ -490,7 +484,6 @@ function GroupChart({
           <div className="dashboard-chart-container" ref={chartContainerRef}>
             <GroupChartContent
               chartData={chartData}
-              chartHeight={chartHeight}
               chartMode={chartMode}
               visibleSegments={visibleSegments}
             />

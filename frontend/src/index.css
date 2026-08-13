@@ -2267,7 +2267,7 @@ pre.error {
   display: flex;
   flex-direction: column;
   flex: 1;
-  min-height: 420px;
+  min-height: 500px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
