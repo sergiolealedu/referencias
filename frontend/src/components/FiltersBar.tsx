@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
-import type { ArticleFilters } from '../types/referencias';
-import { ARTICLE_STATUSES } from '../types/referencias';
+import type { ArticleCategoria, ArticleFilters } from '../types/referencias';
+import { ARTICLE_CATEGORIAS, ARTICLE_CATEGORIA_LABELS, ARTICLE_STATUSES } from '../types/referencias';
 import { TagsFilterInput } from './TagsFilterInput';
 
 interface FiltersBarProps {
@@ -54,44 +54,20 @@ export function FiltersBar({ filters, availableTags, onChange }: FiltersBarProps
         ))}
       </select>
       <select
-        value={filters.usado ?? ''}
+        value={filters.categoria ?? ''}
         onChange={(e) =>
-          onChange({ ...filters, usado: e.target.value || undefined })
+          onChange({
+            ...filters,
+            categoria: (e.target.value as ArticleCategoria) || undefined,
+          })
         }
       >
-        <option value="">Usado: todos</option>
-        <option value="true">Usado</option>
-        <option value="false">Não usado</option>
-      </select>
-      <select
-        value={filters.descartado ?? ''}
-        onChange={(e) =>
-          onChange({ ...filters, descartado: e.target.value || undefined })
-        }
-      >
-        <option value="">Descartado: todos</option>
-        <option value="true">Descartado</option>
-        <option value="false">Não descartado</option>
-      </select>
-      <select
-        value={filters.pdfNaoEncontrado ?? ''}
-        onChange={(e) =>
-          onChange({ ...filters, pdfNaoEncontrado: e.target.value || undefined })
-        }
-      >
-        <option value="">PDF n/enc.: todos</option>
-        <option value="true">PDF não encontrado</option>
-        <option value="false">PDF encontrado / N/A</option>
-      </select>
-      <select
-        value={filters.revisaoLiteratura ?? ''}
-        onChange={(e) =>
-          onChange({ ...filters, revisaoLiteratura: e.target.value || undefined })
-        }
-      >
-        <option value="">Rev. literatura: todos</option>
-        <option value="true">Revisão da literatura</option>
-        <option value="false">Não é revisão</option>
+        <option value="">Categoria: todas</option>
+        {ARTICLE_CATEGORIAS.map((categoria) => (
+          <option key={categoria} value={categoria}>
+            {ARTICLE_CATEGORIA_LABELS[categoria]}
+          </option>
+        ))}
       </select>
     </div>
   );

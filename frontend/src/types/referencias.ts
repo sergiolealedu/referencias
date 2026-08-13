@@ -149,10 +149,32 @@ export interface GroupInput {
   stringBusca?: string;
 }
 
+export const ARTICLE_CATEGORIAS = [
+  'usados',
+  'comPdf',
+  'naoEngSw',
+  'naoDev',
+  'naoQvt',
+  'descartados',
+  'outros',
+] as const;
+export type ArticleCategoria = (typeof ARTICLE_CATEGORIAS)[number];
+
+export const ARTICLE_CATEGORIA_LABELS: Record<ArticleCategoria, string> = {
+  usados: 'Em uso',
+  comPdf: 'Com PDF',
+  naoEngSw: 'Não é eng. SW',
+  naoDev: 'Não é dev',
+  naoQvt: 'Não é QVT',
+  descartados: 'Descartados',
+  outros: 'Outros',
+};
+
 export interface ArticleFilters {
   q?: string;
   tags?: string;
   status?: string;
+  categoria?: ArticleCategoria;
   usado?: string;
   descartado?: string;
   revisaoLiteratura?: string;

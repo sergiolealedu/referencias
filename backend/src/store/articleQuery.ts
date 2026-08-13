@@ -118,6 +118,7 @@ export function normalizeListParams(params: ArticleListParams = {}): {
       q: params.q,
       tags: params.tags,
       status: params.status,
+      categoria: params.categoria,
       usado: params.usado,
       descartado: params.descartado,
       revisaoLiteratura: params.revisaoLiteratura,

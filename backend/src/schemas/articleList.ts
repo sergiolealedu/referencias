@@ -3,7 +3,8 @@ import { z } from 'zod';
 import type { Request } from 'express';
 
 import { MAX_PAGE_SIZE } from '../store/articleQuery.js';
-import type { ArticleListParams, SortColumn } from '../types/referencias.js';
+import { ARTICLE_CATEGORIAS } from '../types/referencias.js';
+import type { ArticleCategoria, ArticleListParams, SortColumn } from '../types/referencias.js';
 
 const sortColumns = [
   'title',
@@ -49,6 +50,11 @@ export function parseArticleListParams(query: Request['query']): ArticleListPara
         ? false
         : undefined;
 
+  const categoriaRaw = typeof query.categoria === 'string' ? query.categoria : undefined;
+  const categoria = ARTICLE_CATEGORIAS.includes(categoriaRaw as ArticleCategoria)
+    ? (categoriaRaw as ArticleCategoria)
+    : undefined;
+
   const pageRaw = typeof query.page === 'string' ? Number(query.page) : undefined;
   const pageSizeRaw =
     typeof query.pageSize === 'string' ? Number(query.pageSize) : undefined;
@@ -65,6 +71,7 @@ export function parseArticleListParams(query: Request['query']): ArticleListPara
     q: typeof query.q === 'string' ? query.q : undefined,
     tags,
     status: typeof query.status === 'string' ? query.status : undefined,
+    categoria,
     usado,
     descartado,
     revisaoLiteratura,

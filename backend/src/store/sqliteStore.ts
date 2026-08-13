@@ -43,6 +43,20 @@ interface FilterClause {
   params: unknown[];
 }
 
+// Mesma ordem de prioridade usada em getArticleStatsByYear: cada artigo cai em
+// exatamente uma categoria, pela primeira condição que satisfizer.
+const CATEGORIA_SQL: Record<string, (alias: string) => string> = {
+  usados: (a) => `${a}.usado = 1`,
+  comPdf: (a) => `${a}.usado = 0 AND TRIM(${a}.caminho) != ''`,
+  naoEngSw: (a) => `${a}.usado = 0 AND TRIM(${a}.caminho) = '' AND ${a}.motivo_descarte = 'nao_eng_sw'`,
+  naoDev: (a) => `${a}.usado = 0 AND TRIM(${a}.caminho) = '' AND ${a}.motivo_descarte = 'nao_dev'`,
+  naoQvt: (a) => `${a}.usado = 0 AND TRIM(${a}.caminho) = '' AND ${a}.motivo_descarte = 'nao_qvt'`,
+  descartados: (a) =>
+    `${a}.usado = 0 AND TRIM(${a}.caminho) = '' AND ${a}.motivo_descarte IS NULL AND ${a}.descartado = 1`,
+  outros: (a) =>
+    `${a}.usado = 0 AND TRIM(${a}.caminho) = '' AND ${a}.motivo_descarte IS NULL AND ${a}.descartado = 0`,
+};
+
 function buildArticleFilters(
   filters: ArticleListParams,
   alias = 'a',
@@ -53,6 +67,9 @@ function buildArticleFilters(
   if (filters.status) {
     conditions.push(`${alias}.status = ?`);
     params.push(filters.status);
+  }
+  if (filters.categoria && CATEGORIA_SQL[filters.categoria]) {
+    conditions.push(`(${CATEGORIA_SQL[filters.categoria](alias)})`);
   }
   if (filters.usado !== undefined) {
     conditions.push(`${alias}.usado = ?`);

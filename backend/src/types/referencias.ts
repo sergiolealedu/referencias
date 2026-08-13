@@ -103,10 +103,22 @@ export interface GroupSummary {
   articleCount: number;
 }
 
+export const ARTICLE_CATEGORIAS = [
+  'usados',
+  'comPdf',
+  'naoEngSw',
+  'naoDev',
+  'naoQvt',
+  'descartados',
+  'outros',
+] as const;
+export type ArticleCategoria = (typeof ARTICLE_CATEGORIAS)[number];
+
 export interface ArticleFilters {
   q?: string;
   tags?: string[];
   status?: string;
+  categoria?: ArticleCategoria;
   usado?: boolean;
   descartado?: boolean;
   revisaoLiteratura?: boolean;

@@ -105,6 +105,7 @@ function toQuery(params: ArticleListParams): string {
   if (params.q) search.set('q', params.q);
   if (params.tags) search.set('tags', params.tags);
   if (params.status) search.set('status', params.status);
+  if (params.categoria) search.set('categoria', params.categoria);
   if (params.usado) search.set('usado', params.usado);
   if (params.descartado) search.set('descartado', params.descartado);
   if (params.revisaoLiteratura) search.set('revisaoLiteratura', params.revisaoLiteratura);
