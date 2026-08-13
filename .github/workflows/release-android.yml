@@ -72,6 +72,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build frontend
+        run: npm run build -w frontend
+
       - name: Set Android version
         run: node scripts/android-set-version.mjs "${{ steps.version.outputs.version }}"
 
