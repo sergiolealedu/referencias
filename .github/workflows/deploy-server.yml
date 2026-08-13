@@ -1,0 +1,99 @@
+name: Deploy server
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: deploy-server-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy-server:
+    name: Build, publish packages and deploy server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version
+        id: version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          if ! echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$'; then
+            echo "Tag inválida: $GITHUB_REF_NAME (esperado vMAJOR.MINOR.PATCH)"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Version: $VERSION"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          registry-url: https://npm.pkg.github.com
+          scope: '@sergiolealedu'
+
+      - name: Align package versions
+        run: npm version "${{ steps.version.outputs.version }}" --no-git-tag-version --allow-same-version --workspaces --include-workspace-root
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Publish backend to GitHub Packages
+        run: npm publish -w backend --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish frontend to GitHub Packages
+        run: npm publish -w frontend --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create release bundle
+        run: node scripts/package-release.mjs "${{ steps.version.outputs.version }}"
+
+      - name: Create/update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Referências v${{ steps.version.outputs.version }}
+          append_body: true
+          body: |
+            ### Pacotes (GitHub Packages)
+
+            ```
+            npm install @sergiolealedu/referencias-backend@${{ steps.version.outputs.version }}
+            npm install @sergiolealedu/referencias-frontend@${{ steps.version.outputs.version }}
+            ```
+          files: |
+            release/referencias-${{ steps.version.outputs.version }}.zip
+          generate_release_notes: false
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.version, '-') }}
+
+      - name: Deploy to production server
+        if: ${{ vars.DEPLOY_ENABLED == 'true' }}
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PASS: ${{ secrets.DEPLOY_PASSWORD }}
+          DEPLOY_TAG: ${{ github.ref_name }}
+          DEPLOY_APP_DIR: ${{ vars.DEPLOY_APP_DIR }}
+          DEPLOY_PM2_APP: ${{ vars.DEPLOY_PM2_APP }}
+          DEPLOY_APP_USER: ${{ vars.DEPLOY_APP_USER }}
+        run: |
+          pip install paramiko
+          python scripts/deploy/publish-server-remote.py

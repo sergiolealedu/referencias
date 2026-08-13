@@ -261,12 +261,11 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-3. O workflow [Release](.github/workflows/release.yml) irá:
-   - compilar backend e frontend;
-   - publicar `@sergiolealedu/referencias-backend` e `@sergiolealedu/referencias-frontend` no [GitHub Packages](https://github.com/sergiolealedu/referencias/pkgs/npm/referencias-backend);
-   - gerar o app Android (`.aab` e `.apk`) com Capacitor;
-   - gerar um ZIP de deploy e anexar tudo à [GitHub Release](https://github.com/sergiolealedu/referencias/releases);
-   - **publicar no servidor de produção** (checkout da tag, build, restart PM2) e copiar o APK para `/downloads/` (quando `DEPLOY_ENABLED=true`).
+3. Dois workflows disparam em paralelo (não dependem um do outro):
+   - [Deploy server](.github/workflows/deploy-server.yml): compila backend e frontend, publica `@sergiolealedu/referencias-backend` e `@sergiolealedu/referencias-frontend` no [GitHub Packages](https://github.com/sergiolealedu/referencias/pkgs/npm/referencias-backend), gera um ZIP de deploy e **publica no servidor de produção** (checkout da tag, build, restart PM2) quando `DEPLOY_ENABLED=true`.
+   - [Release Android](.github/workflows/release-android.yml): gera o app Android (`.aab` e `.apk`) com Capacitor, anexa os artefatos à [GitHub Release](https://github.com/sergiolealedu/referencias/releases) e copia o APK para `/downloads/` no servidor quando `DEPLOY_ENABLED=true`.
+
+   Ambos podem ser disparados manualmente pela aba *Actions* (`workflow_dispatch`), escolhendo a tag desejada como ref.
 
 Tags pré-release (ex.: `v1.1.0-beta.1`) são marcadas como *pre-release* automaticamente.
 

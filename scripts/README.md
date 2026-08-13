@@ -196,13 +196,14 @@ Rodar à mão exige exportar as variáveis manualmente.
 |---|---|---|
 | `install-server-remote.py` | `install-server.ps1` | Sobe `digitalocean-install.sh` para `/tmp/referencias-install.sh`, executa, apaga, faz health check. Sai com **3** se já instalado e `INSTALL_FORCE` não estiver setado |
 | `publish-to-server-remote.py` | `publish-to-server.ps1` | `git fetch/checkout/pull --ff-only` → `npm ci` → `npm run build` → `pm2 restart` → health check |
-| `publish-release-to-server-remote.py` | **só** o GitHub Actions (`.github/workflows/release.yml`) | Faz checkout de uma **tag**, builda, reinicia o PM2, envia o APK e reaponta o symlink `referencias-latest.apk` |
+| `publish-server-remote.py` | **só** o GitHub Actions (`.github/workflows/deploy-server.yml`) | Faz checkout de uma **tag**, builda, reinicia o PM2 e faz health check (sem Android) |
+| `publish-apk-remote.py` | **só** o GitHub Actions (`.github/workflows/release-android.yml`) | Envia o APK de release e reaponta o symlink `referencias-latest.apk` (não toca no código do servidor) |
 
 > ⚠️ `publish-to-server-remote.py` fixa `sudo -u referencias` no código — um `app_user`
 > diferente do padrão quebra o deploy.
-> ⚠️ `publish-release-to-server-remote.py` deixa o repo do servidor em **detached HEAD** na
+> ⚠️ `publish-server-remote.py` deixa o repo do servidor em **detached HEAD** na
 > tag; o próximo `publish:server` precisa voltar pro branch.
-> ⚠️ A porta `3001` do health check está fixa nos três helpers.
+> ⚠️ A porta `3001` do health check está fixa nos helpers de deploy do servidor.
 
 ---
 
@@ -396,6 +397,6 @@ e deixa o Gradle falhar depois.
 | `migrate/import-db-only.sh` | 🟠 Troca o banco (com backup prévio) |
 | `migrate/upload-db-only.ps1` | 🟠 Sem confirmação; não detecta falha do import |
 | `deploy/publish-to-server.ps1` | 🟠 Commita, faz push e reinicia produção; publica o branch **atual** |
-| `deploy/publish-release-to-server-remote.py` | 🟠 Deixa o servidor em detached HEAD na tag |
+| `deploy/publish-server-remote.py` | 🟠 Deixa o servidor em detached HEAD na tag |
 | `android/build-and-copy-apk.ps1` | 🟢 Só sobrescreve APK de mesmo nome |
 | `migrate/create-join-token.sh`, `gen-token-local.mjs` | 🟢 Só inserem registros (token em texto claro no terminal) |

@@ -1,22 +1,21 @@
-name: Release
+name: Release Android
 
 on:
   push:
     tags:
       - 'v*.*.*'
+  workflow_dispatch:
 
 permissions:
   contents: write
-  packages: write
-  id-token: write
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-android-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  release:
-    name: Build, publish and release
+  release-android:
+    name: Build, sign and release Android app
     runs-on: ubuntu-latest
 
     steps:
@@ -41,8 +40,6 @@ jobs:
         with:
           node-version: '20'
           cache: npm
-          registry-url: https://npm.pkg.github.com
-          scope: '@sergiolealedu'
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -72,24 +69,8 @@ jobs:
             echo "configured=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Align package versions
-        run: npm version "${{ steps.version.outputs.version }}" --no-git-tag-version --allow-same-version --workspaces --include-workspace-root
-
       - name: Install dependencies
         run: npm ci
-
-      - name: Build
-        run: npm run build
-
-      - name: Publish backend to GitHub Packages
-        run: npm publish -w backend --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publish frontend to GitHub Packages
-        run: npm publish -w frontend --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set Android version
         run: node scripts/android-set-version.mjs "${{ steps.version.outputs.version }}"
@@ -126,38 +107,13 @@ jobs:
       - name: Collect Android artifacts
         run: node scripts/android-collect-artifacts.mjs "${{ steps.version.outputs.version }}"
 
-      - name: Create release bundle
-        run: node scripts/package-release.mjs "${{ steps.version.outputs.version }}"
-
       - name: Generate release notes
         id: notes
         env:
           ANDROID_SIGNING_CONFIGURED: ${{ steps.android_signing.outputs.configured }}
         run: |
-          PREVIOUS=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo '')
-          if [ -n "$PREVIOUS" ]; then
-            NOTES=$(git log "${PREVIOUS}..HEAD" --pretty=format:'- %s (%h)' --no-merges)
-          else
-            NOTES=$(git log --pretty=format:'- %s (%h)' --no-merges)
-          fi
           {
             echo 'body<<EOF'
-            echo "## Referências ${{ steps.version.outputs.version }}"
-            echo
-            echo "### Pacotes (GitHub Packages)"
-            echo
-            echo '```'
-            echo "npm install @sergiolealedu/referencias-backend@${{ steps.version.outputs.version }}"
-            echo "npm install @sergiolealedu/referencias-frontend@${{ steps.version.outputs.version }}"
-            echo '```'
-            echo
-            echo "Configure o registry em \`.npmrc\`:"
-            echo
-            echo '```'
-            echo '@sergiolealedu:registry=https://npm.pkg.github.com'
-            echo '//npm.pkg.github.com/:_authToken=SEU_TOKEN'
-            echo '```'
-            echo
             echo "### App Android"
             echo
             echo "- \`referencias-${{ steps.version.outputs.version }}.aab\` — bundle para Google Play"
@@ -169,38 +125,32 @@ jobs:
             else
               echo "> Configure os secrets \`ANDROID_KEYSTORE_*\` para gerar builds assinados para produção."
             fi
-            echo
-            echo "### Alterações"
-            echo
-            echo "$NOTES"
             echo EOF
           } >> "$GITHUB_OUTPUT"
 
-      - name: Create GitHub Release
+      - name: Create/update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           name: Referências v${{ steps.version.outputs.version }}
+          append_body: true
           body: ${{ steps.notes.outputs.body }}
           files: |
-            release/referencias-${{ steps.version.outputs.version }}.zip
             release/referencias-${{ steps.version.outputs.version }}.aab
             release/referencias-${{ steps.version.outputs.version }}.apk
           generate_release_notes: false
           draft: false
           prerelease: ${{ contains(steps.version.outputs.version, '-') }}
 
-      - name: Deploy to production server
+      - name: Publish APK to production server
         if: ${{ vars.DEPLOY_ENABLED == 'true' }}
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_PASS: ${{ secrets.DEPLOY_PASSWORD }}
-          DEPLOY_TAG: ${{ github.ref_name }}
           DEPLOY_VERSION: ${{ steps.version.outputs.version }}
           DEPLOY_APP_DIR: ${{ vars.DEPLOY_APP_DIR }}
-          DEPLOY_PM2_APP: ${{ vars.DEPLOY_PM2_APP }}
           DEPLOY_APP_USER: ${{ vars.DEPLOY_APP_USER }}
           DEPLOY_APK_PATH: release/referencias-${{ steps.version.outputs.version }}.apk
         run: |
           pip install paramiko
-          python scripts/deploy/publish-release-to-server-remote.py
+          python scripts/deploy/publish-apk-remote.py
