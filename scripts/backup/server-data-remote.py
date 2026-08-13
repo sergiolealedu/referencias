@@ -39,19 +39,39 @@ def connect() -> paramiko.SSHClient:
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     client.connect(host, username=user, password=password, timeout=30)
+    # Backups grandes passam minutos copiando em disco local; sem keepalive o host
+    # remoto derruba a sessão ociosa (WinError 10054 no Windows).
+    transport = client.get_transport()
+    if transport is not None:
+        transport.set_keepalive(30)
     return client
 
 
-def run(client: paramiko.SSHClient, cmd: str, timeout: int = 600) -> int:
+def cleanup_remote(client: paramiko.SSHClient) -> None:
+    """Remove o staging remoto. Nunca falha o backup — os dados já estão em disco."""
+    try:
+        run(client, f"rm -rf '{REMOTE_STAGING}'", timeout=120)
+    except Exception as exc:  # noqa: BLE001 — limpeza é best-effort
+        print(
+            f"[backup] AVISO: não foi possível limpar {REMOTE_STAGING} no servidor ({exc}).\n"
+            f"[backup]        Remova manualmente:  ssh <host> rm -rf {REMOTE_STAGING}",
+            flush=True,
+        )
+
+
+def run(client: paramiko.SSHClient, cmd: str, timeout: int = 600) -> tuple[int, str]:
+    """Executa no servidor, ecoa a saída e devolve (exit_status, saída completa)."""
     _stdin, stdout, stderr = client.exec_command(cmd, get_pty=True, timeout=timeout)
+    captured: list[str] = []
     for line in stdout:
+        captured.append(line)
         sys.stdout.write(line)
         sys.stdout.flush()
     exit_status = stdout.channel.recv_exit_status()
     err = stderr.read().decode("utf-8", errors="replace")
     if err:
         sys.stderr.write(err)
-    return exit_status
+    return exit_status, "".join(captured)
 
 
 def sftp_get(client: paramiko.SSHClient, remote: str, local: Path, retries: int = 3) -> None:
@@ -134,12 +154,45 @@ def write_manifest(dest: Path, payload: dict) -> None:
     dest.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
-def list_backup_files(backup_dir: Path) -> list[str]:
+def list_backup_files(backup_dir: Path, exclude_dirs: tuple[str, ...] = ()) -> list[str]:
     names: list[str] = []
     for path in sorted(backup_dir.rglob("*")):
-        if path.is_file() and path.name != "manifest.json":
-            names.append(path.relative_to(backup_dir).as_posix())
+        if not path.is_file() or path.name == "manifest.json":
+            continue
+        rel = path.relative_to(backup_dir)
+        if rel.parts and rel.parts[0] in exclude_dirs:
+            continue
+        names.append(rel.as_posix())
     return names
+
+
+def count_files(directory: Path) -> int:
+    if not directory.is_dir():
+        return 0
+    return sum(1 for path in directory.rglob("*") if path.is_file())
+
+
+def dir_size(directory: Path) -> int:
+    if not directory.is_dir():
+        return 0
+    return sum(path.stat().st_size for path in directory.rglob("*") if path.is_file())
+
+
+def parse_pdf_counts(output: str) -> dict[str, int]:
+    """Lê os marcadores PDFCOUNT:<label>:<n> emitidos pelo script remoto."""
+    counts: dict[str, int] = {}
+    for line in output.splitlines():
+        marker = line.strip()
+        if not marker.startswith("PDFCOUNT:"):
+            continue
+        parts = marker.split(":", 2)
+        if len(parts) != 3:
+            continue
+        try:
+            counts[parts[1]] = int(parts[2].strip())
+        except ValueError:
+            continue
+    return counts
 
 
 def do_backup(client: paramiko.SSHClient) -> int:
@@ -164,20 +217,44 @@ def do_backup(client: paramiko.SSHClient) -> int:
 
     print(f"[backup] Empacotando dados em {app_dir}/data ...", flush=True)
 
+    # Os PDFs podem estar na raiz configurada em allowedPdfRoots (pdf_dir) e/ou em
+    # <app_dir>/data/pdfs, que é onde a app grava os anexos por workspace. As duas
+    # origens entram no pacote, cada uma na sua subpasta.
+    pdf_roots = [
+        ("pdfs", pdf_dir),
+        ("data-pdfs", f"{app_dir}/data/pdfs"),
+    ]
+
     pdf_block = ""
     if include_pdfs:
+        for label, root in pdf_roots:
+            reject_shell_meta(f"pdf_root:{label}", root)
+        calls = "\n".join(f"copy_pdf_root '{root}' '{label}'" for label, root in pdf_roots)
         pdf_block = f"""
-if [[ -d '{pdf_dir}' ]]; then
-  echo '[backup] Incluindo PDFs de {pdf_dir}'
-  mkdir -p "$STAGE/pdfs"
-  if command -v rsync >/dev/null 2>&1; then
-    rsync -a '{pdf_dir}/' "$STAGE/pdfs/"
+copy_pdf_root() {{
+  local src="$1"
+  local label="$2"
+  local n=0
+  if [[ -d "$src" ]]; then
+    n="$(find "$src" -type f 2>/dev/null | wc -l)"
+    if [[ "$n" -gt 0 ]]; then
+      echo "[backup] Copiando $n arquivo(s) de $src"
+      mkdir -p "$STAGE/$label"
+      if command -v rsync >/dev/null 2>&1; then
+        rsync -a "$src/" "$STAGE/$label/"
+      else
+        cp -a "$src/." "$STAGE/$label/"
+      fi
+    else
+      echo "[backup] Nenhum arquivo em $src"
+    fi
   else
-    cp -a '{pdf_dir}/.' "$STAGE/pdfs/"
+    echo "[backup] Pasta de PDFs ausente: $src"
   fi
-else
-  echo '[backup] Pasta de PDFs não encontrada — omitindo.'
-fi
+  echo "PDFCOUNT:$label:$n"
+}}
+
+{calls}
 """
 
     cmd = f"""set -euo pipefail
@@ -226,9 +303,11 @@ tar -C "$STAGE" -czf "$ARCHIVE" .
 ls -lh "$ARCHIVE"
 """
 
-    status = run(client, cmd)
+    status, output = run(client, cmd)
     if status != 0:
         return status
+
+    remote_counts = parse_pdf_counts(output)
 
     # Download + extração em disco local; só depois copia para o destino
     # (ex.: Google Drive), evitando size mismatch do SFTP/paramiko.
@@ -240,6 +319,10 @@ ls -lh "$ARCHIVE"
 
         print(f"[backup] Baixando pacote (temp local)...", flush=True)
         sftp_get(client, REMOTE_ARCHIVE, archive_local)
+
+        # Limpa o servidor logo após o download: a cópia para pastas de nuvem pode levar
+        # minutos e deixar a sessão SSH ociosa a ponto de ser derrubada pelo host remoto.
+        cleanup_remote(client)
 
         print("[backup] Extraindo pacote...", flush=True)
         with tarfile.open(archive_local, "r:gz") as tar:
@@ -258,7 +341,11 @@ ls -lh "$ARCHIVE"
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(path, dest)
 
-        files = list_backup_files(local_dir)
+        pdf_labels = tuple(label for label, _ in pdf_roots)
+        files = list_backup_files(local_dir, exclude_dirs=pdf_labels)
+        local_counts = {label: count_files(local_dir / label) for label in pdf_labels}
+        pdf_bytes = sum(dir_size(local_dir / label) for label in pdf_labels)
+
         manifest = {
             "createdAt": datetime.now(timezone.utc).isoformat(),
             "stamp": stamp,
@@ -266,17 +353,57 @@ ls -lh "$ARCHIVE"
             "appDir": app_dir,
             "pdfDir": pdf_dir,
             "includePdfs": include_pdfs,
+            "pdfRoots": {label: root for label, root in pdf_roots},
+            "pdfCountRemote": remote_counts,
+            "pdfCountLocal": local_counts,
+            "pdfTotal": sum(local_counts.values()),
+            "pdfBytes": pdf_bytes,
             "files": files,
         }
         write_manifest(local_dir / "manifest.json", manifest)
 
-    run(client, f"rm -rf '{REMOTE_STAGING}'")
-
-    total = sum((local_dir / f).stat().st_size for f in files)
+    data_bytes = sum((local_dir / f).stat().st_size for f in files)
     print(f"[backup] Concluído: {local_dir}", flush=True)
-    print(f"[backup] Arquivos: {len(files)} (~{total / (1024 * 1024):.1f} MB)", flush=True)
+    print(
+        f"[backup] Dados: {len(files)} arquivo(s) (~{data_bytes / (1024 * 1024):.1f} MB)",
+        flush=True,
+    )
     for name in files:
         print(f"  - {name}", flush=True)
+
+    if not include_pdfs:
+        print("[backup] PDFs: ignorados (-ExcludePdfs)", flush=True)
+        return 0
+
+    total_local = sum(local_counts.values())
+    total_remote = sum(remote_counts.get(label, 0) for label in local_counts)
+    print(
+        f"[backup] PDFs/anexos: {total_local} arquivo(s) "
+        f"(~{pdf_bytes / (1024 * 1024):.1f} MB)",
+        flush=True,
+    )
+    for label, root in pdf_roots:
+        got = local_counts.get(label, 0)
+        expected = remote_counts.get(label, 0)
+        mark = "OK " if got == expected else "!! "
+        print(f"  {mark}{label}/  {root}: {got} de {expected}", flush=True)
+
+    if total_local != total_remote:
+        print(
+            f"[backup] ERRO: o servidor tem {total_remote} PDF(s), mas apenas "
+            f"{total_local} vieram no pacote.",
+            file=sys.stderr,
+            flush=True,
+        )
+        return 1
+
+    if total_local == 0:
+        print(
+            "[backup] AVISO: nenhum PDF encontrado no servidor — confira se as pastas "
+            f"{', '.join(root for _, root in pdf_roots)} são as corretas.",
+            flush=True,
+        )
+
     return 0
 
 
@@ -309,7 +436,7 @@ def do_restore(client: paramiko.SSHClient) -> int:
                 if not path.is_file() or path.name == "manifest.json":
                     continue
                 rel = path.relative_to(local_dir)
-                if not include_pdfs and rel.parts and rel.parts[0] == "pdfs":
+                if not include_pdfs and rel.parts and rel.parts[0] in ("pdfs", "data-pdfs"):
                     continue
                 tar.add(path, arcname=rel.as_posix())
 
@@ -372,16 +499,24 @@ if [[ -f "$STAGE/app.config.json" ]]; then
   chown "$APP_USER:$APP_USER" "$APP_DIR/app.config.json"
 fi
 
-if [[ "$INCLUDE_PDFS" == "1" && -d "$STAGE/pdfs" ]]; then
-  echo "[restore] Restaurando PDFs em $PDF_DIR ..."
-  mkdir -p "$PDF_DIR"
+restore_pdf_root() {{
+  local label="$1"
+  local dest="$2"
+  [[ -d "$STAGE/$label" ]] || return 0
+  echo "[restore] Restaurando $(find "$STAGE/$label" -type f | wc -l) arquivo(s) em $dest ..."
+  mkdir -p "$dest"
   if command -v rsync >/dev/null 2>&1; then
-    rsync -a --delete "$STAGE/pdfs/" "$PDF_DIR/"
+    rsync -a --delete "$STAGE/$label/" "$dest/"
   else
-    rm -rf "$PDF_DIR"/*
-    cp -a "$STAGE/pdfs/." "$PDF_DIR/"
+    rm -rf "${{dest:?}}"/*
+    cp -a "$STAGE/$label/." "$dest/"
   fi
-  chown -R "$APP_USER:$APP_USER" "$PDF_DIR"
+  chown -R "$APP_USER:$APP_USER" "$dest"
+}}
+
+if [[ "$INCLUDE_PDFS" == "1" ]]; then
+  restore_pdf_root pdfs "$PDF_DIR"
+  restore_pdf_root data-pdfs "$DATA_DIR/pdfs"
 fi
 
 echo '[restore] Reiniciando API...'
@@ -401,7 +536,7 @@ echo '[restore] ERRO: API não respondeu após restore.' >&2
 exit 1
 """
 
-    status = run(client, cmd)
+    status, _ = run(client, cmd)
     if status == 0:
         print(f"[restore] Concluído a partir de {local_dir}", flush=True)
     return status
@@ -427,13 +562,20 @@ done
 for f in referencias.db-wal referencias.db-shm registry.db-wal registry.db-shm; do
   [[ -e "$DATA_DIR/$f" ]] && ls -lh "$DATA_DIR/$f" || true
 done
-if [[ -d "$PDF_DIR" ]]; then
-  echo "PDFs: $PDF_DIR ($(du -sh "$PDF_DIR" 2>/dev/null | cut -f1))"
-else
-  echo "PDFs: (pasta ausente) $PDF_DIR"
-fi
+report_pdf_root() {{
+  local src="$1"
+  if [[ -d "$src" ]]; then
+    echo "PDFs: $src -> $(find "$src" -type f 2>/dev/null | wc -l) arquivo(s) ($(du -sh "$src" 2>/dev/null | cut -f1))"
+  else
+    echo "PDFs: $src -> (pasta ausente)"
+  fi
+}}
+
+report_pdf_root "$PDF_DIR"
+report_pdf_root "$DATA_DIR/pdfs"
 """
-    return run(client, cmd)
+    status, _ = run(client, cmd)
+    return status
 
 
 def main() -> int:
