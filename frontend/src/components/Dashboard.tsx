@@ -262,6 +262,7 @@ function GroupChartContent({
   viewMode?: ViewMode;
   visibleSegments: Record<ChartSegment, boolean>;
 }) {
+  const grouped = viewMode === 'total';
   const segments = segmentsForMode(chartMode);
   const visibleKeys = segments
     .filter((segment) => visibleSegments[segment.key])
@@ -269,15 +270,26 @@ function GroupChartContent({
 
   const yMax = useMemo(() => {
     if (visibleKeys.length === 0) return 1;
+    if (grouped) {
+      return Math.max(
+        ...chartData.flatMap((point) => visibleKeys.map((key) => point[key])),
+        1,
+      );
+    }
     return Math.max(
       ...chartData.map((point) =>
         visibleKeys.reduce((sum, key) => sum + point[key], 0),
       ),
       1,
     );
-  }, [chartData, visibleKeys]);
+  }, [chartData, visibleKeys, grouped]);
 
   const topSegment = visibleKeys[visibleKeys.length - 1];
+  const stackId = grouped ? undefined : 'articles';
+  const barRadius = (key: ChartSegment) =>
+    (grouped || topSegment === key ? [4, 4, 0, 0] : undefined) as
+      | [number, number, number, number]
+      | undefined;
 
   const barSize = chartData.length <= 2
     ? 72
@@ -347,10 +359,10 @@ function GroupChartContent({
               <Bar
                 dataKey="usados"
                 name="Em uso"
-                stackId="articles"
+                stackId={stackId}
                 fill={STACK_COLORS.usados}
                 minPointSize={4}
-                radius={topSegment === 'usados' ? [4, 4, 0, 0] : undefined}
+                radius={barRadius('usados')}
               >
                 <LabelList dataKey="usados" content={renderSegmentLabel} />
               </Bar>
@@ -359,10 +371,10 @@ function GroupChartContent({
               <Bar
                 dataKey="comPdf"
                 name="Com PDF"
-                stackId="articles"
+                stackId={stackId}
                 fill={STACK_COLORS.comPdf}
                 minPointSize={4}
-                radius={topSegment === 'comPdf' ? [4, 4, 0, 0] : undefined}
+                radius={barRadius('comPdf')}
               >
                 <LabelList dataKey="comPdf" content={renderSegmentLabel} />
               </Bar>
@@ -371,10 +383,10 @@ function GroupChartContent({
               <Bar
                 dataKey="descartados"
                 name="Descartados"
-                stackId="articles"
+                stackId={stackId}
                 fill={STACK_COLORS.descartados}
                 minPointSize={4}
-                radius={topSegment === 'descartados' ? [4, 4, 0, 0] : undefined}
+                radius={barRadius('descartados')}
               >
                 <LabelList dataKey="descartados" content={renderSegmentLabel} />
               </Bar>
@@ -383,10 +395,10 @@ function GroupChartContent({
               <Bar
                 dataKey="outros"
                 name="Outros"
-                stackId="articles"
+                stackId={stackId}
                 fill={STACK_COLORS.outros}
                 minPointSize={4}
-                radius={topSegment === 'outros' ? [4, 4, 0, 0] : undefined}
+                radius={barRadius('outros')}
               >
                 <LabelList dataKey="outros" content={renderSegmentLabel} />
               </Bar>
@@ -601,7 +613,7 @@ export function Dashboard() {
         <div className="dashboard-toolbar-text">
           <h2>Dashboard por grupo</h2>
           <p className="dashboard-subtitle">
-            Artigos por ano com barras empilhadas. O consolidado soma todos os grupos, com os mesmos agrupamentos.
+            Barras empilhadas por ano, ou lado a lado no modo Consolidado. "Todos" soma todos os grupos.
           </p>
         </div>
         <div className="dashboard-toolbar-actions">
@@ -680,7 +692,7 @@ export function Dashboard() {
           <GroupChart
             key="consolidated"
             className="dashboard-chart-card--consolidated"
-            groupTitle="Consolidado"
+            groupTitle="Todos"
             versao={versaoFilter || 'Todas'}
             extraMeta={`${stats.length} ${stats.length === 1 ? 'grupo' : 'grupos'}`}
             series={consolidatedSeries}
@@ -712,11 +724,11 @@ export function Dashboard() {
           className="dashboard-fullscreen"
           role="dialog"
           aria-modal="true"
-          aria-label="Gráfico consolidado"
+          aria-label="Gráfico Todos"
         >
           <GroupChart
             className="dashboard-chart-card--consolidated"
-            groupTitle="Consolidado"
+            groupTitle="Todos"
             versao={versaoFilter || 'Todas'}
             extraMeta={`${stats.length} ${stats.length === 1 ? 'grupo' : 'grupos'}`}
             series={consolidatedSeries}
