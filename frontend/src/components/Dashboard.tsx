@@ -647,6 +647,7 @@ export function Dashboard() {
   const [viewMode, setViewMode] = useState<ViewMode>(() =>
     window.matchMedia('(max-width: 900px)').matches ? 'total' : 'year',
   );
+  const [toolbarCollapsed, setToolbarCollapsed] = useState(false);
   const [chartVisibility, setChartVisibility] = useState<
     Record<string, Record<ChartSegment, boolean>>
   >({});
@@ -697,71 +698,82 @@ export function Dashboard() {
 
   return (
     <div className="dashboard">
-      <div className="dashboard-toolbar">
-        <div className="dashboard-toolbar-text">
-          <h2>Dashboard por grupo</h2>
-          <p className="dashboard-subtitle">
-            Barras empilhadas por ano, ou lado a lado no modo Consolidado. "Todos" soma todos os grupos.
-          </p>
-        </div>
-        <div className="dashboard-toolbar-actions">
-          <button
-            type="button"
-            className="dashboard-detect-btn"
-            disabled={detectDuplicates.isPending}
-            onClick={() => detectDuplicates.mutate(versaoFilter || 'v2')}
-            title="Identifica artigos repetidos entre grupos da versão selecionada"
-          >
-            {detectDuplicates.isPending ? 'Detectando...' : 'Detectar repetidos'}
-          </button>
-          {detectDuplicates.data && (
-            <span className="dashboard-detect-result">
-              {detectDuplicates.data.marked} marcados · {detectDuplicates.data.cleared} desmarcados
-            </span>
-          )}
-          {detectDuplicates.error && (
-            <span className="error dashboard-detect-result">
-              {(detectDuplicates.error as Error).message}
-            </span>
-          )}
-        </div>
-        <div className="dashboard-view-toggle" role="group" aria-label="Modo de visualização">
-          <button
-            type="button"
-            className={`dashboard-view-toggle-btn${viewMode === 'year' ? ' is-active' : ''}`}
-            aria-pressed={viewMode === 'year'}
-            onClick={() => setViewMode('year')}
-          >
-            Por ano
-          </button>
-          <button
-            type="button"
-            className={`dashboard-view-toggle-btn${viewMode === 'total' ? ' is-active' : ''}`}
-            aria-pressed={viewMode === 'total'}
-            onClick={() => setViewMode('total')}
-          >
-            Consolidado
-          </button>
-        </div>
-        {availableVersoes.length > 0 && (
-          <label className="dashboard-filter">
-            Versão
-            <select
-              value={versaoFilter}
-              onChange={(e) => {
-                setVersaoFilterInitialized(true);
-                setVersaoFilter(e.target.value);
-              }}
+      <div className={`dashboard-toolbar${toolbarCollapsed ? ' is-collapsed' : ''}`}>
+        <button
+          type="button"
+          className="dashboard-toolbar-collapse-toggle"
+          onClick={() => setToolbarCollapsed((prev) => !prev)}
+          aria-expanded={!toolbarCollapsed}
+          title={toolbarCollapsed ? 'Expandir dashboard' : 'Recolher dashboard'}
+        >
+          {toolbarCollapsed ? '▾' : '▴'}
+        </button>
+        <div className="dashboard-toolbar-content">
+          <div className="dashboard-toolbar-text">
+            <h2>Dashboard por grupo</h2>
+            <p className="dashboard-subtitle">
+              Barras empilhadas por ano, ou lado a lado no modo Consolidado. "Todos" soma todos os grupos.
+            </p>
+          </div>
+          <div className="dashboard-toolbar-actions">
+            <button
+              type="button"
+              className="dashboard-detect-btn"
+              disabled={detectDuplicates.isPending}
+              onClick={() => detectDuplicates.mutate(versaoFilter || 'v2')}
+              title="Identifica artigos repetidos entre grupos da versão selecionada"
             >
-              <option value="">Todas</option>
-              {availableVersoes.map((versao) => (
-                <option key={versao} value={versao}>
-                  {versao}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
+              {detectDuplicates.isPending ? 'Detectando...' : 'Detectar repetidos'}
+            </button>
+            {detectDuplicates.data && (
+              <span className="dashboard-detect-result">
+                {detectDuplicates.data.marked} marcados · {detectDuplicates.data.cleared} desmarcados
+              </span>
+            )}
+            {detectDuplicates.error && (
+              <span className="error dashboard-detect-result">
+                {(detectDuplicates.error as Error).message}
+              </span>
+            )}
+          </div>
+          <div className="dashboard-view-toggle" role="group" aria-label="Modo de visualização">
+            <button
+              type="button"
+              className={`dashboard-view-toggle-btn${viewMode === 'year' ? ' is-active' : ''}`}
+              aria-pressed={viewMode === 'year'}
+              onClick={() => setViewMode('year')}
+            >
+              Por ano
+            </button>
+            <button
+              type="button"
+              className={`dashboard-view-toggle-btn${viewMode === 'total' ? ' is-active' : ''}`}
+              aria-pressed={viewMode === 'total'}
+              onClick={() => setViewMode('total')}
+            >
+              Consolidado
+            </button>
+          </div>
+          {availableVersoes.length > 0 && (
+            <label className="dashboard-filter">
+              Versão
+              <select
+                value={versaoFilter}
+                onChange={(e) => {
+                  setVersaoFilterInitialized(true);
+                  setVersaoFilter(e.target.value);
+                }}
+              >
+                <option value="">Todas</option>
+                {availableVersoes.map((versao) => (
+                  <option key={versao} value={versao}>
+                    {versao}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+        </div>
       </div>
 
       {isLoading && <p className="dashboard-status">Carregando estatísticas...</p>}
