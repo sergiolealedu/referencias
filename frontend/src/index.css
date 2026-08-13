@@ -2524,13 +2524,19 @@ body.dashboard-fullscreen-open {
     line-height: 1;
   }
 
-  .app-header.is-collapsed .subtitle,
+  .app-header.is-collapsed .app-header-text,
   .app-header.is-collapsed .app-header-actions {
     display: none;
   }
 
+  .app-header.is-collapsed {
+    min-height: 2.75rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
   .app.header-collapsed {
-    --app-header-height: 56px;
+    --app-header-height: 46px;
   }
 
   .app-header-actions {
