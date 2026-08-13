@@ -18,6 +18,7 @@ import { collectVersoes, getLatestVersao } from '../utils/versao';
 
 const STACK_COLORS = {
   usados: '#6ee7b7',
+  comPdf: '#7dd3fc',
   descartados: '#fda4af',
   outros: '#fde68a',
   unicos: '#93c5fd',
@@ -27,13 +28,17 @@ const STACK_COLORS = {
 const LABEL_FILL = '#1a2332';
 
 type ChartMode = 'usage' | 'duplicates';
+type ViewMode = 'year' | 'total';
 
-type UsageSegment = 'usados' | 'descartados' | 'outros';
+type UsageSegment = 'usados' | 'comPdf' | 'descartados' | 'outros';
 type DuplicateSegment = 'unicos' | 'repetidos';
 type ChartSegment = UsageSegment | DuplicateSegment;
 
+// Ordem de empilhamento (base → topo): cada artigo entra em apenas um segmento,
+// pela primeira condição que satisfizer.
 const USAGE_SEGMENTS: { key: UsageSegment; label: string }[] = [
-  { key: 'usados', label: 'Usados' },
+  { key: 'usados', label: 'Em uso' },
+  { key: 'comPdf', label: 'Com PDF' },
   { key: 'descartados', label: 'Descartados' },
   { key: 'outros', label: 'Outros' },
 ];
@@ -58,6 +63,7 @@ function initialVisibility(chartMode: ChartMode): Record<ChartSegment, boolean> 
 type ChartPoint = {
   year: string;
   usados: number;
+  comPdf: number;
   descartados: number;
   outros: number;
   unicos: number;
@@ -120,11 +126,12 @@ function buildChartData(
     return sorted.map((point) => ({
       year: String(point.year),
       usados: point.usados,
+      comPdf: point.comPdf,
       descartados: point.descartados,
       outros: point.outros,
       unicos: point.unicos,
       repetidos: point.repetidos,
-      total: point.usados + point.descartados + point.outros,
+      total: point.usados + point.comPdf + point.descartados + point.outros,
     }));
   }
 
@@ -136,33 +143,54 @@ function buildChartData(
     filled.push({
       year: String(year),
       usados: point?.usados ?? 0,
+      comPdf: point?.comPdf ?? 0,
       descartados: point?.descartados ?? 0,
       outros: point?.outros ?? 0,
       unicos: point?.unicos ?? 0,
       repetidos: point?.repetidos ?? 0,
-      total: (point?.usados ?? 0) + (point?.descartados ?? 0) + (point?.outros ?? 0),
+      total: (point?.usados ?? 0) + (point?.comPdf ?? 0) + (point?.descartados ?? 0) + (point?.outros ?? 0),
     });
   }
 
   return filled;
 }
 
+type SeriesTotals = Omit<GroupArticleStats['series'][number], 'year'>;
+
+const EMPTY_TOTALS: SeriesTotals = {
+  usados: 0,
+  comPdf: 0,
+  descartados: 0,
+  outros: 0,
+  unicos: 0,
+  repetidos: 0,
+};
+
+function sumSeries(series: GroupArticleStats['series']): SeriesTotals {
+  return series.reduce(
+    (acc, point) => ({
+      usados: acc.usados + point.usados,
+      comPdf: acc.comPdf + point.comPdf,
+      descartados: acc.descartados + point.descartados,
+      outros: acc.outros + point.outros,
+      unicos: acc.unicos + point.unicos,
+      repetidos: acc.repetidos + point.repetidos,
+    }),
+    { ...EMPTY_TOTALS },
+  );
+}
+
 function buildConsolidatedSeries(
   stats: GroupArticleStats[],
 ): GroupArticleStats['series'] {
-  const byYear = new Map<number, { usados: number; descartados: number; outros: number; unicos: number; repetidos: number }>();
+  const byYear = new Map<number, SeriesTotals>();
 
   for (const group of stats) {
     for (const point of group.series) {
-      const existing = byYear.get(point.year) ?? {
-        usados: 0,
-        descartados: 0,
-        outros: 0,
-        unicos: 0,
-        repetidos: 0,
-      };
+      const existing = byYear.get(point.year) ?? { ...EMPTY_TOTALS };
       byYear.set(point.year, {
         usados: existing.usados + point.usados,
+        comPdf: existing.comPdf + point.comPdf,
         descartados: existing.descartados + point.descartados,
         outros: existing.outros + point.outros,
         unicos: existing.unicos + point.unicos,
@@ -184,6 +212,7 @@ interface GroupChartProps {
   className?: string;
   expanded?: boolean;
   chartMode?: ChartMode;
+  viewMode?: ViewMode;
   visibleSegments?: Record<ChartSegment, boolean>;
   onVisibleSegmentsChange?: (next: Record<ChartSegment, boolean>) => void;
   onToggleExpand?: () => void;
@@ -225,10 +254,12 @@ function ChartSegmentToggles({
 function GroupChartContent({
   chartData,
   chartMode = 'usage',
+  viewMode = 'year',
   visibleSegments,
 }: {
   chartData: ChartPoint[];
   chartMode?: ChartMode;
+  viewMode?: ViewMode;
   visibleSegments: Record<ChartSegment, boolean>;
 }) {
   const segments = segmentsForMode(chartMode);
@@ -280,7 +311,7 @@ function GroupChartContent({
           domain={[0, Math.max(yMax, 1)]}
         />
         <Tooltip
-          labelFormatter={(label) => `Ano ${label}`}
+          labelFormatter={(label) => (viewMode === 'total' ? `${label}` : `Ano ${label}`)}
           formatter={(value, name) => [value ?? 0, name ?? '']}
         />
         {chartMode === 'duplicates' ? (
@@ -315,13 +346,25 @@ function GroupChartContent({
             {visibleSegments.usados && (
               <Bar
                 dataKey="usados"
-                name="Usados"
+                name="Em uso"
                 stackId="articles"
                 fill={STACK_COLORS.usados}
                 minPointSize={4}
                 radius={topSegment === 'usados' ? [4, 4, 0, 0] : undefined}
               >
                 <LabelList dataKey="usados" content={renderSegmentLabel} />
+              </Bar>
+            )}
+            {visibleSegments.comPdf && (
+              <Bar
+                dataKey="comPdf"
+                name="Com PDF"
+                stackId="articles"
+                fill={STACK_COLORS.comPdf}
+                minPointSize={4}
+                radius={topSegment === 'comPdf' ? [4, 4, 0, 0] : undefined}
+              >
+                <LabelList dataKey="comPdf" content={renderSegmentLabel} />
               </Bar>
             )}
             {visibleSegments.descartados && (
@@ -363,6 +406,7 @@ function GroupChart({
   className = '',
   expanded = false,
   chartMode = 'usage',
+  viewMode = 'year',
   visibleSegments: visibleSegmentsProp,
   onVisibleSegmentsChange,
   onToggleExpand,
@@ -388,22 +432,21 @@ function GroupChart({
     setVisibleSegments(next);
   };
 
-  const chartData = useMemo(() => buildChartData(series), [series]);
+  const totals = useMemo(() => sumSeries(series), [series]);
 
-  const totals = useMemo(
-    () =>
-      series.reduce(
-        (acc, point) => ({
-          usados: acc.usados + point.usados,
-          descartados: acc.descartados + point.descartados,
-          outros: acc.outros + point.outros,
-          unicos: acc.unicos + point.unicos,
-          repetidos: acc.repetidos + point.repetidos,
-        }),
-        { usados: 0, descartados: 0, outros: 0, unicos: 0, repetidos: 0 },
-      ),
-    [series],
-  );
+  const chartData = useMemo(() => {
+    if (viewMode === 'total') {
+      if (series.length === 0) return [];
+      return [
+        {
+          year: 'Total',
+          ...totals,
+          total: totals.usados + totals.comPdf + totals.descartados + totals.outros,
+        },
+      ];
+    }
+    return buildChartData(series);
+  }, [series, viewMode, totals]);
 
   const handleCopyPng = async () => {
     const container = chartContainerRef.current;
@@ -439,7 +482,7 @@ function GroupChart({
             {' · '}
             {chartMode === 'duplicates'
               ? `${totals.unicos} únicos · ${totals.repetidos} repetidos`
-              : `${totals.usados} usados · ${totals.descartados} descartados · ${totals.outros} outros`}
+              : `${totals.usados} em uso · ${totals.comPdf} com PDF · ${totals.descartados} descartados · ${totals.outros} outros`}
           </p>
         </div>
         <div className="dashboard-chart-actions">
@@ -485,6 +528,7 @@ function GroupChart({
             <GroupChartContent
               chartData={chartData}
               chartMode={chartMode}
+              viewMode={viewMode}
               visibleSegments={visibleSegments}
             />
           </div>
@@ -500,6 +544,7 @@ export function Dashboard() {
   const [versaoFilter, setVersaoFilter] = useState('');
   const [versaoFilterInitialized, setVersaoFilterInitialized] = useState(false);
   const [expandedChart, setExpandedChart] = useState<'consolidated' | number | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('year');
   const [chartVisibility, setChartVisibility] = useState<
     Record<string, Record<ChartSegment, boolean>>
   >({});
@@ -578,6 +623,24 @@ export function Dashboard() {
             </span>
           )}
         </div>
+        <div className="dashboard-view-toggle" role="group" aria-label="Modo de visualização">
+          <button
+            type="button"
+            className={`dashboard-view-toggle-btn${viewMode === 'year' ? ' is-active' : ''}`}
+            aria-pressed={viewMode === 'year'}
+            onClick={() => setViewMode('year')}
+          >
+            Por ano
+          </button>
+          <button
+            type="button"
+            className={`dashboard-view-toggle-btn${viewMode === 'total' ? ' is-active' : ''}`}
+            aria-pressed={viewMode === 'total'}
+            onClick={() => setViewMode('total')}
+          >
+            Consolidado
+          </button>
+        </div>
         {availableVersoes.length > 0 && (
           <label className="dashboard-filter">
             Versão
@@ -620,6 +683,7 @@ export function Dashboard() {
             extraMeta={`${stats.length} ${stats.length === 1 ? 'grupo' : 'grupos'}`}
             series={consolidatedSeries}
             chartMode="duplicates"
+            viewMode={viewMode}
             visibleSegments={getChartVisibility('consolidated', 'duplicates')}
             onVisibleSegmentsChange={(next) => setChartVisibilityFor('consolidated', next)}
             onToggleExpand={() => setExpandedChart('consolidated')}
@@ -631,6 +695,7 @@ export function Dashboard() {
               groupTitle={group.groupTitle}
               versao={group.versao}
               series={group.series}
+              viewMode={viewMode}
               visibleSegments={getChartVisibility(`group-${group.groupId}`, 'usage')}
               onVisibleSegmentsChange={(next) =>
                 setChartVisibilityFor(`group-${group.groupId}`, next)
@@ -655,6 +720,7 @@ export function Dashboard() {
             extraMeta={`${stats.length} ${stats.length === 1 ? 'grupo' : 'grupos'}`}
             series={consolidatedSeries}
             chartMode="duplicates"
+            viewMode={viewMode}
             visibleSegments={getChartVisibility('consolidated', 'duplicates')}
             onVisibleSegmentsChange={(next) => setChartVisibilityFor('consolidated', next)}
             expanded
@@ -674,6 +740,7 @@ export function Dashboard() {
             groupTitle={expandedGroup.groupTitle}
             versao={expandedGroup.versao}
             series={expandedGroup.series}
+            viewMode={viewMode}
             visibleSegments={getChartVisibility(`group-${expandedGroup.groupId}`, 'usage')}
             onVisibleSegmentsChange={(next) =>
               setChartVisibilityFor(`group-${expandedGroup.groupId}`, next)

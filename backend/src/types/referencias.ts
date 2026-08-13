@@ -180,6 +180,7 @@ export interface BibtexImportOptions {
 export interface YearArticleStats {
   year: number;
   usados: number;
+  comPdf: number;
   descartados: number;
   outros: number;
   repetidos: number;
