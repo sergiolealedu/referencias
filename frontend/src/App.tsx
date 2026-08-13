@@ -658,7 +658,7 @@ export default function App() {
 
 
 
-            <main className="main-panel">
+            <main className="main-panel articles-view-panel">
 
               {displayGroupId === null ? (
 

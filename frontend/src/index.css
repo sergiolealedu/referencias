@@ -1065,7 +1065,10 @@ button {
 }
 
 .table-wrap {
+  flex: 1;
+  min-height: 0;
   overflow-x: auto;
+  overflow-y: auto;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -1074,7 +1077,14 @@ button {
 .article-table-panel {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 0;
   gap: 0.5rem;
+}
+
+.article-table-panel .bulk-actions,
+.article-table-panel .article-pagination {
+  flex-shrink: 0;
 }
 
 .bulk-actions {
@@ -1932,6 +1942,24 @@ pre.error {
   overflow: hidden;
 }
 
+.articles-view-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 1rem 1.5rem;
+  overflow: hidden;
+}
+
+.articles-view-panel .panel-header,
+.articles-view-panel .filters-bar {
+  flex-shrink: 0;
+}
+
+.articles-view-panel .empty-state {
+  margin: auto;
+}
+
 .factors-view {
   flex: 1;
   display: flex;
@@ -2557,6 +2585,15 @@ body.dashboard-fullscreen-open {
     max-height: calc(var(--app-viewport-height) - var(--app-header-height));
   }
 
+  .articles-view-panel {
+    overflow: visible;
+  }
+
+  .article-table-panel {
+    flex: none;
+    min-height: auto;
+  }
+
   .factors-view {
     padding: 0.75rem 1rem 1rem;
     min-height: 0;
@@ -2633,6 +2670,7 @@ body.dashboard-fullscreen-open {
 
   .table-wrap {
     overflow-x: visible;
+    overflow-y: visible;
     border: none;
     background: transparent;
   }
