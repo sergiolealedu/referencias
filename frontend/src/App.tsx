@@ -101,6 +101,8 @@ export default function App() {
 
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
 
+  const [articlesToolbarCollapsed, setArticlesToolbarCollapsed] = useState(false);
+
   const [view, setView] = useState<AppView>('articles');
 
   const { data: settings } = useSettings();
@@ -525,7 +527,7 @@ export default function App() {
 
                 <>
 
-                  <div className="panel-header">
+                  <div className={`panel-header${articlesToolbarCollapsed ? ' is-collapsed' : ''}`}>
 
                     <div className="panel-header-text">
 
@@ -543,7 +545,15 @@ export default function App() {
 
                     </div>
 
-
+                    <button
+                      type="button"
+                      className="panel-toolbar-collapse-toggle"
+                      onClick={() => setArticlesToolbarCollapsed((prev) => !prev)}
+                      aria-expanded={!articlesToolbarCollapsed}
+                      title={articlesToolbarCollapsed ? 'Expandir filtros e ações' : 'Recolher filtros e ações'}
+                    >
+                      {articlesToolbarCollapsed ? '▾' : '▴'}
+                    </button>
 
                     <div className="panel-header-actions">
 
@@ -630,6 +640,8 @@ export default function App() {
                     availableTags={availableTags}
 
                     onChange={setFilters}
+
+                    compact={articlesToolbarCollapsed}
 
                   />
 

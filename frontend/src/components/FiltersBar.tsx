@@ -8,9 +8,11 @@ interface FiltersBarProps {
   filters: ArticleFilters;
   availableTags: string[];
   onChange: (filters: ArticleFilters) => void;
+  /** No mobile, esconde busca/tags/status quando recolhido — categoria continua visível. */
+  compact?: boolean;
 }
 
-export function FiltersBar({ filters, availableTags, onChange }: FiltersBarProps) {
+export function FiltersBar({ filters, availableTags, onChange, compact = false }: FiltersBarProps) {
   const [qInput, setQInput] = useState(filters.q ?? '');
   const filtersRef = useRef(filters);
   filtersRef.current = filters;
@@ -30,29 +32,31 @@ export function FiltersBar({ filters, availableTags, onChange }: FiltersBarProps
   }, [qInput, onChange]);
 
   return (
-    <div className="filters-bar">
-      <input
-        type="search"
-        placeholder="Buscar título, autor, chave..."
-        value={qInput}
-        onChange={(e) => setQInput(e.target.value)}
-      />
-      <TagsFilterInput
-        value={filters.tags ?? ''}
-        availableTags={availableTags}
-        onChange={(tags) => onChange({ ...filters, tags })}
-      />
-      <select
-        value={filters.status ?? ''}
-        onChange={(e) =>
-          onChange({ ...filters, status: e.target.value || undefined })
-        }
-      >
-        <option value="">Todos os status</option>
-        {ARTICLE_STATUSES.map((status) => (
-          <option key={status} value={status}>{status}</option>
-        ))}
-      </select>
+    <div className={`filters-bar${compact ? ' is-compact' : ''}`}>
+      <div className="filters-bar-secondary">
+        <input
+          type="search"
+          placeholder="Buscar título, autor, chave..."
+          value={qInput}
+          onChange={(e) => setQInput(e.target.value)}
+        />
+        <TagsFilterInput
+          value={filters.tags ?? ''}
+          availableTags={availableTags}
+          onChange={(tags) => onChange({ ...filters, tags })}
+        />
+        <select
+          value={filters.status ?? ''}
+          onChange={(e) =>
+            onChange({ ...filters, status: e.target.value || undefined })
+          }
+        >
+          <option value="">Todos os status</option>
+          {ARTICLE_STATUSES.map((status) => (
+            <option key={status} value={status}>{status}</option>
+          ))}
+        </select>
+      </div>
       <select
         value={filters.categoria ?? ''}
         onChange={(e) =>
