@@ -15,6 +15,7 @@ data/pdfs/
 backups/
 release/
 .cursor/
+.idea/
 *.tsbuildinfo
 *.bak
 .DS_Store
