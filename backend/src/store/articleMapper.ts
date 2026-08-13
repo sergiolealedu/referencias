@@ -1,4 +1,4 @@
-import type { Article, ArticleFactor } from '../types/referencias.js';
+import type { Article, ArticleFactor, MotivoDescarte } from '../types/referencias.js';
 
 export interface ArticleRow {
   id: number;
@@ -17,6 +17,7 @@ export interface ArticleRow {
   usado: number;
   revisao_literatura: number;
   pdf_nao_encontrado: number;
+  motivo_descarte: string | null;
   duplicate_group_id: number | null;
   duplicate_key: string | null;
 }
@@ -64,6 +65,7 @@ export function rowToArticle(row: ArticleRow): Article {
     usado: row.usado === 1,
     revisaoLiteratura: row.revisao_literatura === 1,
     pdfNaoEncontrado: row.pdf_nao_encontrado === 1,
+    motivoDescarte: (row.motivo_descarte as MotivoDescarte | null) ?? null,
     ...(row.duplicate_group_id != null && row.duplicate_key
       ? { duplicateOf: { groupId: row.duplicate_group_id, key: row.duplicate_key } }
       : {}),
@@ -90,6 +92,7 @@ export function articleToRowValues(
     usado: article.usado ? 1 : 0,
     revisao_literatura: article.revisaoLiteratura ? 1 : 0,
     pdf_nao_encontrado: article.pdfNaoEncontrado ? 1 : 0,
+    motivo_descarte: article.motivoDescarte ?? null,
     duplicate_group_id: article.duplicateOf?.groupId ?? null,
     duplicate_key: article.duplicateOf?.key ?? null,
   };

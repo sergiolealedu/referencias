@@ -91,6 +91,15 @@ export interface ArticleFactorInput {
   aliases?: string[];
 }
 
+export const MOTIVOS_DESCARTE = ['nao_eng_sw', 'nao_dev', 'nao_qvt'] as const;
+export type MotivoDescarte = (typeof MOTIVOS_DESCARTE)[number];
+
+export const MOTIVO_DESCARTE_LABELS: Record<MotivoDescarte, string> = {
+  nao_eng_sw: 'Não é eng. de software',
+  nao_dev: 'Não é desenvolvimento',
+  nao_qvt: 'Não é QVT',
+};
+
 export interface Article {
   entry: Entry;
   status: string;
@@ -104,6 +113,7 @@ export interface Article {
   usado: boolean;
   revisaoLiteratura: boolean;
   pdfNaoEncontrado: boolean;
+  motivoDescarte: MotivoDescarte | null;
   duplicateOf?: DuplicateRef;
 }
 
@@ -229,6 +239,9 @@ export interface YearArticleStats {
   year: number;
   usados: number;
   comPdf: number;
+  naoEngSw: number;
+  naoDev: number;
+  naoQvt: number;
   descartados: number;
   outros: number;
   repetidos: number;
@@ -300,4 +313,5 @@ export const emptyArticle = (): Article => ({
   usado: false,
   revisaoLiteratura: false,
   pdfNaoEncontrado: false,
+  motivoDescarte: null,
 });

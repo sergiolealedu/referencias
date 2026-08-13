@@ -57,6 +57,13 @@ function ensurePdfNaoEncontradoMigration(db: Database.Database): void {
   }
 }
 
+function ensureMotivoDescarteMigration(db: Database.Database): void {
+  const columns = db.prepare('PRAGMA table_info(articles)').all() as Array<{ name: string }>;
+  if (!columns.some((column) => column.name === 'motivo_descarte')) {
+    db.exec(`ALTER TABLE articles ADD COLUMN motivo_descarte TEXT`);
+  }
+}
+
 export function openDatabase(dbPath: string): Database.Database {
   mkdirSync(dirname(dbPath), { recursive: true });
   const db = new Database(dbPath);
@@ -68,6 +75,7 @@ export function openDatabase(dbPath: string): Database.Database {
   ensureFactorsMigration(db);
   ensureRevisaoLiteraturaMigration(db);
   ensurePdfNaoEncontradoMigration(db);
+  ensureMotivoDescarteMigration(db);
   return db;
 }
 

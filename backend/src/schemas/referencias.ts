@@ -1,5 +1,9 @@
 import { z } from 'zod';
 
+import { MOTIVOS_DESCARTE } from '../types/referencias.js';
+
+export const motivoDescarteSchema = z.enum(MOTIVOS_DESCARTE).nullable();
+
 export const duplicateRefSchema = z.object({
   groupId: z.number(),
   key: z.string().min(1),
@@ -40,6 +44,7 @@ export const articleSchema = z.object({
   usado: z.boolean().default(false),
   revisaoLiteratura: z.boolean().default(false),
   pdfNaoEncontrado: z.boolean().default(false),
+  motivoDescarte: motivoDescarteSchema.default(null),
   duplicateOf: duplicateRefSchema.optional(),
 });
 
@@ -61,6 +66,7 @@ export const articlePatchSchema = z.object({
   usado: z.boolean().optional(),
   revisaoLiteratura: z.boolean().optional(),
   pdfNaoEncontrado: z.boolean().optional(),
+  motivoDescarte: motivoDescarteSchema.optional(),
   duplicateOf: duplicateRefSchema.optional(),
 });
 

@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS articles (
   usado INTEGER NOT NULL DEFAULT 0,
   revisao_literatura INTEGER NOT NULL DEFAULT 0,
   pdf_nao_encontrado INTEGER NOT NULL DEFAULT 0,
+  motivo_descarte TEXT,
   duplicate_group_id INTEGER,
   duplicate_key TEXT,
   UNIQUE(group_id, entry_key)

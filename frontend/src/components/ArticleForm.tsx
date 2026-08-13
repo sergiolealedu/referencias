@@ -9,7 +9,14 @@ import {
   useUpdateArticle,
   useUploadArticlePdf,
 } from '../hooks/useApi';
-import { ARTICLE_STATUSES, ENTRY_TYPES, type Article } from '../types/referencias';
+import {
+  ARTICLE_STATUSES,
+  ENTRY_TYPES,
+  MOTIVOS_DESCARTE,
+  MOTIVO_DESCARTE_LABELS,
+  type Article,
+  type MotivoDescarte,
+} from '../types/referencias';
 import { emptyArticle } from '../types/referencias';
 import { articleToBibtex, copyBibtexToClipboard, downloadBibtex } from '../utils/bibtexExport';
 import {
@@ -158,6 +165,14 @@ export function ArticleForm({
 
   const setRoot = <K extends keyof Article>(key: K, value: Article[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleMotivoDescarteChange = (value: MotivoDescarte | null) => {
+    setForm((prev) => ({
+      ...prev,
+      motivoDescarte: value,
+      descartado: value ? true : prev.descartado,
+    }));
   };
 
   const buildPayload = () => ({
@@ -573,6 +588,24 @@ export function ArticleForm({
                   onChange={(e) => setRoot('descartado', e.target.checked)}
                 />
                 Descartado
+              </label>
+              <label>
+                Motivo do descarte
+                <select
+                  value={form.motivoDescarte ?? ''}
+                  onChange={(e) =>
+                    handleMotivoDescarteChange(
+                      e.target.value ? (e.target.value as MotivoDescarte) : null,
+                    )
+                  }
+                >
+                  <option value="">Sem motivo específico</option>
+                  {MOTIVOS_DESCARTE.map((motivo) => (
+                    <option key={motivo} value={motivo}>
+                      {MOTIVO_DESCARTE_LABELS[motivo]}
+                    </option>
+                  ))}
+                </select>
               </label>
               <label>
                 <input

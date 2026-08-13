@@ -609,15 +609,15 @@ export class SqliteStore {
         `INSERT INTO articles (
           group_id, entry_key, entry_type, fields_json, status, source, location,
           caminho, notes, tags_json, factors_json, descartado, usado, revisao_literatura,
-          pdf_nao_encontrado, duplicate_group_id, duplicate_key
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          pdf_nao_encontrado, motivo_descarte, duplicate_group_id, duplicate_key
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       );
 
       const update = this.db.prepare(
         `UPDATE articles SET
           entry_type = ?, fields_json = ?, status = ?, source = ?, location = ?,
           caminho = ?, notes = ?, tags_json = ?, factors_json = ?, descartado = ?,
-          usado = ?, revisao_literatura = ?, pdf_nao_encontrado = ?,
+          usado = ?, revisao_literatura = ?, pdf_nao_encontrado = ?, motivo_descarte = ?,
           duplicate_group_id = ?, duplicate_key = ?
          WHERE group_id = ? AND entry_key = ?`,
       );
@@ -652,6 +652,7 @@ export class SqliteStore {
             values.usado,
             values.revisao_literatura,
             values.pdf_nao_encontrado,
+            values.motivo_descarte,
             values.duplicate_group_id,
             values.duplicate_key,
             groupId,
@@ -677,6 +678,7 @@ export class SqliteStore {
           values.usado,
           values.revisao_literatura,
           values.pdf_nao_encontrado,
+          values.motivo_descarte,
           values.duplicate_group_id,
           values.duplicate_key,
         );
@@ -728,8 +730,8 @@ export class SqliteStore {
         `INSERT INTO articles (
           group_id, entry_key, entry_type, fields_json, status, source, location,
           caminho, notes, tags_json, factors_json, descartado, usado, revisao_literatura,
-          pdf_nao_encontrado, duplicate_group_id, duplicate_key
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          pdf_nao_encontrado, motivo_descarte, duplicate_group_id, duplicate_key
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         values.group_id,
@@ -747,6 +749,7 @@ export class SqliteStore {
         values.usado,
         values.revisao_literatura,
         values.pdf_nao_encontrado,
+        values.motivo_descarte,
         values.duplicate_group_id,
         values.duplicate_key,
       );
@@ -807,6 +810,8 @@ export class SqliteStore {
         patch.factors !== undefined
           ? this.persistArticleFactors(patch.factors)
           : current.factors,
+      // Um motivo de descarte específico implica que o artigo foi descartado.
+      descartado: patch.motivoDescarte ? true : (patch.descartado ?? current.descartado),
     };
 
     const values = articleToRowValues(groupId, merged);
@@ -816,7 +821,7 @@ export class SqliteStore {
           entry_key = ?, entry_type = ?, fields_json = ?, status = ?, source = ?,
           location = ?, caminho = ?, notes = ?, tags_json = ?, factors_json = ?,
           descartado = ?, usado = ?, revisao_literatura = ?, pdf_nao_encontrado = ?,
-          duplicate_group_id = ?, duplicate_key = ?
+          motivo_descarte = ?, duplicate_group_id = ?, duplicate_key = ?
          WHERE group_id = ? AND entry_key = ?`,
       )
       .run(
@@ -834,6 +839,7 @@ export class SqliteStore {
         values.usado,
         values.revisao_literatura,
         values.pdf_nao_encontrado,
+        values.motivo_descarte,
         values.duplicate_group_id,
         values.duplicate_key,
         groupId,
@@ -1078,8 +1084,11 @@ export class SqliteStore {
           CAST(COALESCE(NULLIF(json_extract(a.fields_json, '$.year'), ''), '0') AS INTEGER) AS year,
           SUM(CASE WHEN a.usado = 1 THEN 1 ELSE 0 END) AS usados,
           SUM(CASE WHEN a.usado = 0 AND TRIM(a.caminho) != '' THEN 1 ELSE 0 END) AS com_pdf,
-          SUM(CASE WHEN a.usado = 0 AND TRIM(a.caminho) = '' AND a.descartado = 1 THEN 1 ELSE 0 END) AS descartados,
-          SUM(CASE WHEN a.usado = 0 AND TRIM(a.caminho) = '' AND a.descartado = 0 THEN 1 ELSE 0 END) AS outros,
+          SUM(CASE WHEN a.usado = 0 AND TRIM(a.caminho) = '' AND a.motivo_descarte = 'nao_eng_sw' THEN 1 ELSE 0 END) AS nao_eng_sw,
+          SUM(CASE WHEN a.usado = 0 AND TRIM(a.caminho) = '' AND a.motivo_descarte = 'nao_dev' THEN 1 ELSE 0 END) AS nao_dev,
+          SUM(CASE WHEN a.usado = 0 AND TRIM(a.caminho) = '' AND a.motivo_descarte = 'nao_qvt' THEN 1 ELSE 0 END) AS nao_qvt,
+          SUM(CASE WHEN a.usado = 0 AND TRIM(a.caminho) = '' AND a.motivo_descarte IS NULL AND a.descartado = 1 THEN 1 ELSE 0 END) AS descartados,
+          SUM(CASE WHEN a.usado = 0 AND TRIM(a.caminho) = '' AND a.motivo_descarte IS NULL AND a.descartado = 0 THEN 1 ELSE 0 END) AS outros,
           SUM(CASE WHEN a.status = 'duplicate' THEN 1 ELSE 0 END) AS repetidos,
           SUM(CASE WHEN a.status != 'duplicate' THEN 1 ELSE 0 END) AS unicos
         FROM groups g
@@ -1096,6 +1105,9 @@ export class SqliteStore {
       year: number;
       usados: number;
       com_pdf: number;
+      nao_eng_sw: number;
+      nao_dev: number;
+      nao_qvt: number;
       descartados: number;
       outros: number;
       repetidos: number;
@@ -1118,6 +1130,9 @@ export class SqliteStore {
         year: row.year,
         usados: row.usados,
         comPdf: row.com_pdf,
+        naoEngSw: row.nao_eng_sw,
+        naoDev: row.nao_dev,
+        naoQvt: row.nao_qvt,
         descartados: row.descartados,
         outros: row.outros,
         repetidos: row.repetidos,

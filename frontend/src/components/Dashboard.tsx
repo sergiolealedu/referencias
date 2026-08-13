@@ -19,6 +19,9 @@ import { collectVersoes, getLatestVersao } from '../utils/versao';
 const STACK_COLORS = {
   usados: '#6ee7b7',
   comPdf: '#7dd3fc',
+  naoEngSw: '#fdba74',
+  naoDev: '#fb923c',
+  naoQvt: '#f97316',
   descartados: '#fda4af',
   outros: '#fde68a',
   unicos: '#93c5fd',
@@ -30,7 +33,14 @@ const LABEL_FILL = '#1a2332';
 type ChartMode = 'usage' | 'duplicates';
 type ViewMode = 'year' | 'total';
 
-type UsageSegment = 'usados' | 'comPdf' | 'descartados' | 'outros';
+type UsageSegment =
+  | 'usados'
+  | 'comPdf'
+  | 'naoEngSw'
+  | 'naoDev'
+  | 'naoQvt'
+  | 'descartados'
+  | 'outros';
 type DuplicateSegment = 'unicos' | 'repetidos';
 type ChartSegment = UsageSegment | DuplicateSegment;
 
@@ -39,6 +49,9 @@ type ChartSegment = UsageSegment | DuplicateSegment;
 const USAGE_SEGMENTS: { key: UsageSegment; label: string }[] = [
   { key: 'usados', label: 'Em uso' },
   { key: 'comPdf', label: 'Com PDF' },
+  { key: 'naoEngSw', label: 'Não é eng. SW' },
+  { key: 'naoDev', label: 'Não é dev' },
+  { key: 'naoQvt', label: 'Não é QVT' },
   { key: 'descartados', label: 'Descartados' },
   { key: 'outros', label: 'Outros' },
 ];
@@ -64,6 +77,9 @@ type ChartPoint = {
   year: string;
   usados: number;
   comPdf: number;
+  naoEngSw: number;
+  naoDev: number;
+  naoQvt: number;
   descartados: number;
   outros: number;
   unicos: number;
@@ -127,11 +143,21 @@ function buildChartData(
       year: String(point.year),
       usados: point.usados,
       comPdf: point.comPdf,
+      naoEngSw: point.naoEngSw,
+      naoDev: point.naoDev,
+      naoQvt: point.naoQvt,
       descartados: point.descartados,
       outros: point.outros,
       unicos: point.unicos,
       repetidos: point.repetidos,
-      total: point.usados + point.comPdf + point.descartados + point.outros,
+      total:
+        point.usados +
+        point.comPdf +
+        point.naoEngSw +
+        point.naoDev +
+        point.naoQvt +
+        point.descartados +
+        point.outros,
     }));
   }
 
@@ -144,11 +170,21 @@ function buildChartData(
       year: String(year),
       usados: point?.usados ?? 0,
       comPdf: point?.comPdf ?? 0,
+      naoEngSw: point?.naoEngSw ?? 0,
+      naoDev: point?.naoDev ?? 0,
+      naoQvt: point?.naoQvt ?? 0,
       descartados: point?.descartados ?? 0,
       outros: point?.outros ?? 0,
       unicos: point?.unicos ?? 0,
       repetidos: point?.repetidos ?? 0,
-      total: (point?.usados ?? 0) + (point?.comPdf ?? 0) + (point?.descartados ?? 0) + (point?.outros ?? 0),
+      total:
+        (point?.usados ?? 0) +
+        (point?.comPdf ?? 0) +
+        (point?.naoEngSw ?? 0) +
+        (point?.naoDev ?? 0) +
+        (point?.naoQvt ?? 0) +
+        (point?.descartados ?? 0) +
+        (point?.outros ?? 0),
     });
   }
 
@@ -160,6 +196,9 @@ type SeriesTotals = Omit<GroupArticleStats['series'][number], 'year'>;
 const EMPTY_TOTALS: SeriesTotals = {
   usados: 0,
   comPdf: 0,
+  naoEngSw: 0,
+  naoDev: 0,
+  naoQvt: 0,
   descartados: 0,
   outros: 0,
   unicos: 0,
@@ -171,6 +210,9 @@ function sumSeries(series: GroupArticleStats['series']): SeriesTotals {
     (acc, point) => ({
       usados: acc.usados + point.usados,
       comPdf: acc.comPdf + point.comPdf,
+      naoEngSw: acc.naoEngSw + point.naoEngSw,
+      naoDev: acc.naoDev + point.naoDev,
+      naoQvt: acc.naoQvt + point.naoQvt,
       descartados: acc.descartados + point.descartados,
       outros: acc.outros + point.outros,
       unicos: acc.unicos + point.unicos,
@@ -191,6 +233,9 @@ function buildConsolidatedSeries(
       byYear.set(point.year, {
         usados: existing.usados + point.usados,
         comPdf: existing.comPdf + point.comPdf,
+        naoEngSw: existing.naoEngSw + point.naoEngSw,
+        naoDev: existing.naoDev + point.naoDev,
+        naoQvt: existing.naoQvt + point.naoQvt,
         descartados: existing.descartados + point.descartados,
         outros: existing.outros + point.outros,
         unicos: existing.unicos + point.unicos,
@@ -379,6 +424,42 @@ function GroupChartContent({
                 <LabelList dataKey="comPdf" content={renderSegmentLabel} />
               </Bar>
             )}
+            {visibleSegments.naoEngSw && (
+              <Bar
+                dataKey="naoEngSw"
+                name="Não é eng. SW"
+                stackId={stackId}
+                fill={STACK_COLORS.naoEngSw}
+                minPointSize={4}
+                radius={barRadius('naoEngSw')}
+              >
+                <LabelList dataKey="naoEngSw" content={renderSegmentLabel} />
+              </Bar>
+            )}
+            {visibleSegments.naoDev && (
+              <Bar
+                dataKey="naoDev"
+                name="Não é dev"
+                stackId={stackId}
+                fill={STACK_COLORS.naoDev}
+                minPointSize={4}
+                radius={barRadius('naoDev')}
+              >
+                <LabelList dataKey="naoDev" content={renderSegmentLabel} />
+              </Bar>
+            )}
+            {visibleSegments.naoQvt && (
+              <Bar
+                dataKey="naoQvt"
+                name="Não é QVT"
+                stackId={stackId}
+                fill={STACK_COLORS.naoQvt}
+                minPointSize={4}
+                radius={barRadius('naoQvt')}
+              >
+                <LabelList dataKey="naoQvt" content={renderSegmentLabel} />
+              </Bar>
+            )}
             {visibleSegments.descartados && (
               <Bar
                 dataKey="descartados"
@@ -453,7 +534,14 @@ function GroupChart({
         {
           year: 'Total',
           ...totals,
-          total: totals.usados + totals.comPdf + totals.descartados + totals.outros,
+          total:
+            totals.usados +
+            totals.comPdf +
+            totals.naoEngSw +
+            totals.naoDev +
+            totals.naoQvt +
+            totals.descartados +
+            totals.outros,
         },
       ];
     }
@@ -494,7 +582,7 @@ function GroupChart({
             {' · '}
             {chartMode === 'duplicates'
               ? `${totals.unicos} únicos · ${totals.repetidos} repetidos`
-              : `${totals.usados} em uso · ${totals.comPdf} com PDF · ${totals.descartados} descartados · ${totals.outros} outros`}
+              : `${totals.usados} em uso · ${totals.comPdf} com PDF · ${totals.naoEngSw} não é eng. SW · ${totals.naoDev} não é dev · ${totals.naoQvt} não é QVT · ${totals.descartados} descartados · ${totals.outros} outros`}
           </p>
         </div>
         <div className="dashboard-chart-actions">

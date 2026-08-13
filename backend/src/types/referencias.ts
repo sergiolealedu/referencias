@@ -54,6 +54,9 @@ export interface FactorOverview {
   occurrences: FactorOccurrence[];
 }
 
+export const MOTIVOS_DESCARTE = ['nao_eng_sw', 'nao_dev', 'nao_qvt'] as const;
+export type MotivoDescarte = (typeof MOTIVOS_DESCARTE)[number];
+
 export interface Article {
   entry: Entry;
   status: string;
@@ -67,6 +70,7 @@ export interface Article {
   usado: boolean;
   revisaoLiteratura: boolean;
   pdfNaoEncontrado: boolean;
+  motivoDescarte: MotivoDescarte | null;
   duplicateOf?: DuplicateRef;
 }
 
@@ -181,6 +185,9 @@ export interface YearArticleStats {
   year: number;
   usados: number;
   comPdf: number;
+  naoEngSw: number;
+  naoDev: number;
+  naoQvt: number;
   descartados: number;
   outros: number;
   repetidos: number;
