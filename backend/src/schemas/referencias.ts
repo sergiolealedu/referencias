@@ -43,10 +43,25 @@ export const articleSchema = z.object({
   duplicateOf: duplicateRefSchema.optional(),
 });
 
-export const articlePatchSchema = articleSchema.partial().extend({
+// Não deriva de articleSchema.partial(): campos com .default() continuam
+// preenchendo o valor padrão quando ausentes mesmo após .partial(), o que
+// faz o merge em updateArticle sobrescrever campos não enviados no PATCH.
+export const articlePatchSchema = z.object({
   entry: entrySchema.partial().extend({
     fields: z.record(z.string(), z.string()).optional(),
   }).optional(),
+  status: z.string().optional(),
+  source: z.string().optional(),
+  location: z.string().optional(),
+  caminho: z.string().optional(),
+  notes: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  factors: z.array(articleFactorSchema).optional(),
+  descartado: z.boolean().optional(),
+  usado: z.boolean().optional(),
+  revisaoLiteratura: z.boolean().optional(),
+  pdfNaoEncontrado: z.boolean().optional(),
+  duplicateOf: duplicateRefSchema.optional(),
 });
 
 export const groupSchema = z.object({
