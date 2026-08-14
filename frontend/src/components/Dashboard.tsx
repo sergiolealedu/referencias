@@ -613,8 +613,10 @@ function GroupChart({
           )}
         </div>
       </header>
-      {!cardCollapsed && copyMessage && (
-        <p className={`dashboard-copy-message${copyMessage.includes('copiado') ? '' : ' error'}`}>
+      {copyMessage && (
+        <p
+          className={`dashboard-copy-message${copyMessage.includes('copiado') ? '' : ' error'}${cardCollapsed ? ' is-collapsed' : ''}`}
+        >
           {copyMessage}
         </p>
       )}
@@ -623,13 +625,13 @@ function GroupChart({
         <p className="dashboard-empty-chart">Nenhum artigo com ano informado neste grupo.</p>
       ) : (
         <>
-          {!cardCollapsed && (
+          <div className={`dashboard-chart-segments-wrap${cardCollapsed ? ' is-collapsed' : ''}`}>
             <ChartSegmentToggles
               chartMode={chartMode}
               visibleSegments={visibleSegments}
               onToggle={toggleSegment}
             />
-          )}
+          </div>
           <div className="dashboard-chart-container" ref={chartContainerRef}>
             <GroupChartContent
               chartData={chartData}

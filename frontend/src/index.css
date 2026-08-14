@@ -2381,11 +2381,6 @@ pre.error {
   color: var(--muted);
 }
 
-.dashboard-chart-header.is-collapsed .dashboard-chart-meta,
-.dashboard-chart-header.is-collapsed .dashboard-chart-actions {
-  display: none;
-}
-
 .dashboard-chart-segments {
   display: flex;
   flex-wrap: wrap;
@@ -2650,7 +2645,25 @@ body.dashboard-fullscreen-open {
     display: none;
   }
 
+  .sidebar.is-header-collapsed {
+    display: none;
+  }
+
+  .article-toolbar-collapsible.is-collapsed {
+    display: none;
+  }
+
   .dashboard-toolbar.is-collapsed .dashboard-toolbar-content {
+    display: none;
+  }
+
+  .dashboard-chart-header.is-collapsed .dashboard-chart-meta,
+  .dashboard-chart-header.is-collapsed .dashboard-chart-actions {
+    display: none;
+  }
+
+  .dashboard-chart-segments-wrap.is-collapsed,
+  .dashboard-copy-message.is-collapsed {
     display: none;
   }
 

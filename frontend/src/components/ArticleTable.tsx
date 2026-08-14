@@ -252,26 +252,26 @@ export function ArticleTable({
           })();
         }}
       />
-      {!toolbarCollapsed && pdfMessage && <p className="hint pdf-table-message">{pdfMessage}</p>}
-      {!toolbarCollapsed && checkedKeys.size > 0 && (
-        <div className="bulk-actions">
-          <span className="bulk-actions-count">
-            {checkedKeys.size} selecionada(s)
-          </span>
-          <button type="button" onClick={() => setCheckedKeys(new Set())}>
-            Limpar seleção
-          </button>
-          <button type="button" onClick={handleCopyBibtex}>
-            Copiar BibTeX
-          </button>
-          <button type="button" onClick={handleDownloadBibtex}>
-            Baixar .bib
-          </button>
-          {exportMessage && <span className="bulk-actions-message">{exportMessage}</span>}
-        </div>
-      )}
+      <div className={`article-toolbar-collapsible${toolbarCollapsed ? ' is-collapsed' : ''}`}>
+        {pdfMessage && <p className="hint pdf-table-message">{pdfMessage}</p>}
+        {checkedKeys.size > 0 && (
+          <div className="bulk-actions">
+            <span className="bulk-actions-count">
+              {checkedKeys.size} selecionada(s)
+            </span>
+            <button type="button" onClick={() => setCheckedKeys(new Set())}>
+              Limpar seleção
+            </button>
+            <button type="button" onClick={handleCopyBibtex}>
+              Copiar BibTeX
+            </button>
+            <button type="button" onClick={handleDownloadBibtex}>
+              Baixar .bib
+            </button>
+            {exportMessage && <span className="bulk-actions-message">{exportMessage}</span>}
+          </div>
+        )}
 
-      {!toolbarCollapsed && (
         <div className="article-pagination">
           <label className="article-page-size">
             Por página
@@ -305,7 +305,7 @@ export function ArticleTable({
             </button>
           </div>
         </div>
-      )}
+      </div>
 
       <div className="table-wrap">
         <table className="article-table">

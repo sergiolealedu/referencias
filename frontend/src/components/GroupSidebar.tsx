@@ -11,13 +11,15 @@ import { GroupFormModal } from './GroupFormModal';
 interface GroupSidebarProps {
   selectedId: number | null;
   onSelect: (id: number | null) => void;
+  /** No mobile, esconde a sidebar junto com o resto do topo recolhível. */
+  headerCollapsed?: boolean;
 }
 
 function isMobileLayout() {
   return typeof window !== 'undefined' && window.matchMedia('(max-width: 900px)').matches;
 }
 
-export function GroupSidebar({ selectedId, onSelect }: GroupSidebarProps) {
+export function GroupSidebar({ selectedId, onSelect, headerCollapsed = false }: GroupSidebarProps) {
   const { data: groups = [], isLoading, error } = useGroups();
   const deleteGroup = useDeleteGroup();
   const [open, setOpen] = useState(() => !isMobileLayout());
@@ -86,7 +88,7 @@ export function GroupSidebar({ selectedId, onSelect }: GroupSidebarProps) {
 
   return (
     <aside
-      className={`sidebar${open ? '' : ' is-collapsed'}`}
+      className={`sidebar${open ? '' : ' is-collapsed'}${headerCollapsed ? ' is-header-collapsed' : ''}`}
       aria-label="Lista de grupos"
     >
       <div className="sidebar-header">

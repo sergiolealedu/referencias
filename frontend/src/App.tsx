@@ -511,9 +511,11 @@ export default function App() {
 
           <>
 
-            {!headerCollapsed && (
-              <GroupSidebar selectedId={displayGroupId} onSelect={handleSelectGroup} />
-            )}
+            <GroupSidebar
+              selectedId={displayGroupId}
+              onSelect={handleSelectGroup}
+              headerCollapsed={headerCollapsed}
+            />
 
 
 
