@@ -247,7 +247,7 @@ server {
     listen [::]:80;
     server_name ${server_name};
 
-    client_max_body_size 20m;
+    client_max_body_size 55m;
 
     root ${APP_DIR}/frontend/dist;
     index index.html;
