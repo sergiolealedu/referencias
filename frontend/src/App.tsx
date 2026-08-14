@@ -511,7 +511,9 @@ export default function App() {
 
           <>
 
-            <GroupSidebar selectedId={displayGroupId} onSelect={handleSelectGroup} />
+            {!headerCollapsed && (
+              <GroupSidebar selectedId={displayGroupId} onSelect={handleSelectGroup} />
+            )}
 
 
 
@@ -668,6 +670,8 @@ export default function App() {
                       onPageChange={setPage}
 
                       onPageSizeChange={setPageSize}
+
+                      toolbarCollapsed={headerCollapsed}
 
                       onSortChange={(column, direction) => {
 

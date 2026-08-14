@@ -2381,6 +2381,11 @@ pre.error {
   color: var(--muted);
 }
 
+.dashboard-chart-header.is-collapsed .dashboard-chart-meta,
+.dashboard-chart-header.is-collapsed .dashboard-chart-actions {
+  display: none;
+}
+
 .dashboard-chart-segments {
   display: flex;
   flex-wrap: wrap;

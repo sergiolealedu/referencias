@@ -37,6 +37,8 @@ interface ArticleTableProps {
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: PageSize) => void;
   onSortChange: (column: SortColumn | null, direction: SortDirection) => void;
+  /** No mobile, esconde a paginação junto com o resto do topo recolhível. */
+  toolbarCollapsed?: boolean;
 }
 
 export function ArticleTable({
@@ -53,6 +55,7 @@ export function ArticleTable({
   onPageChange,
   onPageSizeChange,
   onSortChange,
+  toolbarCollapsed = false,
 }: ArticleTableProps) {
   const updateArticle = useUpdateArticle(groupId);
   const uploadPdf = useUploadArticlePdf(groupId);
@@ -249,8 +252,8 @@ export function ArticleTable({
           })();
         }}
       />
-      {pdfMessage && <p className="hint pdf-table-message">{pdfMessage}</p>}
-      {checkedKeys.size > 0 && (
+      {!toolbarCollapsed && pdfMessage && <p className="hint pdf-table-message">{pdfMessage}</p>}
+      {!toolbarCollapsed && checkedKeys.size > 0 && (
         <div className="bulk-actions">
           <span className="bulk-actions-count">
             {checkedKeys.size} selecionada(s)
@@ -268,39 +271,41 @@ export function ArticleTable({
         </div>
       )}
 
-      <div className="article-pagination">
-        <label className="article-page-size">
-          Por página
-          <select
-            value={pageSize}
-            onChange={(e) => onPageSizeChange(Number(e.target.value) as PageSize)}
-          >
-            {PAGE_SIZE_OPTIONS.map((size) => (
-              <option key={size} value={size}>{size}</option>
-            ))}
-          </select>
-        </label>
-        <span className="article-page-info">
-          {rangeStart}–{rangeEnd} de {total}
-        </span>
-        <div className="article-page-nav">
-          <button
-            type="button"
-            onClick={() => onPageChange(Math.max(1, page - 1))}
-            disabled={page <= 1}
-          >
-            Anterior
-          </button>
-          <span>Página {page} de {totalPages}</span>
-          <button
-            type="button"
-            onClick={() => onPageChange(Math.min(totalPages, page + 1))}
-            disabled={page >= totalPages}
-          >
-            Próxima
-          </button>
+      {!toolbarCollapsed && (
+        <div className="article-pagination">
+          <label className="article-page-size">
+            Por página
+            <select
+              value={pageSize}
+              onChange={(e) => onPageSizeChange(Number(e.target.value) as PageSize)}
+            >
+              {PAGE_SIZE_OPTIONS.map((size) => (
+                <option key={size} value={size}>{size}</option>
+              ))}
+            </select>
+          </label>
+          <span className="article-page-info">
+            {rangeStart}–{rangeEnd} de {total}
+          </span>
+          <div className="article-page-nav">
+            <button
+              type="button"
+              onClick={() => onPageChange(Math.max(1, page - 1))}
+              disabled={page <= 1}
+            >
+              Anterior
+            </button>
+            <span>Página {page} de {totalPages}</span>
+            <button
+              type="button"
+              onClick={() => onPageChange(Math.min(totalPages, page + 1))}
+              disabled={page >= totalPages}
+            >
+              Próxima
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="table-wrap">
         <table className="article-table">

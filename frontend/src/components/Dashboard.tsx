@@ -261,6 +261,8 @@ interface GroupChartProps {
   visibleSegments?: Record<ChartSegment, boolean>;
   onVisibleSegmentsChange?: (next: Record<ChartSegment, boolean>) => void;
   onToggleExpand?: () => void;
+  /** No mobile, esconde meta/ações/legendas do card junto com o topo recolhível. */
+  toolbarCollapsed?: boolean;
 }
 
 function ChartSegmentToggles({
@@ -503,7 +505,9 @@ function GroupChart({
   visibleSegments: visibleSegmentsProp,
   onVisibleSegmentsChange,
   onToggleExpand,
+  toolbarCollapsed = false,
 }: GroupChartProps) {
+  const cardCollapsed = toolbarCollapsed && !expanded;
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const [copying, setCopying] = useState(false);
@@ -568,7 +572,7 @@ function GroupChart({
     <section
       className={`dashboard-chart-card${expanded ? ' dashboard-chart-card--expanded' : ''}${className ? ` ${className}` : ''}`}
     >
-      <header className="dashboard-chart-header">
+      <header className={`dashboard-chart-header${cardCollapsed ? ' is-collapsed' : ''}`}>
         <div>
           <h3>{groupTitle}</h3>
           <p className="dashboard-chart-meta">
@@ -609,7 +613,7 @@ function GroupChart({
           )}
         </div>
       </header>
-      {copyMessage && (
+      {!cardCollapsed && copyMessage && (
         <p className={`dashboard-copy-message${copyMessage.includes('copiado') ? '' : ' error'}`}>
           {copyMessage}
         </p>
@@ -619,11 +623,13 @@ function GroupChart({
         <p className="dashboard-empty-chart">Nenhum artigo com ano informado neste grupo.</p>
       ) : (
         <>
-          <ChartSegmentToggles
-            chartMode={chartMode}
-            visibleSegments={visibleSegments}
-            onToggle={toggleSegment}
-          />
+          {!cardCollapsed && (
+            <ChartSegmentToggles
+              chartMode={chartMode}
+              visibleSegments={visibleSegments}
+              onToggle={toggleSegment}
+            />
+          )}
           <div className="dashboard-chart-container" ref={chartContainerRef}>
             <GroupChartContent
               chartData={chartData}
@@ -790,6 +796,7 @@ export function Dashboard({ toolbarCollapsed = false }: { toolbarCollapsed?: boo
             visibleSegments={getChartVisibility('consolidated', 'usage')}
             onVisibleSegmentsChange={(next) => setChartVisibilityFor('consolidated', next)}
             onToggleExpand={() => setExpandedChart('consolidated')}
+            toolbarCollapsed={toolbarCollapsed}
           />
 
           {stats.map((group) => (
@@ -804,6 +811,7 @@ export function Dashboard({ toolbarCollapsed = false }: { toolbarCollapsed?: boo
                 setChartVisibilityFor(`group-${group.groupId}`, next)
               }
               onToggleExpand={() => setExpandedChart(group.groupId)}
+              toolbarCollapsed={toolbarCollapsed}
             />
           ))}
         </div>
