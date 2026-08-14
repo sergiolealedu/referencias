@@ -638,7 +638,7 @@ function GroupChart({
   );
 }
 
-export function Dashboard() {
+export function Dashboard({ toolbarCollapsed = false }: { toolbarCollapsed?: boolean }) {
   const { data: groups = [] } = useGroups();
   const availableVersoes = useMemo(() => collectVersoes(groups), [groups]);
   const [versaoFilter, setVersaoFilter] = useState('');
@@ -647,7 +647,6 @@ export function Dashboard() {
   const [viewMode, setViewMode] = useState<ViewMode>(() =>
     window.matchMedia('(max-width: 900px)').matches ? 'total' : 'year',
   );
-  const [toolbarCollapsed, setToolbarCollapsed] = useState(false);
   const [chartVisibility, setChartVisibility] = useState<
     Record<string, Record<ChartSegment, boolean>>
   >({});
@@ -699,15 +698,6 @@ export function Dashboard() {
   return (
     <div className="dashboard">
       <div className={`dashboard-toolbar${toolbarCollapsed ? ' is-collapsed' : ''}`}>
-        <button
-          type="button"
-          className="dashboard-toolbar-collapse-toggle"
-          onClick={() => setToolbarCollapsed((prev) => !prev)}
-          aria-expanded={!toolbarCollapsed}
-          title={toolbarCollapsed ? 'Expandir dashboard' : 'Recolher dashboard'}
-        >
-          {toolbarCollapsed ? '▾' : '▴'}
-        </button>
         <div className="dashboard-toolbar-content">
           <div className="dashboard-toolbar-text">
             <h2>Dashboard por grupo</h2>

@@ -101,8 +101,6 @@ export default function App() {
 
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
 
-  const [articlesToolbarCollapsed, setArticlesToolbarCollapsed] = useState(false);
-
   const [view, setView] = useState<AppView>('articles');
 
   const { data: settings } = useSettings();
@@ -396,7 +394,7 @@ export default function App() {
           className="app-header-collapse-toggle"
           onClick={() => setHeaderCollapsed((prev) => !prev)}
           aria-expanded={!headerCollapsed}
-          title={headerCollapsed ? 'Expandir cabeçalho' : 'Recolher cabeçalho'}
+          title={headerCollapsed ? 'Expandir topo' : 'Recolher topo'}
         >
           {headerCollapsed ? '▾' : '▴'}
         </button>
@@ -497,7 +495,7 @@ export default function App() {
 
           <main className="main-panel dashboard-panel">
 
-            <Dashboard />
+            <Dashboard toolbarCollapsed={headerCollapsed} />
 
           </main>
 
@@ -527,7 +525,7 @@ export default function App() {
 
                 <>
 
-                  <div className={`panel-header${articlesToolbarCollapsed ? ' is-collapsed' : ''}`}>
+                  <div className={`panel-header${headerCollapsed ? ' is-collapsed' : ''}`}>
 
                     <div className="panel-header-text">
 
@@ -544,16 +542,6 @@ export default function App() {
                       </h2>
 
                     </div>
-
-                    <button
-                      type="button"
-                      className="panel-toolbar-collapse-toggle"
-                      onClick={() => setArticlesToolbarCollapsed((prev) => !prev)}
-                      aria-expanded={!articlesToolbarCollapsed}
-                      title={articlesToolbarCollapsed ? 'Expandir filtros e ações' : 'Recolher filtros e ações'}
-                    >
-                      {articlesToolbarCollapsed ? '▾' : '▴'}
-                    </button>
 
                     <div className="panel-header-actions">
 
@@ -641,7 +629,7 @@ export default function App() {
 
                     onChange={setFilters}
 
-                    compact={articlesToolbarCollapsed}
+                    compact={headerCollapsed}
 
                   />
 

@@ -653,10 +653,6 @@ button {
   gap: 0.5rem;
 }
 
-.panel-toolbar-collapse-toggle {
-  display: none;
-}
-
 .panel-header-actions button {
   padding: 0.45rem 0.9rem;
   border-radius: 6px;
@@ -2237,10 +2233,6 @@ pre.error {
   display: contents;
 }
 
-.dashboard-toolbar-collapse-toggle {
-  display: none;
-}
-
 .dashboard-toolbar-actions {
   display: flex;
   align-items: center;
@@ -2649,52 +2641,8 @@ body.dashboard-fullscreen-open {
     min-height: auto;
   }
 
-  .panel-header {
-    position: relative;
-    padding-right: 2.5rem;
-  }
-
-  .panel-toolbar-collapse-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 1.75rem;
-    height: 1.75rem;
-    padding: 0;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: var(--surface);
-    font-size: 0.9rem;
-    line-height: 1;
-  }
-
   .panel-header.is-collapsed .panel-header-actions {
     display: none;
-  }
-
-  .dashboard-toolbar {
-    position: relative;
-    padding-right: 2.5rem;
-  }
-
-  .dashboard-toolbar-collapse-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 1.75rem;
-    height: 1.75rem;
-    padding: 0;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: var(--surface);
-    font-size: 0.9rem;
-    line-height: 1;
   }
 
   .dashboard-toolbar.is-collapsed .dashboard-toolbar-content {
