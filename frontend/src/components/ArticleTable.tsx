@@ -394,6 +394,17 @@ export function ArticleTable({
                         >
                           {copiedTitleKey === articleKey ? 'Copiado!' : 'Copiar'}
                         </button>
+                        <a
+                          className="title-copy-btn"
+                          title="Buscar este artigo no Google Scholar"
+                          aria-label="Buscar no Google Scholar"
+                          href={`https://scholar.google.com/scholar?q=${encodeURIComponent(article.entry.fields.title || articleKey)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Scholar
+                        </a>
                       </div>
                       {(article.factors?.length ?? 0) > 0 && (
                         <span className="factor-chips" aria-label="Fatores do artigo">
