@@ -2667,6 +2667,11 @@ body.dashboard-fullscreen-open {
     display: none;
   }
 
+  /* Cópia em P&B com padrões é um recurso de desktop (uso em relatórios impressos). */
+  .dashboard-copy-pattern-btn {
+    display: none;
+  }
+
   .filters-bar.is-compact .filters-bar-secondary {
     display: none;
   }

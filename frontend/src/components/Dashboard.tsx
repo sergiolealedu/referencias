@@ -13,20 +13,9 @@ import type { LabelProps } from 'recharts';
 
 import { useArticleStatsByYear, useDetectDuplicates, useGroups } from '../hooks/useApi';
 import type { GroupArticleStats } from '../types/referencias';
-import { copyChartPngToClipboard } from '../utils/chartExport';
+import { STACK_COLORS } from '../utils/chartColors';
+import { copyChartPatternPngToClipboard, copyChartPngToClipboard } from '../utils/chartExport';
 import { collectVersoes, getLatestVersao } from '../utils/versao';
-
-const STACK_COLORS = {
-  usados: '#6ee7b7',
-  comPdf: '#7dd3fc',
-  naoEngSw: '#fdba74',
-  naoDev: '#fb923c',
-  naoQvt: '#f97316',
-  descartados: '#fda4af',
-  outros: '#fde68a',
-  unicos: '#93c5fd',
-  repetidos: '#e9a8fd',
-} as const;
 
 const LABEL_FILL = '#1a2332';
 
@@ -568,6 +557,22 @@ function GroupChart({
     }
   };
 
+  const handleCopyPatternPng = async () => {
+    const container = chartContainerRef.current;
+    if (!container) return;
+
+    setCopyMessage(null);
+    setCopying(true);
+    try {
+      await copyChartPatternPngToClipboard(container);
+      setCopyMessage('PNG em preto e branco (com padrões) copiado para a área de transferência.');
+    } catch (error) {
+      setCopyMessage((error as Error).message);
+    } finally {
+      setCopying(false);
+    }
+  };
+
   return (
     <section
       className={`dashboard-chart-card${expanded ? ' dashboard-chart-card--expanded' : ''}${className ? ` ${className}` : ''}`}
@@ -599,6 +604,17 @@ function GroupChart({
               title="Gerar PNG do gráfico e copiar para a área de transferência"
             >
               {copying ? 'Copiando...' : 'Copiar PNG'}
+            </button>
+          )}
+          {chartData.length > 0 && (
+            <button
+              type="button"
+              className="dashboard-copy-btn dashboard-copy-pattern-btn"
+              onClick={handleCopyPatternPng}
+              disabled={copying}
+              title="Gerar PNG em preto e branco (cada cor como um padrão de achurado) e copiar para a área de transferência"
+            >
+              {copying ? 'Copiando...' : 'Copiar P&B'}
             </button>
           )}
           {onToggleExpand && (
