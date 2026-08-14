@@ -13,7 +13,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: release-android-${{ github.ref }}
+  group: production-deploy
   cancel-in-progress: false
 
 jobs:
