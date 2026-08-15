@@ -2,7 +2,8 @@ import { Fragment, useEffect, useRef, useState } from 'react';
 
 import { api } from '../api/client';
 import { useUpdateArticle, useUploadArticlePdf } from '../hooks/useApi';
-import type { Article, SortColumn, SortDirection } from '../types/referencias';
+import type { Article, MotivoDescarte, SortColumn, SortDirection } from '../types/referencias';
+import { MOTIVOS_DESCARTE, MOTIVO_DESCARTE_LABELS } from '../types/referencias';
 import {
   copyBibtexBulkToClipboard,
   downloadBibtexBulk,
@@ -20,7 +21,6 @@ const COLUMNS: { key: SortColumn; label: string }[] = [
   { key: 'usado', label: 'Usado' },
   { key: 'descartado', label: 'Desc.' },
   { key: 'pdfNaoEncontrado', label: 'PDF n/enc.' },
-  { key: 'revisaoLiteratura', label: 'Rev. lit.' },
 ];
 
 interface ArticleTableProps {
@@ -116,6 +116,17 @@ export function ArticleTable({
     await updateArticle.mutateAsync({
       key: article.entry.key,
       patch: { [field]: !article[field] },
+    });
+  };
+
+  // Escolher um motivo já marca "descartado" (o backend faz o mesmo no merge),
+  // então a categoria fica coerente sem um segundo clique.
+  const changeMotivoDescarte = (article: Article, value: MotivoDescarte | null) => {
+    updateArticle.mutate({
+      key: article.entry.key,
+      patch: value
+        ? { motivoDescarte: value, descartado: true }
+        : { motivoDescarte: null },
     });
   };
 
@@ -500,17 +511,6 @@ export function ArticleTable({
                         onClick={(e) => e.stopPropagation()}
                       />
                     </td>
-                    <td data-label="Rev. lit.">
-                      <input
-                        type="checkbox"
-                        checked={article.revisaoLiteratura ?? false}
-                        onChange={(e) => {
-                          e.stopPropagation();
-                          toggleField(article, 'revisaoLiteratura');
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </td>
                     <td className="pdf-col" data-label="PDF" onClick={(e) => e.stopPropagation()}>
                       <div className="pdf-row-actions">
                         <button
@@ -531,6 +531,42 @@ export function ArticleTable({
                         >
                           PDF
                         </button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr
+                    data-article-key={articleKey}
+                    className={`article-row article-row--categoria ${rowClass}`}
+                    onClick={() => onSelect(articleKey)}
+                  >
+                    <td className="title-cell-spacer" aria-hidden="true" />
+                    <td
+                      className="categoria-cell"
+                      colSpan={COLUMNS.length}
+                      data-label="Categoria"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div
+                        className="categoria-options"
+                        role="group"
+                        aria-label={`Motivo do descarte de ${article.entry.fields.title || articleKey}`}
+                      >
+                        {MOTIVOS_DESCARTE.map((motivo) => {
+                          const active = article.motivoDescarte === motivo;
+                          return (
+                            <button
+                              key={motivo}
+                              type="button"
+                              className={`categoria-chip${active ? ' is-active' : ''}`}
+                              aria-pressed={active}
+                              disabled={updateArticle.isPending}
+                              // Clicar no ativo limpa — sem precisar de uma opção "nenhum".
+                              onClick={() => changeMotivoDescarte(article, active ? null : motivo)}
+                            >
+                              {MOTIVO_DESCARTE_LABELS[motivo]}
+                            </button>
+                          );
+                        })}
                       </div>
                     </td>
                   </tr>

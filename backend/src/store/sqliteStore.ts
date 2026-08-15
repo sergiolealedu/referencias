@@ -45,16 +45,21 @@ interface FilterClause {
 
 // Mesma ordem de prioridade usada em getArticleStatsByYear: cada artigo cai em
 // exatamente uma categoria, pela primeira condição que satisfizer.
+// Prioridade (cada artigo cai em exatamente uma categoria):
+// usado → motivo de descarte → descartado → com PDF → outros.
+// O descarte vem antes de "com PDF": um artigo descartado continua descartado
+// mesmo que já tenha o PDF baixado.
 const CATEGORIA_SQL: Record<string, (alias: string) => string> = {
   usados: (a) => `${a}.usado = 1`,
-  comPdf: (a) => `${a}.usado = 0 AND TRIM(${a}.caminho) != ''`,
-  naoEngSw: (a) => `${a}.usado = 0 AND TRIM(${a}.caminho) = '' AND ${a}.motivo_descarte = 'nao_eng_sw'`,
-  naoDev: (a) => `${a}.usado = 0 AND TRIM(${a}.caminho) = '' AND ${a}.motivo_descarte = 'nao_dev'`,
-  naoQvt: (a) => `${a}.usado = 0 AND TRIM(${a}.caminho) = '' AND ${a}.motivo_descarte = 'nao_qvt'`,
+  naoEngSw: (a) => `${a}.usado = 0 AND ${a}.motivo_descarte = 'nao_eng_sw'`,
+  naoDev: (a) => `${a}.usado = 0 AND ${a}.motivo_descarte = 'nao_dev'`,
+  naoQvt: (a) => `${a}.usado = 0 AND ${a}.motivo_descarte = 'nao_qvt'`,
   descartados: (a) =>
-    `${a}.usado = 0 AND TRIM(${a}.caminho) = '' AND ${a}.motivo_descarte IS NULL AND ${a}.descartado = 1`,
+    `${a}.usado = 0 AND ${a}.motivo_descarte IS NULL AND ${a}.descartado = 1`,
+  comPdf: (a) =>
+    `${a}.usado = 0 AND ${a}.motivo_descarte IS NULL AND ${a}.descartado = 0 AND TRIM(${a}.caminho) != ''`,
   outros: (a) =>
-    `${a}.usado = 0 AND TRIM(${a}.caminho) = '' AND ${a}.motivo_descarte IS NULL AND ${a}.descartado = 0`,
+    `${a}.usado = 0 AND ${a}.motivo_descarte IS NULL AND ${a}.descartado = 0 AND TRIM(${a}.caminho) = ''`,
 };
 
 function buildArticleFilters(
@@ -1100,12 +1105,12 @@ export class SqliteStore {
           g.versao AS versao,
           CAST(COALESCE(NULLIF(json_extract(a.fields_json, '$.year'), ''), '0') AS INTEGER) AS year,
           SUM(CASE WHEN a.usado = 1 THEN 1 ELSE 0 END) AS usados,
-          SUM(CASE WHEN a.usado = 0 AND TRIM(a.caminho) != '' THEN 1 ELSE 0 END) AS com_pdf,
-          SUM(CASE WHEN a.usado = 0 AND TRIM(a.caminho) = '' AND a.motivo_descarte = 'nao_eng_sw' THEN 1 ELSE 0 END) AS nao_eng_sw,
-          SUM(CASE WHEN a.usado = 0 AND TRIM(a.caminho) = '' AND a.motivo_descarte = 'nao_dev' THEN 1 ELSE 0 END) AS nao_dev,
-          SUM(CASE WHEN a.usado = 0 AND TRIM(a.caminho) = '' AND a.motivo_descarte = 'nao_qvt' THEN 1 ELSE 0 END) AS nao_qvt,
-          SUM(CASE WHEN a.usado = 0 AND TRIM(a.caminho) = '' AND a.motivo_descarte IS NULL AND a.descartado = 1 THEN 1 ELSE 0 END) AS descartados,
-          SUM(CASE WHEN a.usado = 0 AND TRIM(a.caminho) = '' AND a.motivo_descarte IS NULL AND a.descartado = 0 THEN 1 ELSE 0 END) AS outros,
+          SUM(CASE WHEN a.usado = 0 AND a.motivo_descarte = 'nao_eng_sw' THEN 1 ELSE 0 END) AS nao_eng_sw,
+          SUM(CASE WHEN a.usado = 0 AND a.motivo_descarte = 'nao_dev' THEN 1 ELSE 0 END) AS nao_dev,
+          SUM(CASE WHEN a.usado = 0 AND a.motivo_descarte = 'nao_qvt' THEN 1 ELSE 0 END) AS nao_qvt,
+          SUM(CASE WHEN a.usado = 0 AND a.motivo_descarte IS NULL AND a.descartado = 1 THEN 1 ELSE 0 END) AS descartados,
+          SUM(CASE WHEN a.usado = 0 AND a.motivo_descarte IS NULL AND a.descartado = 0 AND TRIM(a.caminho) != '' THEN 1 ELSE 0 END) AS com_pdf,
+          SUM(CASE WHEN a.usado = 0 AND a.motivo_descarte IS NULL AND a.descartado = 0 AND TRIM(a.caminho) = '' THEN 1 ELSE 0 END) AS outros,
           SUM(CASE WHEN a.status = 'duplicate' THEN 1 ELSE 0 END) AS repetidos,
           SUM(CASE WHEN a.status != 'duplicate' THEN 1 ELSE 0 END) AS unicos
         FROM groups g

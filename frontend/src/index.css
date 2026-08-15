@@ -1283,6 +1283,58 @@ button {
   max-width: none;
 }
 
+/* Linha de categorias: fica logo abaixo dos status, na mesma "ficha" do artigo. */
+.article-table tbody tr.article-row--categoria:hover,
+.article-table tbody tr.article-row--meta:has(+ .article-row--categoria:hover) {
+  background: #f8fafc;
+}
+
+.article-table tbody tr.article-row--categoria.selected {
+  background: #eff6ff;
+}
+
+.article-row--meta td {
+  border-bottom: none;
+}
+
+.article-row--categoria td {
+  padding-top: 0;
+  padding-bottom: 0.5rem;
+}
+
+.categoria-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.categoria-chip {
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.3;
+}
+
+.categoria-chip:hover:not(:disabled) {
+  border-color: #94a3b8;
+  color: var(--text);
+}
+
+.categoria-chip.is-active {
+  background: #fff1f2;
+  border-color: #fda4af;
+  color: #9f1239;
+  font-weight: 600;
+}
+
+.categoria-chip:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .title-cell-spacer {
   padding: 0;
   width: 0;
