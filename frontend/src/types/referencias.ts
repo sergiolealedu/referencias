@@ -157,6 +157,7 @@ export const ARTICLE_CATEGORIAS = [
   'naoQvt',
   'descartados',
   'outros',
+  'repetidos',
 ] as const;
 export type ArticleCategoria = (typeof ARTICLE_CATEGORIAS)[number];
 
@@ -168,6 +169,7 @@ export const ARTICLE_CATEGORIA_LABELS: Record<ArticleCategoria, string> = {
   naoQvt: 'Não é QVT',
   descartados: 'Descartados',
   outros: 'Outros',
+  repetidos: 'Repetidos',
 };
 
 export interface ArticleFilters {

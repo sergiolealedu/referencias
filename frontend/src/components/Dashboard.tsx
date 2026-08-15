@@ -29,7 +29,8 @@ type UsageSegment =
   | 'naoDev'
   | 'naoQvt'
   | 'descartados'
-  | 'outros';
+  | 'outros'
+  | 'repetidos';
 type DuplicateSegment = 'unicos' | 'repetidos';
 type ChartSegment = UsageSegment | DuplicateSegment;
 
@@ -43,6 +44,9 @@ const USAGE_SEGMENTS: { key: UsageSegment; label: string }[] = [
   { key: 'naoQvt', label: 'Não é QVT' },
   { key: 'descartados', label: 'Descartados' },
   { key: 'outros', label: 'Outros' },
+  // Repetido tem a maior prioridade na classificação, mas fica por último no
+  // empilhamento para não deslocar a ordem já estabelecida das demais.
+  { key: 'repetidos', label: 'Repetidos' },
 ];
 
 const DUPLICATE_SEGMENTS: { key: DuplicateSegment; label: string }[] = [
@@ -146,7 +150,8 @@ function buildChartData(
         point.naoDev +
         point.naoQvt +
         point.descartados +
-        point.outros,
+        point.outros +
+        point.repetidos,
     }));
   }
 
@@ -173,7 +178,8 @@ function buildChartData(
         (point?.naoDev ?? 0) +
         (point?.naoQvt ?? 0) +
         (point?.descartados ?? 0) +
-        (point?.outros ?? 0),
+        (point?.outros ?? 0) +
+        (point?.repetidos ?? 0),
     });
   }
 
@@ -475,6 +481,18 @@ function GroupChartContent({
                 <LabelList dataKey="outros" content={renderSegmentLabel} />
               </Bar>
             )}
+            {visibleSegments.repetidos && (
+              <Bar
+                dataKey="repetidos"
+                name="Repetidos"
+                stackId={stackId}
+                fill={STACK_COLORS.repetidos}
+                minPointSize={4}
+                radius={barRadius('repetidos')}
+              >
+                <LabelList dataKey="repetidos" content={renderSegmentLabel} />
+              </Bar>
+            )}
           </>
         )}
       </BarChart>
@@ -534,7 +552,8 @@ function GroupChart({
             totals.naoDev +
             totals.naoQvt +
             totals.descartados +
-            totals.outros,
+            totals.outros +
+            totals.repetidos,
         },
       ];
     }
@@ -604,7 +623,7 @@ function GroupChart({
             {' · '}
             {chartMode === 'duplicates'
               ? `${totals.unicos} únicos · ${totals.repetidos} repetidos`
-              : `${totals.usados} em uso · ${totals.comPdf} com PDF · ${totals.naoEngSw} não é eng. SW · ${totals.naoDev} não é dev · ${totals.naoQvt} não é QVT · ${totals.descartados} descartados · ${totals.outros} outros`}
+              : `${totals.usados} em uso · ${totals.comPdf} com PDF · ${totals.naoEngSw} não é eng. SW · ${totals.naoDev} não é dev · ${totals.naoQvt} não é QVT · ${totals.descartados} descartados · ${totals.outros} outros · ${totals.repetidos} repetidos`}
           </p>
         </div>
         <div className="dashboard-chart-actions">

@@ -111,6 +111,7 @@ export const ARTICLE_CATEGORIAS = [
   'naoQvt',
   'descartados',
   'outros',
+  'repetidos',
 ] as const;
 export type ArticleCategoria = (typeof ARTICLE_CATEGORIAS)[number];
 
