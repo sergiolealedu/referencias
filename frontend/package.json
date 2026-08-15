@@ -1,6 +1,6 @@
 {
   "name": "@sergiolealedu/referencias-frontend",
-  "version": "1.1.33",
+  "version": "1.1.56",
   "description": "SPA React/Vite do sistema Referências (build estático)",
   "type": "module",
   "files": [
