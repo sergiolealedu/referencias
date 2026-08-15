@@ -64,7 +64,130 @@ async function svgElementToPngBlob(
   }
 }
 
-export async function copyChartPngToClipboard(container: HTMLElement): Promise<void> {
+/** Um item da legenda desenhada dentro da imagem exportada. */
+export interface ChartLegendItem {
+  label: string;
+  color: string;
+}
+
+const LEGEND_FONT = '11px sans-serif';
+const LEGEND_SWATCH = 12;
+const LEGEND_SWATCH_GAP = 6;
+const LEGEND_ITEM_GAP = 18;
+const LEGEND_ROW_HEIGHT = 20;
+const LEGEND_PADDING_TOP = 10;
+const LEGEND_PADDING_BOTTOM = 6;
+const LEGEND_PADDING_X = 8;
+
+let measureContext: CanvasRenderingContext2D | null = null;
+
+function measureLegendText(text: string): number {
+  if (!measureContext) {
+    measureContext = document.createElement('canvas').getContext('2d');
+    if (measureContext) measureContext.font = LEGEND_FONT;
+  }
+  if (!measureContext) return text.length * 6.2;
+  return measureContext.measureText(text).width;
+}
+
+/**
+ * Desenha a legenda dentro do próprio SVG — a legenda da tela é HTML fora do
+ * gráfico, então não aparecia na imagem copiada. Retorna a nova altura total.
+ */
+function appendLegend(
+  svg: SVGSVGElement,
+  items: ChartLegendItem[],
+  width: number,
+  height: number,
+  resolveFill: (color: string) => string,
+): number {
+  if (items.length === 0) return height;
+
+  const widths = items.map(
+    (item) => LEGEND_SWATCH + LEGEND_SWATCH_GAP + measureLegendText(item.label),
+  );
+
+  // Quebra em linhas respeitando a largura do gráfico.
+  const rows: number[][] = [];
+  let current: number[] = [];
+  let used = 0;
+  widths.forEach((itemWidth, index) => {
+    const needed = itemWidth + (current.length ? LEGEND_ITEM_GAP : 0);
+    if (current.length && used + needed > width - LEGEND_PADDING_X * 2) {
+      rows.push(current);
+      current = [index];
+      used = itemWidth;
+    } else {
+      current.push(index);
+      used += needed;
+    }
+  });
+  if (current.length) rows.push(current);
+
+  const legendHeight =
+    LEGEND_PADDING_TOP + rows.length * LEGEND_ROW_HEIGHT + LEGEND_PADDING_BOTTOM;
+  const totalHeight = height + legendHeight;
+
+  const group = document.createElementNS(SVG_NS, 'g');
+  const background = document.createElementNS(SVG_NS, 'rect');
+  background.setAttribute('x', '0');
+  background.setAttribute('y', String(height));
+  background.setAttribute('width', String(width));
+  background.setAttribute('height', String(legendHeight));
+  background.setAttribute('fill', '#ffffff');
+  group.appendChild(background);
+
+  rows.forEach((row, rowIndex) => {
+    const rowWidth =
+      row.reduce((sum, index) => sum + widths[index], 0) +
+      (row.length - 1) * LEGEND_ITEM_GAP;
+    let x = Math.max(LEGEND_PADDING_X, (width - rowWidth) / 2);
+    const y = height + LEGEND_PADDING_TOP + rowIndex * LEGEND_ROW_HEIGHT;
+
+    row.forEach((index) => {
+      const item = items[index];
+
+      const swatch = document.createElementNS(SVG_NS, 'rect');
+      swatch.setAttribute('x', String(x));
+      swatch.setAttribute('y', String(y));
+      swatch.setAttribute('width', String(LEGEND_SWATCH));
+      swatch.setAttribute('height', String(LEGEND_SWATCH));
+      swatch.setAttribute('rx', '2');
+      swatch.setAttribute('fill', resolveFill(item.color));
+      swatch.setAttribute('stroke', '#94a3b8');
+      swatch.setAttribute('stroke-width', '0.6');
+      group.appendChild(swatch);
+
+      const text = document.createElementNS(SVG_NS, 'text');
+      text.setAttribute('x', String(x + LEGEND_SWATCH + LEGEND_SWATCH_GAP));
+      text.setAttribute('y', String(y + LEGEND_SWATCH / 2));
+      text.setAttribute('dominant-baseline', 'central');
+      text.setAttribute('font-size', '11');
+      text.setAttribute('fill', '#1a2332');
+      text.textContent = item.label;
+      group.appendChild(text);
+
+      x += widths[index] + LEGEND_ITEM_GAP;
+    });
+  });
+
+  svg.appendChild(group);
+  svg.setAttribute('height', String(totalHeight));
+  const viewBox = svg.getAttribute('viewBox');
+  if (viewBox) {
+    const [minX, minY, vbWidth] = viewBox.split(/[\s,]+/).map(Number);
+    if ([minX, minY, vbWidth].every((n) => Number.isFinite(n))) {
+      svg.setAttribute('viewBox', `${minX} ${minY} ${vbWidth} ${totalHeight}`);
+    }
+  }
+
+  return totalHeight;
+}
+
+export async function copyChartPngToClipboard(
+  container: HTMLElement,
+  legend: ChartLegendItem[] = [],
+): Promise<void> {
   if (!navigator.clipboard?.write) {
     throw new Error('Seu navegador não suporta copiar imagens para a área de transferência.');
   }
@@ -76,7 +199,9 @@ export async function copyChartPngToClipboard(container: HTMLElement): Promise<v
     throw new Error('O gráfico não possui dimensões válidas para exportação.');
   }
 
-  const pngBlob = await svgElementToPngBlob(svgElement, width, height);
+  const clone = svgElement.cloneNode(true) as SVGSVGElement;
+  const totalHeight = appendLegend(clone, legend, width, height, (color) => color);
+  const pngBlob = await svgElementToPngBlob(clone, width, totalHeight);
 
   await navigator.clipboard.write([
     new ClipboardItem({ 'image/png': pngBlob }),
@@ -185,7 +310,11 @@ function addLabelBackgrounds(svg: SVGSVGElement): void {
 }
 
 /** Clona o SVG do gráfico substituindo cada cor sólida de barra por um padrão de achurado em P&B. */
-function buildHatchedSvg(svgElement: SVGSVGElement): SVGSVGElement {
+function buildHatchedSvg(svgElement: SVGSVGElement): {
+  svg: SVGSVGElement;
+  /** Resolve uma cor da paleta para o `url(#...)` do padrão correspondente. */
+  patternFillFor: (color: string) => string;
+} {
   const clone = svgElement.cloneNode(true) as SVGSVGElement;
   const defs = document.createElementNS(SVG_NS, 'defs');
   clone.insertBefore(defs, clone.firstChild);
@@ -193,11 +322,8 @@ function buildHatchedSvg(svgElement: SVGSVGElement): SVGSVGElement {
   const colorToPatternId = new Map<string, string>();
   let nextFallbackIndex = CHART_COLOR_ORDER.length;
 
-  const filledEls = clone.querySelectorAll<SVGElement>('path[fill], rect[fill]');
-  filledEls.forEach((el) => {
-    const fill = el.getAttribute('fill')?.toLowerCase();
-    if (!fill || !/^#[0-9a-f]{6}$/.test(fill) || fill === '#ffffff') return;
-
+  const patternIdFor = (rawFill: string): string => {
+    const fill = rawFill.toLowerCase();
     let patternId = colorToPatternId.get(fill);
     if (!patternId) {
       const knownIndex = CHART_COLOR_ORDER.findIndex((c) => c.toLowerCase() === fill);
@@ -207,7 +333,15 @@ function buildHatchedSvg(svgElement: SVGSVGElement): SVGSVGElement {
       appendPatternDef(defs, patternId, style);
       colorToPatternId.set(fill, patternId);
     }
-    el.setAttribute('fill', `url(#${patternId})`);
+    return patternId;
+  };
+
+  const filledEls = clone.querySelectorAll<SVGElement>('path[fill], rect[fill]');
+  filledEls.forEach((el) => {
+    const fill = el.getAttribute('fill')?.toLowerCase();
+    if (!fill || !/^#[0-9a-f]{6}$/.test(fill) || fill === '#ffffff') return;
+
+    el.setAttribute('fill', `url(#${patternIdFor(fill)})`);
     // Contorno fino mantém os segmentos delimitados agora que o preenchimento
     // é claro.
     if (!el.getAttribute('stroke')) {
@@ -218,10 +352,16 @@ function buildHatchedSvg(svgElement: SVGSVGElement): SVGSVGElement {
 
   addLabelBackgrounds(clone);
 
-  return clone;
+  return {
+    svg: clone,
+    patternFillFor: (color) => `url(#${patternIdFor(color)})`,
+  };
 }
 
-export async function copyChartPatternPngToClipboard(container: HTMLElement): Promise<void> {
+export async function copyChartPatternPngToClipboard(
+  container: HTMLElement,
+  legend: ChartLegendItem[] = [],
+): Promise<void> {
   if (!navigator.clipboard?.write) {
     throw new Error('Seu navegador não suporta copiar imagens para a área de transferência.');
   }
@@ -233,8 +373,9 @@ export async function copyChartPatternPngToClipboard(container: HTMLElement): Pr
     throw new Error('O gráfico não possui dimensões válidas para exportação.');
   }
 
-  const hatchedSvg = buildHatchedSvg(svgElement);
-  const pngBlob = await svgElementToPngBlob(hatchedSvg, width, height);
+  const { svg: hatchedSvg, patternFillFor } = buildHatchedSvg(svgElement);
+  const totalHeight = appendLegend(hatchedSvg, legend, width, height, patternFillFor);
+  const pngBlob = await svgElementToPngBlob(hatchedSvg, width, totalHeight);
 
   await navigator.clipboard.write([
     new ClipboardItem({ 'image/png': pngBlob }),

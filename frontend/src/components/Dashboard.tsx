@@ -541,6 +541,19 @@ function GroupChart({
     return buildChartData(series);
   }, [series, viewMode, totals]);
 
+  // A legenda da tela é HTML fora do <svg>, então precisa ser reconstruída para
+  // ser desenhada dentro da imagem exportada.
+  const legendItems = useMemo(
+    () =>
+      segmentsForMode(chartMode)
+        .filter((segment) => visibleSegments[segment.key])
+        .map((segment) => ({
+          label: segment.label,
+          color: STACK_COLORS[segment.key],
+        })),
+    [chartMode, visibleSegments],
+  );
+
   const handleCopyPng = async () => {
     const container = chartContainerRef.current;
     if (!container) return;
@@ -548,7 +561,7 @@ function GroupChart({
     setCopyMessage(null);
     setCopying(true);
     try {
-      await copyChartPngToClipboard(container);
+      await copyChartPngToClipboard(container, legendItems);
       setCopyMessage('PNG copiado para a área de transferência.');
     } catch (error) {
       setCopyMessage((error as Error).message);
@@ -564,7 +577,7 @@ function GroupChart({
     setCopyMessage(null);
     setCopying(true);
     try {
-      await copyChartPatternPngToClipboard(container);
+      await copyChartPatternPngToClipboard(container, legendItems);
       setCopyMessage('PNG em preto e branco (com padrões) copiado para a área de transferência.');
     } catch (error) {
       setCopyMessage((error as Error).message);
