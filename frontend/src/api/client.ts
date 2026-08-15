@@ -38,6 +38,10 @@ function getApiBase(): string {
   return resolveApiBaseUrl();
 }
 
+/** Deve acompanhar MAX_PDF_BYTES no backend e o client_max_body_size do nginx. */
+export const MAX_PDF_UPLOAD_MB = 50;
+const MAX_PDF_UPLOAD_BYTES = MAX_PDF_UPLOAD_MB * 1024 * 1024;
+
 function authHeaders(): HeadersInit {
   const authToken = getAuthToken();
   if (authToken) {
@@ -250,6 +254,17 @@ export const api = {
 
   uploadArticlePdf: async (groupId: number, key: string, file: File) => {
     const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+
+    // Recusa antes de enviar: acima do limite o upload é cortado no meio do
+    // caminho (nginx/Cloudflare fecham a conexão) e o erro chegava confuso ou
+    // simplesmente não chegava.
+    if (file.size > MAX_PDF_UPLOAD_BYTES) {
+      throw new Error(
+        `PDF de ${sizeMb} MB excede o limite de ${MAX_PDF_UPLOAD_MB} MB. ` +
+          'Comprima o arquivo (ex.: reduzir resolução das imagens) e envie de novo.',
+      );
+    }
+
     let response: Response;
     try {
       response = await fetch(
