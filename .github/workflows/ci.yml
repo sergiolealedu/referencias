@@ -41,9 +41,14 @@ jobs:
       - name: Verify frontend artifact
         run: test -f frontend/dist/index.html
 
+  # Build Android desativado temporariamente — rodava em TODO push pra main,
+  # independente de tags/release-android.yml, disparando builds Gradle sem
+  # necessidade. Reative removendo o "if: false" quando precisar validar o
+  # build Android no CI de novo.
   android:
     name: Build Android
     runs-on: ubuntu-latest
+    if: false
 
     steps:
       - name: Checkout
