@@ -237,7 +237,12 @@ export function ArticleTable({
           const key = pdfTargetKey;
           e.target.value = '';
           setPdfTargetKey(null);
-          if (!file || !key) return;
+          if (!file) return;
+          if (!key) {
+            // Sem alvo o upload não tem para onde ir — antes isso falhava calado.
+            setPdfMessage('Não foi possível identificar o artigo. Clique em ↑ na linha e escolha o PDF de novo.');
+            return;
+          }
           void (async () => {
             setPdfMessage(null);
             setUploadingKey(key);
@@ -252,8 +257,10 @@ export function ArticleTable({
           })();
         }}
       />
+      {/* Fora da área recolhível: um erro de PDF precisa aparecer mesmo com a
+          barra recolhida no mobile. */}
+      {pdfMessage && <p className="hint pdf-table-message">{pdfMessage}</p>}
       <div className={`article-toolbar-collapsible${toolbarCollapsed ? ' is-collapsed' : ''}`}>
-        {pdfMessage && <p className="hint pdf-table-message">{pdfMessage}</p>}
         {checkedKeys.size > 0 && (
           <div className="bulk-actions">
             <span className="bulk-actions-count">

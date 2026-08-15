@@ -548,10 +548,10 @@ function GroupChart({
       segmentsForMode(chartMode)
         .filter((segment) => visibleSegments[segment.key])
         .map((segment) => ({
-          label: segment.label,
+          label: `${segment.label} (${totals[segment.key]})`,
           color: STACK_COLORS[segment.key],
         })),
-    [chartMode, visibleSegments],
+    [chartMode, visibleSegments, totals],
   );
 
   const handleCopyPng = async () => {

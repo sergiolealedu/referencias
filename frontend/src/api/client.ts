@@ -249,26 +249,52 @@ export const api = {
   },
 
   uploadArticlePdf: async (groupId: number, key: string, file: File) => {
-    const response = await fetch(
-      `${getApiBase()}/groups/${groupId}/articles/${encodeURIComponent(key)}/pdf`,
-      {
-        method: 'POST',
-        headers: {
-          ...authHeaders(),
-          'Content-Type': 'application/pdf',
+    const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+    let response: Response;
+    try {
+      response = await fetch(
+        `${getApiBase()}/groups/${groupId}/articles/${encodeURIComponent(key)}/pdf`,
+        {
+          method: 'POST',
+          headers: {
+            ...authHeaders(),
+            'Content-Type': 'application/pdf',
+          },
+          body: file,
         },
-        body: file,
-      },
-    );
+      );
+    } catch (error) {
+      // Falha de rede: a requisição nem chegou a ter resposta (conexão cortada
+      // no meio do upload, offline, proxy fechando a conexão...).
+      throw new Error(
+        `Falha de rede ao enviar o PDF (${sizeMb} MB): ${(error as Error).message}`,
+      );
+    }
+
     if (!response.ok) {
-      let message = `Erro ${response.status}`;
+      // O corpo pode não ser JSON (ex.: página de erro do nginx/Cloudflare),
+      // então preserva o status para não sumir com a causa real.
+      let detail = '';
       try {
-        const body = (await response.json()) as { error?: string };
-        if (body.error) message = body.error;
+        const raw = await response.text();
+        try {
+          const body = JSON.parse(raw) as { error?: string };
+          detail = body.error ?? raw.slice(0, 200);
+        } catch {
+          detail = raw.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200);
+        }
       } catch {
-        // ignore
+        // corpo ilegível — segue só com o status
       }
-      throw new Error(message);
+
+      if (response.status === 413) {
+        throw new Error(
+          `PDF recusado por ser grande demais (${sizeMb} MB) — HTTP 413. Limite do servidor.`,
+        );
+      }
+      throw new Error(
+        `Erro ${response.status} ao enviar o PDF (${sizeMb} MB)${detail ? `: ${detail}` : ''}`,
+      );
     }
     return response.json() as Promise<Article>;
   },
