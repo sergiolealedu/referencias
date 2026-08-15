@@ -91,19 +91,25 @@ interface HatchStyle {
   dotRadius?: number;
 }
 
+// Cinza médio em vez de preto puro: mantém as barras legíveis sem "pesar" a
+// imagem quando o padrão se repete numa área grande.
+const HATCH_STROKE = '#4a4a4a';
+
 // Um estilo de achurado por cor conhecida da paleta, na mesma ordem — mantém a
 // associação cor → padrão estável entre exportações, independente de quais
 // segmentos estejam visíveis em cada gráfico.
+// Traços finos e bem espaçados: a distinção vem da direção/forma do padrão,
+// não da densidade de tinta.
 const HATCH_STYLES: HatchStyle[] = [
-  { kind: 'lines', angle: 45, size: 6, thickness: 1.5 },
-  { kind: 'lines', angle: -45, size: 6, thickness: 1.5 },
-  { kind: 'lines', angle: 0, size: 5, thickness: 1.5 },
-  { kind: 'lines', angle: 90, size: 5, thickness: 1.5 },
-  { kind: 'cross', size: 8, thickness: 1.3 },
-  { kind: 'dots', size: 6, thickness: 0, dotRadius: 1.3 },
-  { kind: 'lines', angle: 45, size: 3, thickness: 1.8 },
-  { kind: 'lines', angle: -45, size: 3, thickness: 1.8 },
-  { kind: 'lines', angle: 0, size: 3, thickness: 1.8 },
+  { kind: 'lines', angle: 45, size: 9, thickness: 0.7 },
+  { kind: 'lines', angle: -45, size: 9, thickness: 0.7 },
+  { kind: 'lines', angle: 0, size: 8, thickness: 0.7 },
+  { kind: 'lines', angle: 90, size: 8, thickness: 0.7 },
+  { kind: 'cross', size: 11, thickness: 0.6 },
+  { kind: 'dots', size: 9, thickness: 0, dotRadius: 0.9 },
+  { kind: 'lines', angle: 45, size: 5, thickness: 0.6 },
+  { kind: 'lines', angle: -45, size: 5, thickness: 0.6 },
+  { kind: 'lines', angle: 0, size: 5, thickness: 0.6 },
 ];
 
 function hatchPatternMarkup(id: string, style: HatchStyle): string {
@@ -112,14 +118,14 @@ function hatchPatternMarkup(id: string, style: HatchStyle): string {
 
   if (style.kind === 'dots') {
     const r = style.dotRadius ?? 1.2;
-    return `<pattern id="${id}" width="${size}" height="${size}" patternUnits="userSpaceOnUse">${background}<circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="#000000"/></pattern>`;
+    return `<pattern id="${id}" width="${size}" height="${size}" patternUnits="userSpaceOnUse">${background}<circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="${HATCH_STROKE}"/></pattern>`;
   }
 
   if (style.kind === 'cross') {
-    return `<pattern id="${id}" width="${size}" height="${size}" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">${background}<line x1="0" y1="${size / 2}" x2="${size}" y2="${size / 2}" stroke="#000000" stroke-width="${style.thickness}"/><line x1="${size / 2}" y1="0" x2="${size / 2}" y2="${size}" stroke="#000000" stroke-width="${style.thickness}"/></pattern>`;
+    return `<pattern id="${id}" width="${size}" height="${size}" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">${background}<line x1="0" y1="${size / 2}" x2="${size}" y2="${size / 2}" stroke="${HATCH_STROKE}" stroke-width="${style.thickness}"/><line x1="${size / 2}" y1="0" x2="${size / 2}" y2="${size}" stroke="${HATCH_STROKE}" stroke-width="${style.thickness}"/></pattern>`;
   }
 
-  return `<pattern id="${id}" width="${size}" height="${size}" patternUnits="userSpaceOnUse" patternTransform="rotate(${style.angle ?? 0})">${background}<line x1="0" y1="0" x2="0" y2="${size}" stroke="#000000" stroke-width="${style.thickness}"/></pattern>`;
+  return `<pattern id="${id}" width="${size}" height="${size}" patternUnits="userSpaceOnUse" patternTransform="rotate(${style.angle ?? 0})">${background}<line x1="0" y1="0" x2="0" y2="${size}" stroke="${HATCH_STROKE}" stroke-width="${style.thickness}"/></pattern>`;
 }
 
 function appendPatternDef(defs: SVGDefsElement, id: string, style: HatchStyle): void {
@@ -131,6 +137,50 @@ function appendPatternDef(defs: SVGDefsElement, id: string, style: HatchStyle): 
   const patternNode = doc.documentElement.firstElementChild;
   if (patternNode) {
     defs.appendChild(document.adoptNode(patternNode));
+  }
+}
+
+const LABEL_BG_PADDING_X = 2;
+const LABEL_BG_PADDING_Y = 1;
+
+/**
+ * Insere um retângulo branco atrás de cada texto para que os números não se
+ * misturem com o achurado das barras. Precisa medir via `getBBox()`, que só
+ * funciona com o SVG anexado ao documento — daí o container fora da tela.
+ */
+function addLabelBackgrounds(svg: SVGSVGElement): void {
+  const holder = document.createElement('div');
+  holder.style.cssText =
+    'position:absolute;left:-99999px;top:0;width:0;height:0;overflow:hidden';
+  holder.appendChild(svg);
+  document.body.appendChild(holder);
+
+  try {
+    svg.querySelectorAll('text').forEach((text) => {
+      let box: DOMRect;
+      try {
+        box = text.getBBox();
+      } catch {
+        return;
+      }
+      if (!box.width || !box.height) return;
+
+      const rect = document.createElementNS(SVG_NS, 'rect');
+      rect.setAttribute('x', String(box.x - LABEL_BG_PADDING_X));
+      rect.setAttribute('y', String(box.y - LABEL_BG_PADDING_Y));
+      rect.setAttribute('width', String(box.width + LABEL_BG_PADDING_X * 2));
+      rect.setAttribute('height', String(box.height + LABEL_BG_PADDING_Y * 2));
+      rect.setAttribute('fill', '#ffffff');
+
+      // O texto pode ter transform próprio (rótulos de eixo rotacionados);
+      // o fundo precisa acompanhar para ficar alinhado.
+      const transform = text.getAttribute('transform');
+      if (transform) rect.setAttribute('transform', transform);
+
+      text.parentNode?.insertBefore(rect, text);
+    });
+  } finally {
+    document.body.removeChild(holder);
   }
 }
 
@@ -158,7 +208,15 @@ function buildHatchedSvg(svgElement: SVGSVGElement): SVGSVGElement {
       colorToPatternId.set(fill, patternId);
     }
     el.setAttribute('fill', `url(#${patternId})`);
+    // Contorno fino mantém os segmentos delimitados agora que o preenchimento
+    // é claro.
+    if (!el.getAttribute('stroke')) {
+      el.setAttribute('stroke', HATCH_STROKE);
+      el.setAttribute('stroke-width', '0.6');
+    }
   });
+
+  addLabelBackgrounds(clone);
 
   return clone;
 }

@@ -1,12 +1,11 @@
 name: Release Android
 
 on:
-  # Gatilho automático por tag temporariamente desativado enquanto o deploy do
-  # servidor é estabilizado — dispare manualmente (workflow_dispatch) quando
-  # precisar de uma release Android.
-  # push:
-  #   tags:
-  #     - 'v*.*.*'
+  # Compartilha o grupo de concorrência "production-deploy" com o deploy do
+  # servidor: numa mesma tag os dois entram na fila em vez de rodar em paralelo.
+  push:
+    tags:
+      - 'v*.*.*'
   workflow_dispatch:
 
 permissions:
