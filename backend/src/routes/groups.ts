@@ -1,5 +1,5 @@
 import express, { Router, type NextFunction, type Request, type Response } from 'express';
-import { ZodError } from 'zod';
+import { ZodError, z } from 'zod';
 
 import { createGroupSchema, updateGroupSchema } from '../schemas/referencias.js';
 import { bibtexImportSchema } from '../schemas/import.js';
@@ -248,6 +248,55 @@ export function createArticlesRouter(): Router {
       const params = parseArticleListParams(req.query);
       const result = await storeFrom(req).listArticles(groupId, params);
       res.json(result);
+    } catch (error) {
+      handleRouteError(error, res);
+    }
+  });
+
+  /**
+   * Reinclusão em lote: marca como usado os artigos apontados pela revisão dos
+   * abstracts e limpa o descarte, senão o artigo ficaria usado e descartado ao
+   * mesmo tempo.
+   */
+  router.post('/marcar-usados', async (req, res) => {
+    try {
+      const groupId = parseGroupId(req.params as Record<string, string | undefined>);
+      if (groupId === null) {
+        res.status(400).json({ error: 'ID de grupo inválido' });
+        return;
+      }
+
+      const body = z
+        .object({ keys: z.array(z.string().trim().min(1)).min(1).max(2000) })
+        .parse(req.body ?? {});
+
+      const store = storeFrom(req);
+      const chaves = [...new Set(body.keys)];
+      const atualizados: string[] = [];
+      const naoEncontrados: string[] = [];
+
+      for (const key of chaves) {
+        try {
+          await store.updateArticle(groupId, key, {
+            usado: true,
+            descartado: false,
+            motivoDescarte: null,
+          });
+          atualizados.push(key);
+        } catch (error) {
+          if (error instanceof StoreError && error.code === 'NOT_FOUND') {
+            naoEncontrados.push(key);
+            continue;
+          }
+          throw error;
+        }
+      }
+
+      res.json({
+        solicitados: chaves.length,
+        atualizados: atualizados.length,
+        naoEncontrados,
+      });
     } catch (error) {
       handleRouteError(error, res);
     }

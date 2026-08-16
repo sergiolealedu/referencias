@@ -188,6 +188,12 @@ export interface AbstractsExport {
   }[];
 }
 
+export interface MarcarUsadosResult {
+  solicitados: number;
+  atualizados: number;
+  naoEncontrados: string[];
+}
+
 export interface ArticleFilters {
   q?: string;
   tags?: string;

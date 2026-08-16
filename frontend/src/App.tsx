@@ -10,6 +10,8 @@ import { BibtexImportModal } from './components/BibtexImportModal';
 
 import { GroupImportModal } from './components/GroupImportModal';
 
+import { RevisaoUsadosModal } from './components/RevisaoUsadosModal';
+
 import { Dashboard } from './components/Dashboard';
 import { FactorsView } from './components/FactorsView';
 
@@ -94,6 +96,8 @@ export default function App() {
   const [exportingGroup, setExportingGroup] = useState(false);
 
   const [exportingAbstracts, setExportingAbstracts] = useState(false);
+
+  const [showRevisaoUsados, setShowRevisaoUsados] = useState(false);
 
   const [showUsadoExport, setShowUsadoExport] = useState(false);
 
@@ -635,6 +639,22 @@ export default function App() {
 
                         type="button"
 
+                        onClick={() => setShowRevisaoUsados(true)}
+
+                        disabled={!group}
+
+                        title="Aplica a resposta da avaliação, marcando como usados os artigos descartados por engano"
+
+                      >
+
+                        Aplicar revisão
+
+                      </button>
+
+                      <button
+
+                        type="button"
+
                         className="primary"
 
                         onClick={() => {
@@ -844,6 +864,20 @@ export default function App() {
                   setShowGroupImport(false);
 
                 }}
+
+              />
+
+            )}
+
+            {showRevisaoUsados && displayGroupId !== null && (
+
+              <RevisaoUsadosModal
+
+                groupId={displayGroupId}
+
+                groupTitle={group?.title ?? ''}
+
+                onClose={() => setShowRevisaoUsados(false)}
 
               />
 

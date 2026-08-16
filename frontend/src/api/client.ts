@@ -16,6 +16,7 @@ import type {
   GroupArticleStats,
   AbstractsExport,
   GroupExport,
+  MarcarUsadosResult,
   GroupImportOptions,
   GroupImportResult,
   GroupInput,
@@ -185,6 +186,12 @@ export const api = {
 
   exportGroupAbstractsNaoUsados: (id: number) =>
     request<AbstractsExport>(`/groups/${id}/abstracts-nao-usados`),
+
+  marcarArtigosComoUsados: (groupId: number, keys: string[]) =>
+    request<MarcarUsadosResult>(`/groups/${groupId}/articles/marcar-usados`, {
+      method: 'POST',
+      body: JSON.stringify({ keys }),
+    }),
 
   importGroup: (payload: GroupExport, options?: GroupImportOptions) =>
     request<GroupImportResult>('/groups/import', {
