@@ -1413,11 +1413,17 @@ button {
   cursor: pointer;
 }
 
-.title-copy-btn:hover,
-.title-copy-btn:focus-visible {
+.title-copy-btn:hover:not(:disabled),
+.title-copy-btn:focus-visible:not(:disabled) {
   background: #f1f5f9;
   border-color: #94a3b8;
   color: var(--primary);
+}
+
+/* Sem PDF enviado não há URL para copiar. */
+.title-copy-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .title-copy-btn.is-copied {

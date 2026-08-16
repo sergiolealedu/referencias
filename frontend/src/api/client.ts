@@ -243,6 +243,14 @@ export const api = {
   pdfUrl: (filePath: string) =>
     `${getApiBase()}/files/pdf?path=${encodeURIComponent(filePath.trim())}`,
 
+  /** Versão absoluta, para copiar/compartilhar — na web getApiBase() é só "/api". */
+  pdfAbsoluteUrl: (filePath: string) => {
+    const url = api.pdfUrl(filePath);
+    if (/^https?:\/\//i.test(url)) return url;
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    return `${origin}${url}`;
+  },
+
   openPdf: async (filePath: string) => {
     const response = await fetch(api.pdfUrl(filePath), {
       headers: { ...authHeaders() },
