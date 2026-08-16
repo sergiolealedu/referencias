@@ -14,6 +14,7 @@ import type {
   BibtexImportResult,
   DuplicateDetectionResult,
   GroupArticleStats,
+  AbstractsExport,
   GroupExport,
   GroupImportOptions,
   GroupImportResult,
@@ -181,6 +182,9 @@ export const api = {
     request<void>(`/groups/${id}`, { method: 'DELETE' }),
 
   exportGroup: (id: number) => request<GroupExport>(`/groups/${id}/export`),
+
+  exportGroupAbstractsNaoUsados: (id: number) =>
+    request<AbstractsExport>(`/groups/${id}/abstracts-nao-usados`),
 
   importGroup: (payload: GroupExport, options?: GroupImportOptions) =>
     request<GroupImportResult>('/groups/import', {

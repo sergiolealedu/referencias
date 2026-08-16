@@ -50,7 +50,7 @@ import type { ArticleFilters, SortColumn, SortDirection } from './types/referenc
 import { api } from './api/client';
 
 import { APP_TITLE, BUILD_ID, BUILD_LABEL } from './buildInfo';
-import { downloadGroupExport } from './utils/groupExport';
+import { downloadAbstractsNaoUsados, downloadGroupExport } from './utils/groupExport';
 import { showGlobalSettings } from './utils/platform';
 
 
@@ -92,6 +92,8 @@ export default function App() {
   const [showGroupImport, setShowGroupImport] = useState(false);
 
   const [exportingGroup, setExportingGroup] = useState(false);
+
+  const [exportingAbstracts, setExportingAbstracts] = useState(false);
 
   const [showUsadoExport, setShowUsadoExport] = useState(false);
 
@@ -320,6 +322,24 @@ export default function App() {
   };
 
 
+
+  const handleExportAbstracts = async () => {
+    if (displayGroupId === null || !group) return;
+
+    setExportingAbstracts(true);
+    try {
+      const payload = await api.exportGroupAbstractsNaoUsados(displayGroupId);
+      if (payload.articles.length === 0) {
+        window.alert('Todos os artigos deste grupo já estão marcados como usado.');
+        return;
+      }
+      downloadAbstractsNaoUsados(payload);
+    } catch (err) {
+      window.alert(`Não foi possível exportar os abstracts: ${(err as Error).message}`);
+    } finally {
+      setExportingAbstracts(false);
+    }
+  };
 
   const handleExportGroup = async () => {
 
@@ -585,13 +605,29 @@ export default function App() {
 
                         onClick={handleExportGroup}
 
-                        disabled={!group || exportingGroup}
+                        disabled={!group || exportingGroup || exportingAbstracts}
 
                         title="Exporta metadados e todos os artigos para transferir a outro servidor"
 
                       >
 
                         {exportingGroup ? 'Exportando…' : 'Exportar grupo'}
+
+                      </button>
+
+                      <button
+
+                        type="button"
+
+                        onClick={handleExportAbstracts}
+
+                        disabled={!group || exportingGroup || exportingAbstracts}
+
+                        title="Baixa os abstracts dos artigos que não estão marcados como usado, para revisar exclusões"
+
+                      >
+
+                        {exportingAbstracts ? 'Exportando…' : 'Abstracts não usados'}
 
                       </button>
 

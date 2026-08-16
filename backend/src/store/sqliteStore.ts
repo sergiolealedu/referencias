@@ -531,6 +531,23 @@ export class SqliteStore {
     };
   }
 
+  /**
+   * Artigos que NÃO estão marcados como usado, para revisar se algum foi
+   * eliminado por engano. Sem paginação: o objetivo é justamente ver todos.
+   */
+  async listArticlesNaoUsados(groupId: number): Promise<Article[]> {
+    this.getGroupRow(groupId);
+    const rows = this.db
+      .prepare(
+        `SELECT * FROM articles a
+         WHERE a.group_id = ? AND a.usado = 0
+         ORDER BY CAST(COALESCE(NULLIF(json_extract(a.fields_json, '$.year'), ''), '0') AS INTEGER) DESC,
+                  COALESCE(json_extract(a.fields_json, '$.title'), a.entry_key) ASC`,
+      )
+      .all(groupId) as ArticleRow[];
+    return rows.map((row) => rowToArticle(row));
+  }
+
   async exportArticlesByKeys(groupId: number, keys: string[]): Promise<Article[]> {
     this.getGroupRow(groupId);
     if (keys.length === 0) return [];

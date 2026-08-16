@@ -110,6 +110,37 @@ export function createGroupsRouter(): Router {
     }
   });
 
+  router.get('/:id/abstracts-nao-usados', async (req, res) => {
+    try {
+      const groupId = Number(req.params.id);
+      if (Number.isNaN(groupId)) {
+        res.status(400).json({ error: 'ID de grupo inválido' });
+        return;
+      }
+      const store = storeFrom(req);
+      const [group, articles] = await Promise.all([
+        store.getGroup(groupId),
+        store.listArticlesNaoUsados(groupId),
+      ]);
+      res.json({
+        group: { id: group.id, title: group.title, versao: group.versao },
+        articles: articles.map((article) => ({
+          key: article.entry.key,
+          title: article.entry.fields.title ?? '',
+          year: article.entry.fields.year ?? '',
+          abstract: article.entry.fields.abstract ?? '',
+          status: article.status,
+          descartado: article.descartado,
+          motivoDescarte: article.motivoDescarte,
+          pdfNaoEncontrado: article.pdfNaoEncontrado,
+          temPdf: Boolean(article.caminho.trim()),
+        })),
+      });
+    } catch (error) {
+      handleRouteError(error, res);
+    }
+  });
+
   router.get('/:id', async (req, res) => {
     try {
       const groupId = Number(req.params.id);

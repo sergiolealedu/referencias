@@ -172,6 +172,22 @@ export const ARTICLE_CATEGORIA_LABELS: Record<ArticleCategoria, string> = {
   repetidos: 'Repetidos',
 };
 
+/** Abstracts dos artigos NÃO usados de um grupo, para revisar exclusões. */
+export interface AbstractsExport {
+  group: { id: number; title: string; versao: string };
+  articles: {
+    key: string;
+    title: string;
+    year: string;
+    abstract: string;
+    status: string;
+    descartado: boolean;
+    motivoDescarte: MotivoDescarte | null;
+    pdfNaoEncontrado: boolean;
+    temPdf: boolean;
+  }[];
+}
+
 export interface ArticleFilters {
   q?: string;
   tags?: string;
