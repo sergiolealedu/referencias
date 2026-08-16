@@ -290,6 +290,9 @@ export function createFactorsRouter(): Router {
           '',
           'CAMPOS DA RESPOSTA:',
           '- "key": copie exatamente o valor de "chave" do artigo. Não invente nem altere.',
+          '- "groupId": copie o "grupoId" do artigo, como NÚMERO (sem aspas). Quando a',
+          '  mesma chave existe em mais de um grupo, sem ele o item é pulado.',
+          '- "aliases": lista vazia quando o fator é novo.',
           '- "polarity": "positive" se o fator MELHORA o bem-estar/QVT; "negative" se PIORA.',
           '  A polaridade é do efeito do fator, não da qualidade do artigo.',
           '- "description": uma frase curta com a evidência encontrada NESTE artigo,',
@@ -328,7 +331,14 @@ export function createFactorsRouter(): Router {
           '{"label": "excessive workload", "canonical": "Carga de trabalho",',
           ' "aliases": ["Carga de trabalho"]} — e NÃO crie "Sobrecarga de trabalho".',
           '',
+          'ANTES DE RESPONDER, confira: nenhum "label", "canonical" ou "description"',
+          'vazio; nenhuma vírgula ou ponto-e-vírgula em "label" e "canonical"; "polarity"',
+          'exatamente "positive" ou "negative"; "groupId" numérico.',
+          '',
           'REGRAS DE SAÍDA:',
+          '- Se só alguns PDFs abrirem, gere o delta apenas para os artigos que leu e',
+          '  informe quais ficaram de fora. Nunca inclua item vazio ou com fatores',
+          '  inventados para artigo não lido — o envio sobrescreve o que já existe.',
           '- Omita da resposta os artigos em que não encontrar nenhum fator evidenciado.',
           '- Se "fatoresAtuais" já trouxer um fator, só o repita se for corrigir a',
           '  polaridade ou a descrição — o envio sobrescreve o que existe.',
@@ -341,6 +351,7 @@ export function createFactorsRouter(): Router {
           items: [
             {
               key: '<chave do artigo, exatamente como em "chave">',
+              groupId: '<copie o grupoId do artigo, como número e sem aspas>',
               factors: [
                 {
                   label: '<termo exato como escrito no artigo, para busca no PDF>',

@@ -14,7 +14,8 @@ retrabalho manual.
 1. O usuário exporta um pacote pelo botão **Análise** (na linha do artigo) ou
    **Exportar para análise** (aba Fatores). O arquivo traz `catalogo`,
    `artigos` (com `pdfUrl` assinado) e `formatoResposta`.
-2. Você lê o PDF, extrai os fatores e devolve **apenas** o JSON do delta.
+2. Você lê o PDF, extrai os fatores e devolve o JSON do delta acompanhado de um
+   resumo de leitura por artigo, fora do bloco JSON.
 3. O usuário aplica em **Fatores → Aplicar delta em artigos**.
 
 O arquivo exportado já contém um campo `prompt` com as regras. Ele existe para
@@ -128,10 +129,28 @@ deste artigo, de preferência citando o trecho.
 ## Saída
 
 ```json
-{"items": [{"key": "<chave>", "factors": [
-  {"label": "...", "canonical": "...", "aliases": [],
-   "polarity": "positive", "description": "..."}]}]}
+{
+  "items": [
+    {
+      "key": "Wong2025",
+      "groupId": 1783072880903,
+      "factors": [
+        {
+          "label": "constant pressure to learn new skills",
+          "canonical": "Pressão por atualização",
+          "aliases": [],
+          "polarity": "negative",
+          "description": "..."
+        }
+      ]
+    }
+  ]
+}
 ```
+
+`groupId` é **número**, copiado de `grupoId` — sem aspas, ou o app rejeita o
+arquivo. `aliases` vai vazio (`[]`) quando o fator é novo; só se preenche
+quando ele já existe em `catalogo`.
 
 - `key` copiado exatamente de `chave` — nunca inventado ou alterado.
 - `groupId`: copie o `grupoId` do artigo. É opcional, mas quando a mesma chave
@@ -147,7 +166,21 @@ Entregue o JSON em um bloco próprio (ou arquivo), sem comentários dentro dele.
 conseguiu ler o PDF. O usuário precisa disso para saber se um retorno curto foi
 "artigo sem fatores" ou "não consegui abrir o PDF".
 
+**Falha parcial:** se só alguns PDFs abrirem, gere o delta apenas para os
+artigos que você leu e liste os não analisados no resumo externo. Nunca inclua
+um item vazio ou com fatores inventados para um artigo que não foi lido — o
+delta sobrescreve, e um item malfeito apaga trabalho bom.
+
 ## Conferir antes de aplicar
+
+Mecânico, antes de responder:
+
+- Nenhum `label`, `canonical` ou `description` está vazio.
+- Nenhum `label` ou `canonical` contém vírgula ou ponto-e-vírgula.
+- Todo `polarity` é exatamente `positive` ou `negative`.
+- Todo `groupId` é número, sem aspas.
+
+De conteúdo:
 
 - Toda `key` existe no arquivo de entrada.
 - Todo `label` é localizável no PDF.
@@ -163,5 +196,8 @@ duplicadas — sinal de que `aliases` faltou.
 
 Estas regras existem em dois lugares: aqui e no `prompt` embutido em
 `backend/src/routes/factors.ts` (rota `export-analise`), que viaja dentro de
-cada pacote para funcionar em IAs sem skills. **Já divergiram uma vez** — ao
-mudar uma, mude a outra.
+cada pacote para funcionar em IAs sem skills.
+
+**Ao alterar esta skill, atualize o `prompt` no mesmo commit.** Elas já
+divergiram uma vez, e a divergência é silenciosa: o resultado muda conforme o
+usuário trabalhe com skill ou com o pacote exportado, sem nenhum erro visível.
