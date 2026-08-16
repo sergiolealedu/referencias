@@ -158,6 +158,11 @@ export function createFactorsRouter(): Router {
    * Pacote autoexplicativo para análise por IA: catálogo (para ela reusar as
    * grafias já existentes em vez de inventar rótulos), artigos com link do PDF,
    * e o esquema exato do delta que o app aceita de volta.
+   *
+   * ATENÇÃO: as regras abaixo existem em dois lugares — aqui (para qualquer IA,
+   * já que viajam dentro do arquivo) e em
+   * .claude/skills/analise-fatores-qvt/SKILL.md (versão com o raciocínio).
+   * Elas já divergiram uma vez: ao mudar uma, mude a outra.
    */
   router.get('/export-analise', async (req, res) => {
     try {

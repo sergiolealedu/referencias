@@ -21,6 +21,12 @@ O arquivo exportado já contém um campo `prompt` com as regras. Ele existe para
 funcionar em qualquer IA; esta skill é a versão completa, com o raciocínio por
 trás das regras.
 
+**Confira a versão do pacote antes de analisar.** Se `formatoResposta` não
+tiver o campo `canonical`, o arquivo foi gerado por uma versão antiga do
+servidor: o schema descarta `canonical` silenciosamente e o `label` verbatim
+vira nome de fator no catálogo. Avise o usuário e peça que reexporte, em vez de
+gerar um delta que suja o catálogo.
+
 ## Ler o material
 
 Baixe o PDF de `artigos[].pdfUrl` — o link é assinado e abre sem login, mas
@@ -75,8 +81,11 @@ frases longas do texto viram nome de fator e o catálogo fica ilegível.
 idioma — repita esse rótulo em `canonical` **e** em `aliases`. É assim que
 artigos diferentes convergem no mesmo fator em vez de fragmentar o catálogo.
 
-Não use vírgula nem ponto-e-vírgula dentro de `label` ou `canonical`: eles
-separam grafias no app.
+Não use vírgula nem ponto-e-vírgula dentro de `label` ou `canonical`: o app
+divide a grafia nesses caracteres, e você acabaria com duas grafias truncadas.
+Se o trecho exato do artigo contiver vírgula, recorte um pedaço **contíguo e
+sem vírgula** que ainda seja localizável com Ctrl+F — em vez de reescrever a
+frase, que quebraria a busca.
 
 `polarity` é o efeito do fator (`positive` melhora o bem-estar, `negative`
 piora), não a qualidade do artigo. `description` é uma frase com a evidência
@@ -125,13 +134,16 @@ deste artigo, de preferência citando o trecho.
 ```
 
 - `key` copiado exatamente de `chave` — nunca inventado ou alterado.
+- `groupId`: copie o `grupoId` do artigo. É opcional, mas quando a mesma chave
+  existe em mais de um grupo o app **não adivinha** — ele pula o item e o marca
+  como ambíguo. Copiar sempre evita esse buraco.
 - Omita artigos sem nenhum fator evidenciado.
 - Se `fatoresAtuais` já traz um fator, só o repita para corrigir polaridade ou
   descrição: o envio **sobrescreve** o que existe naquele fator.
 - Vários artigos e vários grupos cabem no mesmo `items`.
-- Responda apenas com o JSON, sem texto em volta.
 
-Antes de entregar, liste em uma linha por artigo: chave, quantos fatores e se
+Entregue o JSON em um bloco próprio (ou arquivo), sem comentários dentro dele.
+**Fora** do bloco, liste uma linha por artigo: chave, quantos fatores e se
 conseguiu ler o PDF. O usuário precisa disso para saber se um retorno curto foi
 "artigo sem fatores" ou "não consegui abrir o PDF".
 
@@ -146,3 +158,10 @@ conseguiu ler o PDF. O usuário precisa disso para saber se um retorno curto foi
 
 Depois de aplicar, vale abrir a aba Fatores e checar se surgiram entradas quase
 duplicadas — sinal de que `aliases` faltou.
+
+## Manutenção
+
+Estas regras existem em dois lugares: aqui e no `prompt` embutido em
+`backend/src/routes/factors.ts` (rota `export-analise`), que viaja dentro de
+cada pacote para funcionar em IAs sem skills. **Já divergiram uma vez** — ao
+mudar uma, mude a outra.
