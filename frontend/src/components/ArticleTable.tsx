@@ -219,6 +219,20 @@ export function ArticleTable({
     }
   };
 
+  const handleCopyPdfUrl = async (key: string, caminho: string) => {
+    if (!caminho.trim()) return;
+    setPdfMessage(null);
+    try {
+      const { url, expiresAt } = await api.createPdfShareLink(caminho);
+      await handleCopy(`${key}|url`, url, 'a URL do PDF');
+      setPdfMessage(
+        `Link do PDF copiado. Vale até ${new Date(expiresAt).toLocaleString('pt-BR')}.`,
+      );
+    } catch (err) {
+      setPdfMessage(`Não foi possível gerar o link do PDF: ${(err as Error).message}`);
+    }
+  };
+
   const handleDownloadBibtex = async () => {
     setExportMessage(null);
     try {
@@ -438,11 +452,7 @@ export function ArticleTable({
                           onClick={(e) => {
                             e.stopPropagation();
                             e.preventDefault();
-                            void handleCopy(
-                              `${articleKey}|url`,
-                              api.pdfAbsoluteUrl(article.caminho),
-                              'a URL do PDF',
-                            );
+                            void handleCopyPdfUrl(articleKey, article.caminho);
                           }}
                         >
                           {copiedTitleKey === `${articleKey}|url` ? 'Copiado!' : 'URL'}

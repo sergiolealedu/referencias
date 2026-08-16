@@ -243,12 +243,22 @@ export const api = {
   pdfUrl: (filePath: string) =>
     `${getApiBase()}/files/pdf?path=${encodeURIComponent(filePath.trim())}`,
 
-  /** Versão absoluta, para copiar/compartilhar — na web getApiBase() é só "/api". */
-  pdfAbsoluteUrl: (filePath: string) => {
-    const url = api.pdfUrl(filePath);
-    if (/^https?:\/\//i.test(url)) return url;
+  /**
+   * Link temporário assinado que abre o PDF sem exigir o header de
+   * autenticação — é o que dá para colar no navegador ou compartilhar.
+   */
+  createPdfShareLink: async (filePath: string) => {
+    const { path, expiresAt } = await request<{ path: string; expiresAt: string }>(
+      '/files/share-link',
+      { method: 'POST', body: JSON.stringify({ path: filePath }) },
+    );
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    return `${origin}${url}`;
+    // Em app nativo a base já é absoluta; na web o caminho vira URL completa.
+    const base = getApiBase();
+    const url = /^https?:\/\//i.test(base)
+      ? `${base.replace(/\/api$/, '')}${path}`
+      : `${origin}${path}`;
+    return { url, expiresAt };
   },
 
   openPdf: async (filePath: string) => {

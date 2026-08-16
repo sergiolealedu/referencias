@@ -10,7 +10,7 @@ import {
   createSearchRouter,
 } from './routes/groups.js';
 import { createFactorsRouter } from './routes/factors.js';
-import { createFilesRouter } from './routes/files.js';
+import { createFilesRouter, createPublicShareRouter } from './routes/files.js';
 import { createSettingsRouter } from './routes/settings.js';
 import { createStatsRouter } from './routes/stats.js';
 import { createWorkspacesRouter } from './routes/workspaces.js';
@@ -33,6 +33,10 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/device', createDeviceRouter());
 app.use('/api/workspaces', createWorkspacesRouter());
+
+// Links de compartilhamento se autenticam pelo token assinado na própria URL,
+// então ficam antes do requireDevice.
+app.use('/api/share', createPublicShareRouter());
 
 app.use('/api', requireDevice);
 app.use('/api/settings', createSettingsRouter());
