@@ -34,6 +34,8 @@ interface ArticleTableProps {
   selectedKey: string | null;
   onSelect: (key: string) => void;
   onNavigateToArticle?: (groupId: number, key: string) => void;
+  /** Abre o fator clicado na aba Fatores. */
+  onNavigateToFactor?: (factorId: string) => void;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: PageSize) => void;
   onSortChange: (column: SortColumn | null, direction: SortDirection) => void;
@@ -52,6 +54,7 @@ export function ArticleTable({
   selectedKey,
   onSelect,
   onNavigateToArticle,
+  onNavigateToFactor,
   onPageChange,
   onPageSizeChange,
   onSortChange,
@@ -515,18 +518,26 @@ export function ArticleTable({
                                 }
                               >
                                 {doTipo.map((factor) => (
-                                  <span
+                                  <button
                                     key={`${factor.factorId}-${factor.label}`}
+                                    type="button"
                                     className={`factor-chip polarity-${factor.polarity}`}
                                     title={
                                       factor.description
                                         ? `${factor.label}: ${factor.description}`
                                         : factor.label
                                     }
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      e.preventDefault();
+                                      if (factor.factorId) {
+                                        onNavigateToFactor?.(factor.factorId);
+                                      }
+                                    }}
                                   >
                                     {factor.polarity === 'positive' ? '+' : '−'}
                                     {factor.label}
-                                  </span>
+                                  </button>
                                 ))}
                               </span>
                             );

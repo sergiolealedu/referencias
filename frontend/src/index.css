@@ -1403,6 +1403,18 @@ button {
   border: 1px solid #fecaca;
 }
 
+/* Na lista de artigos o chip é um botão que abre o fator na aba Fatores. */
+button.factor-chip {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+button.factor-chip:hover,
+button.factor-chip:focus-visible {
+  text-decoration: underline;
+  filter: brightness(0.95);
+}
+
 .title-copy-btn {
   flex-shrink: 0;
   display: inline-flex;

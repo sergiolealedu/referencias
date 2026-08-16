@@ -13,6 +13,9 @@ import {
 
 interface FactorsViewProps {
   onOpenArticle: (groupId: number, key: string) => void;
+  /** Fator a selecionar ao abrir a aba (clique num chip da lista de artigos). */
+  focusFactorId?: string | null;
+  onFocusConsumed?: () => void;
 }
 
 function polarityLabel(polarity: FactorOccurrence['polarity']): string {
@@ -28,7 +31,11 @@ function occurrenceMeta(occurrence: FactorOccurrence): string {
   return parts.join(' · ');
 }
 
-export function FactorsView({ onOpenArticle }: FactorsViewProps) {
+export function FactorsView({
+  onOpenArticle,
+  focusFactorId,
+  onFocusConsumed,
+}: FactorsViewProps) {
   const { data: factors = [], isLoading, error } = useFactorOverviews();
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -153,6 +160,21 @@ export function FactorsView({ onOpenArticle }: FactorsViewProps) {
     }
   }, [filtered, selectedId]);
 
+  // Foco vindo de fora (chip na lista de artigos): espera o catálogo carregar,
+  // limpa a busca para o fator aparecer na lista e o seleciona.
+  useEffect(() => {
+    if (!focusFactorId) return;
+    if (!factors.some((factor) => factor.id === focusFactorId)) return;
+    setQuery('');
+    setSelectedId(focusFactorId);
+    onFocusConsumed?.();
+  }, [focusFactorId, factors, onFocusConsumed]);
+
+  const activeItemRef = useRef<HTMLLIElement | null>(null);
+  useEffect(() => {
+    activeItemRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [selectedId]);
+
   const selected: FactorOverview | null =
     filtered.find((factor) => factor.id === selectedId) ?? null;
 
@@ -253,7 +275,7 @@ export function FactorsView({ onOpenArticle }: FactorsViewProps) {
                   {filtered.map((factor) => {
                     const active = factor.id === selected?.id;
                     return (
-                      <li key={factor.id}>
+                      <li key={factor.id} ref={active ? activeItemRef : undefined}>
                         <button
                           type="button"
                           className={active ? 'is-active' : ''}

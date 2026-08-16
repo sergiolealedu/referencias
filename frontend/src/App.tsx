@@ -109,6 +109,9 @@ export default function App() {
 
   const [view, setView] = useState<AppView>('articles');
 
+  /** Fator a abrir na aba Fatores (clique num chip da lista de artigos). */
+  const [focusFactorId, setFocusFactorId] = useState<string | null>(null);
+
   const { data: settings } = useSettings();
 
   const { data: activeWorkspace } = useActiveWorkspace();
@@ -258,6 +261,11 @@ export default function App() {
   };
 
 
+
+  const handleNavigateToFactor = (factorId: string) => {
+    setFocusFactorId(factorId);
+    setView('factors');
+  };
 
   const handleNavigateToArticle = (groupId: number, key: string) => {
 
@@ -527,7 +535,11 @@ export default function App() {
 
           <main className="main-panel factors-view-panel">
 
-            <FactorsView onOpenArticle={handleNavigateToArticle} />
+            <FactorsView
+              onOpenArticle={handleNavigateToArticle}
+              focusFactorId={focusFactorId}
+              onFocusConsumed={() => setFocusFactorId(null)}
+            />
 
           </main>
 
@@ -724,6 +736,8 @@ export default function App() {
                       onSelect={handleSelectArticle}
 
                       onNavigateToArticle={handleNavigateToArticle}
+
+                      onNavigateToFactor={handleNavigateToFactor}
 
                       onPageChange={setPage}
 
