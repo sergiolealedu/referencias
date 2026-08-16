@@ -224,6 +224,28 @@ export interface FactorsDeltaResult {
   erros: { key: string; motivo: string }[];
 }
 
+/** Pacote para a IA analisar artigos e devolver um delta de fatores. */
+export interface FactorsAnalysisExport {
+  prompt: string;
+  formatoResposta: unknown;
+  aviso: string;
+  baseUrl: string;
+  escopo: string;
+  resumo: { totalArtigos: number; semPdf: number; semAbstract: number };
+  catalogo: { label: string; grafias: string[] }[];
+  artigos: {
+    chave: string;
+    grupoId: number;
+    grupo: string;
+    titulo: string;
+    ano: string;
+    abstract: string;
+    pdfUrl: string | null;
+    pdfExpiraEm: string | null;
+    fatoresAtuais: { label: string; polarity: FactorPolarity; description: string }[];
+  }[];
+}
+
 export interface MarcarUsadosResult {
   solicitados: number;
   atualizados: number;

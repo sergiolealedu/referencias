@@ -219,6 +219,30 @@ export function ArticleTable({
     }
   };
 
+  /** Baixa o pacote (prompt + catálogo + link assinado) para analisar por IA. */
+  const handleExportAnalise = async (key: string) => {
+    setPdfMessage(null);
+    try {
+      const payload = await api.exportAnaliseFatores({ groupId, key });
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {
+        type: 'application/json;charset=utf-8',
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `analise-fatores-${key.replace(/[^\w.-]+/g, '_')}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      setPdfMessage(
+        payload.artigos[0]?.pdfUrl
+          ? 'Pacote de análise baixado (com link assinado do PDF).'
+          : 'Pacote de análise baixado. Atenção: este artigo não tem PDF, a IA só terá o abstract.',
+      );
+    } catch (err) {
+      setPdfMessage(`Não foi possível gerar o pacote de análise: ${(err as Error).message}`);
+    }
+  };
+
   const handleCopyPdfUrl = async (key: string, caminho: string) => {
     if (!caminho.trim()) return;
     setPdfMessage(null);
@@ -456,6 +480,19 @@ export function ArticleTable({
                           }}
                         >
                           {copiedTitleKey === `${articleKey}|url` ? 'Copiado!' : 'URL'}
+                        </button>
+                        <button
+                          type="button"
+                          className="title-copy-btn"
+                          title="Baixar o pacote para análise por IA: prompt, catálogo de fatores e link assinado do PDF"
+                          aria-label="Exportar para análise de fatores"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            void handleExportAnalise(articleKey);
+                          }}
+                        >
+                          Análise
                         </button>
                       </div>
                       {(article.factors?.length ?? 0) > 0 && (

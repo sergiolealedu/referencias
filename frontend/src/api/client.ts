@@ -22,6 +22,7 @@ import type {
   GroupInput,
   FactorDefinition,
   FactorsImportResult,
+  FactorsAnalysisExport,
   FactorsDeltaItem,
   FactorsDeltaResult,
   FactorOverview,
@@ -160,6 +161,14 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ factors }),
     }),
+
+  /** Sem groupId/key, traz o lote de usados; com eles, só aquele artigo. */
+  exportAnaliseFatores: (alvo?: { groupId: number; key: string }) => {
+    const qs = alvo
+      ? `?groupId=${alvo.groupId}&key=${encodeURIComponent(alvo.key)}`
+      : '';
+    return request<FactorsAnalysisExport>(`/factors/export-analise${qs}`);
+  },
 
   applyFactorsDelta: (items: FactorsDeltaItem[]) =>
     request<FactorsDeltaResult>('/factors/apply-delta', {
