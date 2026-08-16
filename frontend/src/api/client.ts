@@ -21,6 +21,7 @@ import type {
   GroupImportResult,
   GroupInput,
   FactorDefinition,
+  FactorsImportResult,
   FactorOverview,
   GroupMeta,
   GroupSummary,
@@ -151,6 +152,12 @@ export const api = {
   listFactors: () => request<FactorDefinition[]>('/factors'),
 
   listFactorOverviews: () => request<FactorOverview[]>('/factors/overview'),
+
+  importFactors: (factors: FactorDefinition[]) =>
+    request<FactorsImportResult>('/factors/import', {
+      method: 'POST',
+      body: JSON.stringify({ factors }),
+    }),
 
   ensureFactor: (input: { id?: string; name: string; aliases?: string[] }) =>
     request<FactorDefinition>('/factors', {

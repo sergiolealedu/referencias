@@ -1,8 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
+import { api } from '../api/client';
 import { useFactorOverviews } from '../hooks/useApi';
 import type { FactorOccurrence, FactorOverview } from '../types/referencias';
-import { formatAllSpellings } from '../utils/factors';
+import {
+  downloadFactorsExport,
+  formatAllSpellings,
+  parseFactorsExportFile,
+} from '../utils/factors';
 
 interface FactorsViewProps {
   onOpenArticle: (groupId: number, key: string) => void;
@@ -25,6 +31,50 @@ export function FactorsView({ onOpenArticle }: FactorsViewProps) {
   const { data: factors = [], isLoading, error } = useFactorOverviews();
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const importInputRef = useRef<HTMLInputElement>(null);
+  const [transferMessage, setTransferMessage] = useState<string | null>(null);
+  const [transferError, setTransferError] = useState(false);
+  const [importing, setImporting] = useState(false);
+
+  const handleExport = () => {
+    setTransferError(false);
+    if (factors.length === 0) {
+      setTransferError(true);
+      setTransferMessage('Nenhum fator para exportar.');
+      return;
+    }
+    downloadFactorsExport(factors);
+    setTransferMessage(`${factors.length} fator(es) exportado(s).`);
+  };
+
+  const handleImportFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    setTransferError(false);
+    setTransferMessage(null);
+    setImporting(true);
+    try {
+      const lista = parseFactorsExportFile(await file.text());
+      const resultado = await api.importFactors(lista);
+      // Recarrega o catálogo e as ocorrências já com os fatores novos.
+      await queryClient.invalidateQueries({ queryKey: ['factors'] });
+      const partes = [
+        `${resultado.criados} criado(s)`,
+        `${resultado.atualizados} atualizado(s)`,
+      ];
+      if (resultado.erros.length) partes.push(`${resultado.erros.length} com erro`);
+      setTransferMessage(`Importação concluída: ${partes.join(', ')}.`);
+      setTransferError(resultado.erros.length > 0);
+    } catch (err) {
+      setTransferError(true);
+      setTransferMessage((err as Error).message);
+    } finally {
+      setImporting(false);
+    }
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -68,6 +118,26 @@ export function FactorsView({ onOpenArticle }: FactorsViewProps) {
             ocorrência.
           </p>
         </div>
+        <div className="factors-view-actions">
+          <button type="button" onClick={handleExport} disabled={importing}>
+            Exportar fatores
+          </button>
+          <button
+            type="button"
+            onClick={() => importInputRef.current?.click()}
+            disabled={importing}
+            title="Importa um catálogo exportado; grafias novas são somadas aos fatores existentes"
+          >
+            {importing ? 'Importando…' : 'Importar fatores'}
+          </button>
+          <input
+            ref={importInputRef}
+            type="file"
+            accept=".json,application/json"
+            className="visually-hidden"
+            onChange={handleImportFile}
+          />
+        </div>
         <label className="factors-view-search">
           <span>Buscar</span>
           <input
@@ -78,6 +148,10 @@ export function FactorsView({ onOpenArticle }: FactorsViewProps) {
           />
         </label>
       </div>
+
+      {transferMessage && (
+        <p className={transferError ? 'error' : 'hint'}>{transferMessage}</p>
+      )}
 
       {isLoading && <p className="empty-state">Carregando fatores…</p>}
       {error && (

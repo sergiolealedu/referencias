@@ -1,4 +1,4 @@
-import type { ArticleFactor, FactorDefinition } from '../types/referencias';
+import type { ArticleFactor, FactorDefinition, FactorsExport } from '../types/referencias';
 
 /** Normaliza grafia para comparação case-insensitive e sem acentos. */
 export function normalizeFactorKey(value: string): string {
@@ -143,4 +143,56 @@ export function draftsToArticleFactorInputs(rows: FactorRowDraft[]) {
         aliases: tokenizeSpellings(row.aliasesText, ...labelTokens),
       };
     });
+}
+
+/** Baixa o catálogo de fatores para backup ou transferência entre workspaces. */
+export function downloadFactorsExport(factors: FactorDefinition[]): void {
+  const payload: FactorsExport = {
+    formatVersion: 1,
+    exportedAt: new Date().toISOString(),
+    factors: factors.map((f) => ({ id: f.id, name: f.name, aliases: [...f.aliases] })),
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {
+    type: 'application/json;charset=utf-8',
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `fatores-${new Date().toISOString().slice(0, 10)}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+/** Aceita o arquivo exportado ou uma lista solta de fatores. */
+export function parseFactorsExportFile(text: string): FactorDefinition[] {
+  let data: unknown;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error('Arquivo não é um JSON válido.');
+  }
+
+  const lista = Array.isArray(data)
+    ? data
+    : data && typeof data === 'object' && Array.isArray((data as FactorsExport).factors)
+      ? (data as FactorsExport).factors
+      : null;
+
+  if (!lista) {
+    throw new Error('Arquivo inválido: esperado {"factors": [...]} ou uma lista de fatores.');
+  }
+
+  const fatores = lista
+    .filter((f): f is FactorDefinition => Boolean(f) && typeof (f as FactorDefinition).name === 'string')
+    .map((f) => ({
+      id: typeof f.id === 'string' ? f.id : '',
+      name: f.name.trim(),
+      aliases: Array.isArray(f.aliases) ? f.aliases.filter((a) => typeof a === 'string') : [],
+    }))
+    .filter((f) => f.name);
+
+  if (fatores.length === 0) {
+    throw new Error('Nenhum fator válido encontrado no arquivo.');
+  }
+  return fatores;
 }

@@ -17,6 +17,19 @@ const updateFactorSchema = z.object({
   spellings: z.array(z.string()).optional(),
 });
 
+const importFactorsSchema = z.object({
+  factors: z
+    .array(
+      z.object({
+        id: z.string().trim().min(1).optional(),
+        name: z.string().trim().min(1),
+        aliases: z.array(z.string()).optional(),
+      }),
+    )
+    .min(1, 'Arquivo sem fatores')
+    .max(5000),
+});
+
 function handleRouteError(error: unknown, res: Response): void {
   if (error instanceof ZodError) {
     res.status(400).json({ error: 'Dados inválidos', details: error.flatten() });
@@ -68,6 +81,45 @@ export function createFactorsRouter(): Router {
       const body = ensureFactorSchema.parse(req.body ?? {});
       const factor = await storeFrom(req).ensureFactor(body);
       res.status(201).json(factor);
+    } catch (error) {
+      handleRouteError(error, res);
+    }
+  });
+
+  /**
+   * Importa um catálogo exportado. Reusa ensureFactor, que casa o fator por id
+   * ou por qualquer grafia já conhecida e mescla as grafias novas — então
+   * reimportar o mesmo arquivo não duplica nada.
+   */
+  router.post('/import', async (req, res) => {
+    try {
+      const body = importFactorsSchema.parse(req.body ?? {});
+      const store = storeFrom(req);
+      const antes = await store.listFactors();
+      const idsAntes = new Set(antes.map((f) => f.id));
+
+      let criados = 0;
+      let atualizados = 0;
+      const erros: { name: string; motivo: string }[] = [];
+
+      for (const entrada of body.factors) {
+        try {
+          const factor = await store.ensureFactor({
+            id: entrada.id,
+            name: entrada.name,
+            aliases: entrada.aliases ?? [],
+          });
+          if (idsAntes.has(factor.id)) atualizados += 1;
+          else {
+            criados += 1;
+            idsAntes.add(factor.id);
+          }
+        } catch (error) {
+          erros.push({ name: entrada.name, motivo: (error as Error).message });
+        }
+      }
+
+      res.json({ recebidos: body.factors.length, criados, atualizados, erros });
     } catch (error) {
       handleRouteError(error, res);
     }

@@ -188,6 +188,20 @@ export interface AbstractsExport {
   }[];
 }
 
+/** Catálogo de fatores exportado, para backup ou transferir entre workspaces. */
+export interface FactorsExport {
+  formatVersion: 1;
+  exportedAt: string;
+  factors: FactorDefinition[];
+}
+
+export interface FactorsImportResult {
+  recebidos: number;
+  criados: number;
+  atualizados: number;
+  erros: { name: string; motivo: string }[];
+}
+
 export interface MarcarUsadosResult {
   solicitados: number;
   atualizados: number;

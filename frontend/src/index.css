@@ -2046,6 +2046,28 @@ pre.error {
   flex-wrap: wrap;
 }
 
+.factors-view-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.factors-view-actions button {
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.factors-view-actions button:hover:not(:disabled) {
+  background: #f1f5f9;
+}
+
+.factors-view-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .factors-view-toolbar h2 {
   margin: 0;
   font-size: 1.125rem;
