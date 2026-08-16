@@ -1360,18 +1360,27 @@ button {
   line-height: 1.35;
 }
 
+/* Positivos e negativos em linhas separadas. */
+.factor-chip-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-top: 0.3rem;
+}
+
 .factor-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
-  margin-top: 0.3rem;
 }
 
 .factor-chip {
   display: inline-flex;
   align-items: center;
   gap: 0.1rem;
-  max-width: 11rem;
+  /* Rótulos são verbatim do artigo (frases inteiras), então 11rem cortava a
+     maioria. 16rem cobre os casos reais sem aumentar a altura da linha. */
+  max-width: 16rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

@@ -496,21 +496,41 @@ export function ArticleTable({
                         </button>
                       </div>
                       {(article.factors?.length ?? 0) > 0 && (
-                        <span className="factor-chips" aria-label="Fatores do artigo">
-                          {article.factors.map((factor) => (
-                            <span
-                              key={`${factor.factorId}-${factor.label}-${factor.polarity}`}
-                              className={`factor-chip polarity-${factor.polarity}`}
-                              title={
-                                factor.description
-                                  ? `${factor.label}: ${factor.description}`
-                                  : factor.label
-                              }
-                            >
-                              {factor.polarity === 'positive' ? '+' : '−'}
-                              {factor.label}
-                            </span>
-                          ))}
+                        <span className="factor-chip-rows">
+                          {/* Uma linha por polaridade: misturados, os dois grupos
+                              ficavam impossíveis de ler de relance. */}
+                          {(['positive', 'negative'] as const).map((polarity) => {
+                            const doTipo = article.factors.filter(
+                              (f) => f.polarity === polarity,
+                            );
+                            if (doTipo.length === 0) return null;
+                            return (
+                              <span
+                                key={polarity}
+                                className={`factor-chips polarity-${polarity}`}
+                                aria-label={
+                                  polarity === 'positive'
+                                    ? 'Fatores positivos'
+                                    : 'Fatores negativos'
+                                }
+                              >
+                                {doTipo.map((factor) => (
+                                  <span
+                                    key={`${factor.factorId}-${factor.label}`}
+                                    className={`factor-chip polarity-${factor.polarity}`}
+                                    title={
+                                      factor.description
+                                        ? `${factor.label}: ${factor.description}`
+                                        : factor.label
+                                    }
+                                  >
+                                    {factor.polarity === 'positive' ? '+' : '−'}
+                                    {factor.label}
+                                  </span>
+                                ))}
+                              </span>
+                            );
+                          })}
                         </span>
                       )}
                       {article.status === 'duplicate' && article.duplicateOf && (
