@@ -22,6 +22,8 @@ import type {
   GroupInput,
   FactorDefinition,
   FactorsImportResult,
+  FactorsDeltaItem,
+  FactorsDeltaResult,
   FactorOverview,
   GroupMeta,
   GroupSummary,
@@ -157,6 +159,12 @@ export const api = {
     request<FactorsImportResult>('/factors/import', {
       method: 'POST',
       body: JSON.stringify({ factors }),
+    }),
+
+  applyFactorsDelta: (items: FactorsDeltaItem[]) =>
+    request<FactorsDeltaResult>('/factors/apply-delta', {
+      method: 'POST',
+      body: JSON.stringify({ items }),
     }),
 
   ensureFactor: (input: { id?: string; name: string; aliases?: string[] }) =>

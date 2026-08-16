@@ -214,6 +214,63 @@ export class SqliteStore {
     return this.readFactorCatalog();
   }
 
+  /** Todos os grupos em que existe um artigo com esta chave. */
+  async findArticleGroupsByKey(key: string): Promise<number[]> {
+    const rows = this.db
+      .prepare('SELECT group_id FROM articles WHERE entry_key = ?')
+      .all(key) as { group_id: number }[];
+    return rows.map((r) => r.group_id);
+  }
+
+  /**
+   * Soma fatores a um artigo já existente, sem tocar nos demais campos.
+   * Cada fator recebido é primeiro resolvido no catálogo (por grafia), então
+   * "Autonomy" e "Autonomia" atualizam a mesma entrada em vez de duplicar.
+   */
+  async addFactorsToArticle(
+    groupId: number,
+    key: string,
+    entradas: ArticleFactorInput[],
+  ): Promise<Article> {
+    const atual = await this.getArticle(groupId, key);
+
+    let catalog = this.readFactorCatalog();
+    const resolvidos: ArticleFactorInput[] = [];
+    for (const entrada of entradas) {
+      const label = entrada.label?.trim();
+      if (!label) continue;
+      const { factor, catalog: proximo } = ensureFactorInCatalog(catalog, {
+        id: entrada.factorId,
+        name: label,
+        aliases: entrada.aliases ?? [],
+      });
+      catalog = proximo;
+      resolvidos.push({
+        factorId: factor.id,
+        label,
+        polarity: entrada.polarity === 'negative' ? 'negative' : 'positive',
+        description: entrada.description ?? '',
+      });
+    }
+    this.writeFactorCatalog(catalog);
+
+    // Mescla por fator canônico: o que vem no delta sobrescreve o que já havia.
+    const porFator = new Map<string, ArticleFactorInput>();
+    for (const existente of atual.factors) {
+      porFator.set(existente.factorId, {
+        factorId: existente.factorId,
+        label: existente.label,
+        polarity: existente.polarity,
+        description: existente.description,
+      });
+    }
+    for (const novo of resolvidos) {
+      porFator.set(novo.factorId!, novo);
+    }
+
+    return this.updateArticle(groupId, key, { factors: [...porFator.values()] });
+  }
+
   /** Catálogo de fatores com ocorrências em todos os artigos do workspace. */
   async listFactorOverviews(): Promise<FactorOverview[]> {
     const catalog = this.readFactorCatalog();

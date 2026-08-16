@@ -30,6 +30,30 @@ const importFactorsSchema = z.object({
     .max(5000),
 });
 
+const deltaSchema = z.object({
+  items: z
+    .array(
+      z.object({
+        key: z.string().trim().min(1),
+        /** Opcional: sem ele o artigo é procurado em todos os grupos. */
+        groupId: z.number().int().optional(),
+        factors: z
+          .array(
+            z.object({
+              factorId: z.string().trim().min(1).optional(),
+              label: z.string().trim().min(1),
+              polarity: z.enum(['positive', 'negative']).optional(),
+              description: z.string().optional(),
+              aliases: z.array(z.string()).optional(),
+            }),
+          )
+          .min(1),
+      }),
+    )
+    .min(1, 'Arquivo sem itens')
+    .max(5000),
+});
+
 function handleRouteError(error: unknown, res: Response): void {
   if (error instanceof ZodError) {
     res.status(400).json({ error: 'Dados inválidos', details: error.flatten() });
@@ -120,6 +144,74 @@ export function createFactorsRouter(): Router {
       }
 
       res.json({ recebidos: body.factors.length, criados, atualizados, erros });
+    } catch (error) {
+      handleRouteError(error, res);
+    }
+  });
+
+  /**
+   * Delta: liga fatores a artigos que JÁ existem. Nada é criado nem removido —
+   * cada item soma/atualiza os fatores daquele artigo.
+   */
+  router.post('/apply-delta', async (req, res) => {
+    try {
+      const body = deltaSchema.parse(req.body ?? {});
+      const store = storeFrom(req);
+
+      let aplicados = 0;
+      let fatoresAplicados = 0;
+      const naoEncontrados: string[] = [];
+      const ambiguos: { key: string; grupos: number[] }[] = [];
+      const erros: { key: string; motivo: string }[] = [];
+
+      for (const item of body.items) {
+        try {
+          let grupos: number[];
+          if (item.groupId !== undefined) {
+            grupos = [item.groupId];
+          } else {
+            grupos = await store.findArticleGroupsByKey(item.key);
+            if (grupos.length === 0) {
+              naoEncontrados.push(item.key);
+              continue;
+            }
+            // Mesma chave em vários grupos: aplicar em todos seria adivinhar.
+            if (grupos.length > 1) {
+              ambiguos.push({ key: item.key, grupos });
+              continue;
+            }
+          }
+
+          await store.addFactorsToArticle(
+            grupos[0],
+            item.key,
+            item.factors.map((f) => ({
+              factorId: f.factorId,
+              label: f.label,
+              polarity: f.polarity ?? 'positive',
+              description: f.description ?? '',
+              aliases: f.aliases ?? [],
+            })),
+          );
+          aplicados += 1;
+          fatoresAplicados += item.factors.length;
+        } catch (error) {
+          if (error instanceof StoreError && error.code === 'NOT_FOUND') {
+            naoEncontrados.push(item.key);
+            continue;
+          }
+          erros.push({ key: item.key, motivo: (error as Error).message });
+        }
+      }
+
+      res.json({
+        recebidos: body.items.length,
+        aplicados,
+        fatoresAplicados,
+        naoEncontrados,
+        ambiguos,
+        erros,
+      });
     } catch (error) {
       handleRouteError(error, res);
     }

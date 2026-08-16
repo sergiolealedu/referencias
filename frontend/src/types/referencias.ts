@@ -202,6 +202,28 @@ export interface FactorsImportResult {
   erros: { name: string; motivo: string }[];
 }
 
+/** Delta que liga fatores a artigos já existentes. */
+export interface FactorsDeltaItem {
+  key: string;
+  groupId?: number;
+  factors: {
+    factorId?: string;
+    label: string;
+    polarity?: FactorPolarity;
+    description?: string;
+    aliases?: string[];
+  }[];
+}
+
+export interface FactorsDeltaResult {
+  recebidos: number;
+  aplicados: number;
+  fatoresAplicados: number;
+  naoEncontrados: string[];
+  ambiguos: { key: string; grupos: number[] }[];
+  erros: { key: string; motivo: string }[];
+}
+
 export interface MarcarUsadosResult {
   solicitados: number;
   atualizados: number;

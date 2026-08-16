@@ -1,4 +1,9 @@
-import type { ArticleFactor, FactorDefinition, FactorsExport } from '../types/referencias';
+import type {
+  ArticleFactor,
+  FactorDefinition,
+  FactorsDeltaItem,
+  FactorsExport,
+} from '../types/referencias';
 
 /** Normaliza grafia para comparação case-insensitive e sem acentos. */
 export function normalizeFactorKey(value: string): string {
@@ -195,4 +200,60 @@ export function parseFactorsExportFile(text: string): FactorDefinition[] {
     throw new Error('Nenhum fator válido encontrado no arquivo.');
   }
   return fatores;
+}
+
+/**
+ * Aceita o delta como {"items": [...]} ou como lista solta. Cada item liga
+ * fatores a um artigo que já existe, identificado pela chave BibTeX.
+ */
+export function parseFactorsDeltaFile(text: string): FactorsDeltaItem[] {
+  let data: unknown;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error('Arquivo não é um JSON válido.');
+  }
+
+  const lista = Array.isArray(data)
+    ? data
+    : data && typeof data === 'object' && Array.isArray((data as { items?: unknown }).items)
+      ? ((data as { items: unknown[] }).items)
+      : null;
+
+  if (!lista) {
+    throw new Error('Arquivo inválido: esperado {"items": [...]} ou uma lista de itens.');
+  }
+
+  const items: FactorsDeltaItem[] = [];
+  for (const bruto of lista) {
+    if (!bruto || typeof bruto !== 'object') continue;
+    const item = bruto as Record<string, unknown>;
+    const key = typeof item.key === 'string' ? item.key.trim() : '';
+    const fatoresBrutos = Array.isArray(item.factors) ? item.factors : [];
+    if (!key || fatoresBrutos.length === 0) continue;
+
+    const factors = fatoresBrutos
+      .filter((f): f is Record<string, unknown> => Boolean(f) && typeof f === 'object')
+      .map((f) => ({
+        label: typeof f.label === 'string' ? f.label.trim() : '',
+        polarity: f.polarity === 'negative' ? ('negative' as const) : ('positive' as const),
+        description: typeof f.description === 'string' ? f.description : '',
+        aliases: Array.isArray(f.aliases)
+          ? f.aliases.filter((a): a is string => typeof a === 'string')
+          : [],
+      }))
+      .filter((f) => f.label);
+
+    if (factors.length === 0) continue;
+    items.push({
+      key,
+      ...(typeof item.groupId === 'number' ? { groupId: item.groupId } : {}),
+      factors,
+    });
+  }
+
+  if (items.length === 0) {
+    throw new Error('Nenhum item válido: cada item precisa de "key" e ao menos um fator com "label".');
+  }
+  return items;
 }

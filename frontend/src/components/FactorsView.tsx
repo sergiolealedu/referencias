@@ -7,6 +7,7 @@ import type { FactorOccurrence, FactorOverview } from '../types/referencias';
 import {
   downloadFactorsExport,
   formatAllSpellings,
+  parseFactorsDeltaFile,
   parseFactorsExportFile,
 } from '../utils/factors';
 
@@ -33,6 +34,7 @@ export function FactorsView({ onOpenArticle }: FactorsViewProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const importInputRef = useRef<HTMLInputElement>(null);
+  const deltaInputRef = useRef<HTMLInputElement>(null);
   const [transferMessage, setTransferMessage] = useState<string | null>(null);
   const [transferError, setTransferError] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -46,6 +48,46 @@ export function FactorsView({ onOpenArticle }: FactorsViewProps) {
     }
     downloadFactorsExport(factors);
     setTransferMessage(`${factors.length} fator(es) exportado(s).`);
+  };
+
+  const handleDeltaFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    setTransferError(false);
+    setTransferMessage(null);
+    setImporting(true);
+    try {
+      const items = parseFactorsDeltaFile(await file.text());
+      const r = await api.applyFactorsDelta(items);
+      await queryClient.invalidateQueries({ queryKey: ['factors'] });
+      await queryClient.invalidateQueries({ queryKey: ['articles'] });
+
+      const partes = [`${r.aplicados} de ${r.recebidos} artigo(s) atualizado(s)`];
+      if (r.fatoresAplicados) partes.push(`${r.fatoresAplicados} fator(es)`);
+      if (r.naoEncontrados.length) {
+        partes.push(
+          `não encontrados: ${r.naoEncontrados.slice(0, 5).join(', ')}${r.naoEncontrados.length > 5 ? '…' : ''}`,
+        );
+      }
+      if (r.ambiguos.length) {
+        partes.push(
+          `em mais de um grupo (informe groupId): ${r.ambiguos.map((a) => a.key).slice(0, 5).join(', ')}`,
+        );
+      }
+      if (r.erros.length) partes.push(`${r.erros.length} com erro`);
+
+      setTransferMessage(partes.join(' · '));
+      setTransferError(
+        r.naoEncontrados.length > 0 || r.ambiguos.length > 0 || r.erros.length > 0,
+      );
+    } catch (err) {
+      setTransferError(true);
+      setTransferMessage((err as Error).message);
+    } finally {
+      setImporting(false);
+    }
   };
 
   const handleImportFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -136,6 +178,21 @@ export function FactorsView({ onOpenArticle }: FactorsViewProps) {
             accept=".json,application/json"
             className="visually-hidden"
             onChange={handleImportFile}
+          />
+          <button
+            type="button"
+            onClick={() => deltaInputRef.current?.click()}
+            disabled={importing}
+            title="Aplica um arquivo que liga fatores a artigos já existentes, pela chave BibTeX"
+          >
+            {importing ? 'Aplicando…' : 'Aplicar delta em artigos'}
+          </button>
+          <input
+            ref={deltaInputRef}
+            type="file"
+            accept=".json,application/json"
+            className="visually-hidden"
+            onChange={handleDeltaFile}
           />
         </div>
         <label className="factors-view-search">
