@@ -216,11 +216,30 @@ export interface FactorsDeltaItem {
   }[];
 }
 
+/**
+ * Operação de catálogo dentro do delta: localiza o fator por qualquer grafia
+ * (`match`) e renomeia (`name`), soma grafias (`aliases`) ou substitui o
+ * conjunto inteiro (`spellings`).
+ */
+export interface FactorsDeltaCatalogOp {
+  match: string;
+  name?: string;
+  aliases?: string[];
+  spellings?: string[];
+}
+
+export interface FactorsDelta {
+  factors?: FactorsDeltaCatalogOp[];
+  items: FactorsDeltaItem[];
+}
+
 export interface FactorsDeltaResult {
   recebidos: number;
   aplicados: number;
   fatoresAplicados: number;
+  fatoresCatalogo: number;
   naoEncontrados: string[];
+  fatoresNaoEncontrados: string[];
   ambiguos: { key: string; grupos: number[] }[];
   erros: { key: string; motivo: string }[];
 }

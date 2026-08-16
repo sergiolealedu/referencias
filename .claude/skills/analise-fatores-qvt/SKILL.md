@@ -82,15 +82,24 @@ frases longas do texto viram nome de fator e o catálogo fica ilegível.
 idioma — repita esse rótulo em `canonical` **e** em `aliases`. É assim que
 artigos diferentes convergem no mesmo fator em vez de fragmentar o catálogo.
 
-Não use vírgula nem ponto-e-vírgula dentro de `label` ou `canonical`: o app
-divide a grafia nesses caracteres, e você acabaria com duas grafias truncadas.
-Se o trecho exato do artigo contiver vírgula, recorte um pedaço **contíguo e
-sem vírgula** que ainda seja localizável com Ctrl+F — em vez de reescrever a
-frase, que quebraria a busca.
+Além do rótulo do catálogo, `aliases` pode trazer outros sinônimos do fator
+encontrados no artigo, em inglês ou português (ex.: `Upskilling`, `Layoffs`):
+todos viram grafias do fator e ajudam os próximos artigos a convergir. O nome
+do catálogo (`canonical`) é **sempre em português**.
+
+Não use vírgula nem ponto-e-vírgula dentro de `label`, `canonical` ou de um
+item de `aliases`: o app divide a grafia nesses caracteres, e você acabaria
+com duas grafias truncadas. Se o trecho exato do artigo contiver vírgula,
+recorte um pedaço **contíguo e sem vírgula** que ainda seja localizável com
+Ctrl+F — em vez de reescrever a frase, que quebraria a busca.
 
 `polarity` é o efeito do fator (`positive` melhora o bem-estar, `negative`
-piora), não a qualidade do artigo. `description` é uma frase com a evidência
-deste artigo, de preferência citando o trecho.
+piora), não a qualidade do artigo. `description` tem duas partes: seu resumo
+da evidência em português (com seção e participantes) seguido da citação
+**verbatim** do trecho, entre aspas e sem traduzir. Ex.: `Seção 4.2.1: prazos
+minaram a confiança de entregar a tempo (P2) — “the pressure from task urgency
+and deadlines could lead to feeling a lack of competence”.` Vírgula é
+permitida aqui.
 
 ## Exemplos
 
@@ -138,9 +147,9 @@ deste artigo, de preferência citando o trecho.
         {
           "label": "constant pressure to learn new skills",
           "canonical": "Pressão por atualização",
-          "aliases": [],
+          "aliases": ["Upskilling"],
           "polarity": "negative",
-          "description": "..."
+          "description": "Seção 4.1.1: a pressão por atualização constante minou competência e pertencimento (P9) — “This ongoing pressure to learn new skills and tools challenged their relatedness”."
         }
       ]
     }
@@ -149,8 +158,9 @@ deste artigo, de preferência citando o trecho.
 ```
 
 `groupId` é **número**, copiado de `grupoId` — sem aspas, ou o app rejeita o
-arquivo. `aliases` vai vazio (`[]`) quando o fator é novo; só se preenche
-quando ele já existe em `catalogo`.
+arquivo. Em `aliases`, o rótulo do `catalogo` é **obrigatório** quando o fator
+já existe; sinônimos do artigo são bem-vindos em qualquer caso. Fator novo sem
+sinônimo leva lista vazia (`[]`).
 
 - `key` copiado exatamente de `chave` — nunca inventado ou alterado.
 - `groupId`: copie o `grupoId` do artigo. É opcional, mas quando a mesma chave
@@ -160,6 +170,24 @@ quando ele já existe em `catalogo`.
 - Se `fatoresAtuais` já traz um fator, só o repita para corrigir polaridade ou
   descrição: o envio **sobrescreve** o que existe naquele fator.
 - Vários artigos e vários grupos cabem no mesmo `items`.
+
+O delta também aceita ajustes de catálogo, numa lista `factors` no topo do
+arquivo, aplicada **antes** dos artigos:
+
+```json
+{
+  "factors": [
+    {"match": "job insecurity", "name": "Insegurança no emprego",
+     "aliases": ["Layoffs"]}
+  ],
+  "items": []
+}
+```
+
+`match` localiza o fator por qualquer grafia atual; `name` renomeia (o nome
+antigo vira grafia); `aliases` soma grafias; `spellings` substitui o conjunto
+inteiro de grafias — o que ficar de fora se perde. Use para corrigir catálogo
+sem mexer nos artigos, p. ex. renomear um fator que entrou com o nome errado.
 
 Entregue o JSON em um bloco próprio (ou arquivo), sem comentários dentro dele.
 **Fora** do bloco, liste uma linha por artigo: chave, quantos fatores e se
@@ -176,7 +204,10 @@ delta sobrescreve, e um item malfeito apaga trabalho bom.
 Mecânico, antes de responder:
 
 - Nenhum `label`, `canonical` ou `description` está vazio.
-- Nenhum `label` ou `canonical` contém vírgula ou ponto-e-vírgula.
+- Nenhum `label`, `canonical` ou item de `aliases` contém vírgula ou
+  ponto-e-vírgula.
+- Toda `description` traz o resumo em PT **e** a citação verbatim do texto
+  original.
 - Todo `polarity` é exatamente `positive` ou `negative`.
 - Todo `groupId` é número, sem aspas.
 

@@ -5,6 +5,7 @@ import type { AuthenticatedRequest } from '../middleware/deviceAuth.js';
 import type { Article } from '../types/referencias.js';
 import { StoreError } from '../store/storeError.js';
 import { createShareToken } from '../shareLinks.js';
+import { allFactorSpellings, findFactorBySpelling } from '../utils/factors.js';
 
 const ensureFactorSchema = z.object({
   id: z.string().min(1).optional(),
@@ -32,32 +33,49 @@ const importFactorsSchema = z.object({
     .max(5000),
 });
 
-const deltaSchema = z.object({
-  items: z
+const deltaItemSchema = z.object({
+  key: z.string().trim().min(1),
+  /** Opcional: sem ele o artigo é procurado em todos os grupos. */
+  groupId: z.number().int().optional(),
+  factors: z
     .array(
       z.object({
-        key: z.string().trim().min(1),
-        /** Opcional: sem ele o artigo é procurado em todos os grupos. */
-        groupId: z.number().int().optional(),
-        factors: z
-          .array(
-            z.object({
-              factorId: z.string().trim().min(1).optional(),
-              /** Grafia deste artigo — é o que fica na ocorrência. */
-              label: z.string().trim().min(1),
-              /** Nome do fator no catálogo quando ele ainda não existe. */
-              canonical: z.string().trim().min(1).optional(),
-              polarity: z.enum(['positive', 'negative']).optional(),
-              description: z.string().optional(),
-              aliases: z.array(z.string()).optional(),
-            }),
-          )
-          .min(1),
+        factorId: z.string().trim().min(1).optional(),
+        /** Grafia deste artigo — é o que fica na ocorrência. */
+        label: z.string().trim().min(1),
+        /** Nome do fator no catálogo quando ele ainda não existe. */
+        canonical: z.string().trim().min(1).optional(),
+        polarity: z.enum(['positive', 'negative']).optional(),
+        description: z.string().optional(),
+        aliases: z.array(z.string()).optional(),
       }),
     )
-    .min(1, 'Arquivo sem itens')
-    .max(5000),
+    .min(1),
 });
+
+/**
+ * Operação de catálogo dentro do delta, aplicada ANTES dos artigos: renomeia
+ * um fator, soma grafias ou substitui o conjunto inteiro de grafias.
+ */
+const deltaFactorOpSchema = z.object({
+  /** Qualquer grafia atual do fator (nome ou alias) — é assim que ele é achado. */
+  match: z.string().trim().min(1),
+  /** Novo nome canônico; o nome antigo é preservado como grafia. */
+  name: z.string().trim().min(1).optional(),
+  /** Grafias a somar às existentes. */
+  aliases: z.array(z.string()).optional(),
+  /** Substitui TODAS as grafias (o que ficar de fora se perde); ignora "aliases". */
+  spellings: z.array(z.string()).optional(),
+});
+
+const deltaSchema = z
+  .object({
+    factors: z.array(deltaFactorOpSchema).max(5000).optional(),
+    items: z.array(deltaItemSchema).max(5000).optional(),
+  })
+  .refine((body) => (body.factors?.length ?? 0) + (body.items?.length ?? 0) > 0, {
+    message: 'Arquivo sem itens',
+  });
 
 function handleRouteError(error: unknown, res: Response): void {
   if (error instanceof ZodError) {
@@ -285,18 +303,24 @@ export function createFactorsRouter(): Router {
           '  Se o fator já existe, repita esse mesmo rótulo em "canonical".',
           '  Se não existir em "catalogo", deixe "aliases" vazio e proponha o',
           '  "canonical" novo.',
-          '- Não use vírgula nem ponto-e-vírgula dentro de "label" nem de "canonical":',
-          '  eles separam grafias.',
+          '  Além do rótulo do catálogo, "aliases" pode trazer outros sinônimos do',
+          '  fator encontrados no artigo, em PT ou EN (ex.: "Upskilling", "Layoffs"):',
+          '  todos viram grafias do fator no catálogo.',
+          '- Não use vírgula nem ponto-e-vírgula dentro de "label", de "canonical" nem',
+          '  de um item de "aliases": eles separam grafias.',
           '',
           'CAMPOS DA RESPOSTA:',
           '- "key": copie exatamente o valor de "chave" do artigo. Não invente nem altere.',
           '- "groupId": copie o "grupoId" do artigo, como NÚMERO (sem aspas). Quando a',
           '  mesma chave existe em mais de um grupo, sem ele o item é pulado.',
-          '- "aliases": lista vazia quando o fator é novo.',
+          '- "aliases": fator novo sem sinônimo leva lista vazia.',
           '- "polarity": "positive" se o fator MELHORA o bem-estar/QVT; "negative" se PIORA.',
           '  A polaridade é do efeito do fator, não da qualidade do artigo.',
-          '- "description": uma frase curta com a evidência encontrada NESTE artigo,',
-          '  de preferência citando o trecho que sustenta o fator.',
+          '- "description": duas partes — um resumo da evidência em português (com',
+          '  seção e participantes) seguido da citação VERBATIM do trecho entre aspas,',
+          '  sem traduzir. Ex.: Seção 4.2.1: prazos minaram a confiança de entregar a',
+          '  tempo (P2) — “the pressure from task urgency and deadlines could lead to',
+          '  feeling a lack of competence”. Vírgula é permitida aqui.',
           '',
           'EXEMPLOS (casos reais de um artigo que usa Self-Determination Theory):',
           '',
@@ -332,7 +356,8 @@ export function createFactorsRouter(): Router {
           ' "aliases": ["Carga de trabalho"]} — e NÃO crie "Sobrecarga de trabalho".',
           '',
           'ANTES DE RESPONDER, confira: nenhum "label", "canonical" ou "description"',
-          'vazio; nenhuma vírgula ou ponto-e-vírgula em "label" e "canonical"; "polarity"',
+          'vazio; nenhuma vírgula ou ponto-e-vírgula em "label", "canonical" e itens de',
+          '"aliases"; "description" traz resumo em PT + citação verbatim; "polarity"',
           'exatamente "positive" ou "negative"; "groupId" numérico.',
           '',
           'REGRAS DE SAÍDA:',
@@ -356,9 +381,11 @@ export function createFactorsRouter(): Router {
                 {
                   label: '<termo exato como escrito no artigo, para busca no PDF>',
                   canonical: '<nome curto do fator em português, para o catálogo>',
-                  aliases: ['<rótulo do catálogo se o fator já existir; senão, lista vazia>'],
+                  aliases: [
+                    '<rótulo do catálogo se o fator já existir + sinônimos PT/EN do artigo>',
+                  ],
                   polarity: 'positive | negative',
-                  description: '<evidência em uma frase>',
+                  description: '<resumo em PT (Seção X.Y, participantes) — “citação verbatim do trecho”>',
                 },
               ],
             },
@@ -382,8 +409,10 @@ export function createFactorsRouter(): Router {
   });
 
   /**
-   * Delta: liga fatores a artigos que JÁ existem. Nada é criado nem removido —
-   * cada item soma/atualiza os fatores daquele artigo.
+   * Delta: liga fatores a artigos que JÁ existem e ajusta o catálogo.
+   * "factors" (opcional) roda primeiro e pode renomear fatores ou mexer nas
+   * grafias; "items" soma/atualiza os fatores de cada artigo. Nenhum artigo
+   * é criado nem removido.
    */
   router.post('/apply-delta', async (req, res) => {
     try {
@@ -392,11 +421,41 @@ export function createFactorsRouter(): Router {
 
       let aplicados = 0;
       let fatoresAplicados = 0;
+      let fatoresCatalogo = 0;
       const naoEncontrados: string[] = [];
+      const fatoresNaoEncontrados: string[] = [];
       const ambiguos: { key: string; grupos: number[] }[] = [];
       const erros: { key: string; motivo: string }[] = [];
 
-      for (const item of body.items) {
+      // Catálogo primeiro: renomear antes de casar os artigos garante que os
+      // itens abaixo encontrem o fator já com o nome novo (o antigo vira grafia).
+      for (const op of body.factors ?? []) {
+        try {
+          const alvo = findFactorBySpelling(await store.listFactors(), op.match);
+          if (!alvo) {
+            fatoresNaoEncontrados.push(op.match);
+            continue;
+          }
+          const nome = op.name?.trim();
+          // Sem "spellings" a mudança é aditiva: nenhuma grafia existente se perde.
+          const spellings = op.spellings
+            ? [...(nome ? [nome] : []), ...op.spellings]
+            : [
+                ...(nome ? [nome] : []),
+                ...allFactorSpellings(alvo),
+                ...(op.aliases ?? []),
+              ];
+          await store.updateFactor(alvo.id, {
+            ...(nome ? { name: nome } : {}),
+            spellings,
+          });
+          fatoresCatalogo += 1;
+        } catch (error) {
+          erros.push({ key: `fator ${op.match}`, motivo: (error as Error).message });
+        }
+      }
+
+      for (const item of body.items ?? []) {
         try {
           let grupos: number[];
           if (item.groupId !== undefined) {
@@ -438,10 +497,12 @@ export function createFactorsRouter(): Router {
       }
 
       res.json({
-        recebidos: body.items.length,
+        recebidos: (body.items ?? []).length,
         aplicados,
         fatoresAplicados,
+        fatoresCatalogo,
         naoEncontrados,
+        fatoresNaoEncontrados,
         ambiguos,
         erros,
       });

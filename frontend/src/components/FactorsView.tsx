@@ -59,16 +59,22 @@ export function FactorsView({ onOpenArticle }: FactorsViewProps) {
     setTransferMessage(null);
     setImporting(true);
     try {
-      const items = parseFactorsDeltaFile(await file.text());
-      const r = await api.applyFactorsDelta(items);
+      const delta = parseFactorsDeltaFile(await file.text());
+      const r = await api.applyFactorsDelta(delta);
       await queryClient.invalidateQueries({ queryKey: ['factors'] });
       await queryClient.invalidateQueries({ queryKey: ['articles'] });
 
       const partes = [`${r.aplicados} de ${r.recebidos} artigo(s) atualizado(s)`];
       if (r.fatoresAplicados) partes.push(`${r.fatoresAplicados} fator(es)`);
+      if (r.fatoresCatalogo) partes.push(`${r.fatoresCatalogo} fator(es) do catálogo ajustado(s)`);
       if (r.naoEncontrados.length) {
         partes.push(
           `não encontrados: ${r.naoEncontrados.slice(0, 5).join(', ')}${r.naoEncontrados.length > 5 ? '…' : ''}`,
+        );
+      }
+      if (r.fatoresNaoEncontrados?.length) {
+        partes.push(
+          `fatores não encontrados no catálogo: ${r.fatoresNaoEncontrados.slice(0, 5).join(', ')}${r.fatoresNaoEncontrados.length > 5 ? '…' : ''}`,
         );
       }
       if (r.ambiguos.length) {
@@ -80,7 +86,10 @@ export function FactorsView({ onOpenArticle }: FactorsViewProps) {
 
       setTransferMessage(partes.join(' · '));
       setTransferError(
-        r.naoEncontrados.length > 0 || r.ambiguos.length > 0 || r.erros.length > 0,
+        r.naoEncontrados.length > 0 ||
+          (r.fatoresNaoEncontrados?.length ?? 0) > 0 ||
+          r.ambiguos.length > 0 ||
+          r.erros.length > 0,
       );
     } catch (err) {
       setTransferError(true);

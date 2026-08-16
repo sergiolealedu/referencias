@@ -1,6 +1,8 @@
 import type {
   ArticleFactor,
   FactorDefinition,
+  FactorsDelta,
+  FactorsDeltaCatalogOp,
   FactorsDeltaItem,
   FactorsExport,
 } from '../types/referencias';
@@ -202,11 +204,19 @@ export function parseFactorsExportFile(text: string): FactorDefinition[] {
   return fatores;
 }
 
+function textList(value: unknown): string[] | undefined {
+  return Array.isArray(value)
+    ? value.filter((v): v is string => typeof v === 'string')
+    : undefined;
+}
+
 /**
  * Aceita o delta como {"items": [...]} ou como lista solta. Cada item liga
- * fatores a um artigo que já existe, identificado pela chave BibTeX.
+ * fatores a um artigo que já existe, identificado pela chave BibTeX. Uma lista
+ * "factors" no topo do arquivo traz operações de catálogo (renomear fator,
+ * ajustar grafias), aplicadas antes dos artigos.
  */
-export function parseFactorsDeltaFile(text: string): FactorsDeltaItem[] {
+export function parseFactorsDeltaFile(text: string): FactorsDelta {
   let data: unknown;
   try {
     data = JSON.parse(text);
@@ -214,18 +224,20 @@ export function parseFactorsDeltaFile(text: string): FactorsDeltaItem[] {
     throw new Error('Arquivo não é um JSON válido.');
   }
 
-  const lista = Array.isArray(data)
-    ? data
-    : data && typeof data === 'object' && Array.isArray((data as { items?: unknown }).items)
-      ? ((data as { items: unknown[] }).items)
+  const raiz =
+    !Array.isArray(data) && data && typeof data === 'object'
+      ? (data as Record<string, unknown>)
       : null;
 
-  if (!lista) {
-    throw new Error('Arquivo inválido: esperado {"items": [...]} ou uma lista de itens.');
-  }
+  const listaItems = Array.isArray(data)
+    ? data
+    : Array.isArray(raiz?.items)
+      ? (raiz.items as unknown[])
+      : [];
+  const listaOps = Array.isArray(raiz?.factors) ? (raiz.factors as unknown[]) : [];
 
   const items: FactorsDeltaItem[] = [];
-  for (const bruto of lista) {
+  for (const bruto of listaItems) {
     if (!bruto || typeof bruto !== 'object') continue;
     const item = bruto as Record<string, unknown>;
     const key = typeof item.key === 'string' ? item.key.trim() : '';
@@ -239,9 +251,7 @@ export function parseFactorsDeltaFile(text: string): FactorsDeltaItem[] {
         canonical: typeof f.canonical === 'string' ? f.canonical.trim() : undefined,
         polarity: f.polarity === 'negative' ? ('negative' as const) : ('positive' as const),
         description: typeof f.description === 'string' ? f.description : '',
-        aliases: Array.isArray(f.aliases)
-          ? f.aliases.filter((a): a is string => typeof a === 'string')
-          : [],
+        aliases: textList(f.aliases) ?? [],
       }))
       .filter((f) => f.label);
 
@@ -253,8 +263,20 @@ export function parseFactorsDeltaFile(text: string): FactorsDeltaItem[] {
     });
   }
 
-  if (items.length === 0) {
-    throw new Error('Nenhum item válido: cada item precisa de "key" e ao menos um fator com "label".');
+  const factors: FactorsDeltaCatalogOp[] = listaOps
+    .filter((op): op is Record<string, unknown> => Boolean(op) && typeof op === 'object')
+    .map((op) => ({
+      match: typeof op.match === 'string' ? op.match.trim() : '',
+      ...(typeof op.name === 'string' && op.name.trim() ? { name: op.name.trim() } : {}),
+      ...(textList(op.aliases) ? { aliases: textList(op.aliases) } : {}),
+      ...(textList(op.spellings) ? { spellings: textList(op.spellings) } : {}),
+    }))
+    .filter((op) => op.match);
+
+  if (items.length === 0 && factors.length === 0) {
+    throw new Error(
+      'Nenhum item válido: inclua "items" (artigos, cada um com "key" e fatores com "label") ou "factors" (ajustes de catálogo com "match").',
+    );
   }
-  return items;
+  return { ...(factors.length > 0 ? { factors } : {}), items };
 }

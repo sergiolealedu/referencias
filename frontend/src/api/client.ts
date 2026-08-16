@@ -23,7 +23,7 @@ import type {
   FactorDefinition,
   FactorsImportResult,
   FactorsAnalysisExport,
-  FactorsDeltaItem,
+  FactorsDelta,
   FactorsDeltaResult,
   FactorOverview,
   GroupMeta,
@@ -170,10 +170,10 @@ export const api = {
     return request<FactorsAnalysisExport>(`/factors/export-analise${qs}`);
   },
 
-  applyFactorsDelta: (items: FactorsDeltaItem[]) =>
+  applyFactorsDelta: (delta: FactorsDelta) =>
     request<FactorsDeltaResult>('/factors/apply-delta', {
       method: 'POST',
-      body: JSON.stringify({ items }),
+      body: JSON.stringify(delta),
     }),
 
   ensureFactor: (input: { id?: string; name: string; aliases?: string[] }) =>
