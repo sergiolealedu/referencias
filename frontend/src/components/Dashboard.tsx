@@ -538,6 +538,12 @@ function GroupChart({
 
   const totals = useMemo(() => sumSeries(series), [series]);
 
+  /** Todas as categorias de uso somadas — cada artigo entra em exatamente uma. */
+  const totalGeral = useMemo(
+    () => USAGE_SEGMENTS.reduce((soma, segment) => soma + totals[segment.key], 0),
+    [totals],
+  );
+
   const chartData = useMemo(() => {
     if (viewMode === 'total') {
       if (series.length === 0) return [];
@@ -562,16 +568,25 @@ function GroupChart({
 
   // A legenda da tela é HTML fora do <svg>, então precisa ser reconstruída para
   // ser desenhada dentro da imagem exportada.
-  const legendItems = useMemo(
+  /** Soma só do que está visível — esconder um segmento muda o total mostrado. */
+  const totalVisivel = useMemo(
     () =>
       segmentsForMode(chartMode)
         .filter((segment) => visibleSegments[segment.key])
-        .map((segment) => ({
-          label: `${segment.label} (${totals[segment.key]})`,
-          color: STACK_COLORS[segment.key],
-        })),
+        .reduce((soma, segment) => soma + totals[segment.key], 0),
     [chartMode, visibleSegments, totals],
   );
+
+  const legendItems = useMemo(() => {
+    const itens = segmentsForMode(chartMode)
+      .filter((segment) => visibleSegments[segment.key])
+      .map((segment) => ({
+        label: `${segment.label} (${totals[segment.key]})`,
+        color: STACK_COLORS[segment.key],
+      }));
+    // Sem cor: entra na legenda como texto, sem quadradinho.
+    return [...itens, { label: `Total: ${totalVisivel}`, color: null }];
+  }, [chartMode, visibleSegments, totals, totalVisivel]);
 
   const handleCopyPng = async () => {
     const container = chartContainerRef.current;
@@ -623,7 +638,7 @@ function GroupChart({
             {' · '}
             {chartMode === 'duplicates'
               ? `${totals.unicos} únicos · ${totals.repetidos} repetidos`
-              : `${totals.usados} em uso · ${totals.comPdf} com PDF · ${totals.naoEngSw} não é eng. SW · ${totals.naoDev} não é dev · ${totals.naoQvt} não é QVT · ${totals.descartados} descartados · ${totals.outros} outros · ${totals.repetidos} repetidos`}
+              : `${totalGeral} artigos no gráfico · ${totals.usados} em uso · ${totals.comPdf} com PDF · ${totals.naoEngSw} não é eng. SW · ${totals.naoDev} não é dev · ${totals.naoQvt} não é QVT · ${totals.descartados} descartados · ${totals.outros} outros · ${totals.repetidos} repetidos`}
           </p>
         </div>
         <div className="dashboard-chart-actions">

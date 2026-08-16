@@ -67,7 +67,8 @@ async function svgElementToPngBlob(
 /** Um item da legenda desenhada dentro da imagem exportada. */
 export interface ChartLegendItem {
   label: string;
-  color: string;
+  /** `null` desenha só o texto, sem quadradinho — usado no total. */
+  color: string | null;
 }
 
 const LEGEND_FONT = '11px sans-serif';
@@ -104,7 +105,9 @@ function appendLegend(
   if (items.length === 0) return height;
 
   const widths = items.map(
-    (item) => LEGEND_SWATCH + LEGEND_SWATCH_GAP + measureLegendText(item.label),
+    (item) =>
+      (item.color ? LEGEND_SWATCH + LEGEND_SWATCH_GAP : 0) +
+      measureLegendText(item.label),
   );
 
   // Quebra em linhas respeitando a largura do gráfico.
@@ -147,22 +150,28 @@ function appendLegend(
     row.forEach((index) => {
       const item = items[index];
 
-      const swatch = document.createElementNS(SVG_NS, 'rect');
-      swatch.setAttribute('x', String(x));
-      swatch.setAttribute('y', String(y));
-      swatch.setAttribute('width', String(LEGEND_SWATCH));
-      swatch.setAttribute('height', String(LEGEND_SWATCH));
-      swatch.setAttribute('rx', '2');
-      swatch.setAttribute('fill', resolveFill(item.color));
-      swatch.setAttribute('stroke', '#94a3b8');
-      swatch.setAttribute('stroke-width', '0.6');
-      group.appendChild(swatch);
+      if (item.color) {
+        const swatch = document.createElementNS(SVG_NS, 'rect');
+        swatch.setAttribute('x', String(x));
+        swatch.setAttribute('y', String(y));
+        swatch.setAttribute('width', String(LEGEND_SWATCH));
+        swatch.setAttribute('height', String(LEGEND_SWATCH));
+        swatch.setAttribute('rx', '2');
+        swatch.setAttribute('fill', resolveFill(item.color));
+        swatch.setAttribute('stroke', '#94a3b8');
+        swatch.setAttribute('stroke-width', '0.6');
+        group.appendChild(swatch);
+      }
 
       const text = document.createElementNS(SVG_NS, 'text');
-      text.setAttribute('x', String(x + LEGEND_SWATCH + LEGEND_SWATCH_GAP));
+      text.setAttribute(
+        'x',
+        String(item.color ? x + LEGEND_SWATCH + LEGEND_SWATCH_GAP : x),
+      );
       text.setAttribute('y', String(y + LEGEND_SWATCH / 2));
       text.setAttribute('dominant-baseline', 'central');
       text.setAttribute('font-size', '11');
+      text.setAttribute('font-weight', item.color ? 'normal' : '600');
       text.setAttribute('fill', '#1a2332');
       text.textContent = item.label;
       group.appendChild(text);

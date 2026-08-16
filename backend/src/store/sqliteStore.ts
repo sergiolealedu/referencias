@@ -920,6 +920,15 @@ export class SqliteStore {
       descartado: patch.motivoDescarte ? true : (patch.descartado ?? current.descartado),
     };
 
+    // Descartar e continuar "em uso" é contraditório: ao descartar (direto ou
+    // escolhendo um motivo), o artigo sai de uso. Só vale quando o próprio
+    // patch não está marcando usado — aí quem manda é a ação mais recente.
+    const virouDescartado =
+      merged.descartado && (patch.motivoDescarte != null || patch.descartado === true);
+    if (virouDescartado && patch.usado !== true) {
+      merged.usado = false;
+    }
+
     const values = articleToRowValues(groupId, merged);
     const result = this.db
       .prepare(
