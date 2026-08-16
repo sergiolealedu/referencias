@@ -15,6 +15,7 @@ import { useArticleStatsByYear, useDetectDuplicates, useGroups } from '../hooks/
 import type { GroupArticleStats } from '../types/referencias';
 import { STACK_COLORS } from '../utils/chartColors';
 import { copyChartPatternPngToClipboard, copyChartPngToClipboard } from '../utils/chartExport';
+import { usePersistedState } from '../utils/persistedState';
 import { collectVersoes, getLatestVersao } from '../utils/versao';
 
 const LABEL_FILL = '#1a2332';
@@ -712,15 +713,18 @@ function GroupChart({
 export function Dashboard({ toolbarCollapsed = false }: { toolbarCollapsed?: boolean }) {
   const { data: groups = [] } = useGroups();
   const availableVersoes = useMemo(() => collectVersoes(groups), [groups]);
-  const [versaoFilter, setVersaoFilter] = useState('');
-  const [versaoFilterInitialized, setVersaoFilterInitialized] = useState(false);
+  const [versaoFilter, setVersaoFilter] = usePersistedState('dash.versao', '');
+  // Já veio do localStorage? Então não sobrescrever com a versão mais recente.
+  const [versaoFilterInitialized, setVersaoFilterInitialized] = useState(
+    () => versaoFilter !== '',
+  );
   const [expandedChart, setExpandedChart] = useState<'consolidated' | number | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>(() =>
+  const [viewMode, setViewMode] = usePersistedState<ViewMode>('dash.modo', () =>
     window.matchMedia('(max-width: 900px)').matches ? 'total' : 'year',
   );
-  const [chartVisibility, setChartVisibility] = useState<
+  const [chartVisibility, setChartVisibility] = usePersistedState<
     Record<string, Record<ChartSegment, boolean>>
-  >({});
+  >('dash.segmentos', {});
 
   const getChartVisibility = (chartId: string, chartMode: ChartMode) =>
     chartVisibility[chartId] ?? initialVisibility(chartMode);

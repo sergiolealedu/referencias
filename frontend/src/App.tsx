@@ -53,6 +53,7 @@ import { api } from './api/client';
 
 import { APP_TITLE, BUILD_ID, BUILD_LABEL } from './buildInfo';
 import { downloadAbstractsNaoUsados, downloadGroupExport } from './utils/groupExport';
+import { usePersistedState, useIsFirstRender } from './utils/persistedState';
 import { showGlobalSettings } from './utils/platform';
 
 
@@ -67,7 +68,7 @@ export default function App() {
 
   const { data: groups = [] } = useGroups();
 
-  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
+  const [selectedGroupId, setSelectedGroupId] = usePersistedState<number | null>('grupo', null);
 
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
@@ -77,15 +78,15 @@ export default function App() {
 
   const [isNewArticle, setIsNewArticle] = useState(false);
 
-  const [filters, setFilters] = useState<ArticleFilters>({});
+  const [filters, setFilters] = usePersistedState<ArticleFilters>('filtros', {});
 
-  const [page, setPage] = useState(1);
+  const [page, setPage] = usePersistedState('pagina', 1);
 
-  const [pageSize, setPageSize] = useState<PageSize>(20);
+  const [pageSize, setPageSize] = usePersistedState<PageSize>('porPagina', 20);
 
-  const [sortColumn, setSortColumn] = useState<SortColumn | null>(null);
+  const [sortColumn, setSortColumn] = usePersistedState<SortColumn | null>('ordenarPor', null);
 
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [sortDirection, setSortDirection] = usePersistedState<SortDirection>('ordem', 'asc');
 
   const [findKey, setFindKey] = useState<string | undefined>();
 
@@ -107,7 +108,7 @@ export default function App() {
 
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
 
-  const [view, setView] = useState<AppView>('articles');
+  const [view, setView] = usePersistedState<AppView>('aba', 'articles');
 
   /** Fator a abrir na aba Fatores (clique num chip da lista de artigos). */
   const [focusFactorId, setFocusFactorId] = useState<string | null>(null);
@@ -190,7 +191,13 @@ export default function App() {
 
 
 
+  const ehPrimeiroRender = useIsFirstRender();
+
   useEffect(() => {
+
+    // No primeiro render esses valores vêm do localStorage, não de uma ação do
+    // usuário — resetar aqui jogaria fora a página restaurada.
+    if (ehPrimeiroRender()) return;
 
     setPage(1);
 
