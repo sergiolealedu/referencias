@@ -1,7 +1,7 @@
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 
 import { api } from '../api/client';
-import { useUpdateArticle, useUploadArticlePdf } from '../hooks/useApi';
+import { useFactors, useUpdateArticle, useUploadArticlePdf } from '../hooks/useApi';
 import type { Article, MotivoDescarte, SortColumn, SortDirection } from '../types/referencias';
 import { MOTIVOS_DESCARTE, MOTIVO_DESCARTE_LABELS } from '../types/referencias';
 import {
@@ -61,6 +61,14 @@ export function ArticleTable({
   toolbarCollapsed = false,
 }: ArticleTableProps) {
   const updateArticle = useUpdateArticle(groupId);
+
+  // O chip mostra o nome canônico do catálogo (PT); o label verbatim do
+  // artigo fica no tooltip, junto com a descrição.
+  const { data: factorCatalog = [] } = useFactors();
+  const factorNames = useMemo(
+    () => new Map(factorCatalog.map((f) => [f.id, f.name])),
+    [factorCatalog],
+  );
   const uploadPdf = useUploadArticlePdf(groupId);
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const [pdfTargetKey, setPdfTargetKey] = useState<string | null>(null);
@@ -536,7 +544,9 @@ export function ArticleTable({
                                     }}
                                   >
                                     {factor.polarity === 'positive' ? '+' : '−'}
-                                    {factor.label}
+                                    {(factor.factorId &&
+                                      factorNames.get(factor.factorId)) ||
+                                      factor.label}
                                   </button>
                                 ))}
                               </span>
