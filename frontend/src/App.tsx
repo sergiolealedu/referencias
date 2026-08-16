@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { ArticleForm } from './components/ArticleForm';
 
-import { ArticleTable, type PageSize } from './components/ArticleTable';
+import { ArticleTable, SORTABLE_COLUMNS, type PageSize } from './components/ArticleTable';
 
 import { BibtexImportModal } from './components/BibtexImportModal';
 
@@ -190,6 +190,13 @@ export default function App() {
   }, [articlesPage?.foundPage, page]);
 
 
+
+  // Ordenação salva pode apontar para uma coluna que já não existe na tabela.
+  useEffect(() => {
+    if (sortColumn && !SORTABLE_COLUMNS.includes(sortColumn)) {
+      setSortColumn(null);
+    }
+  }, [sortColumn, setSortColumn]);
 
   const ehPrimeiroRender = useIsFirstRender();
 

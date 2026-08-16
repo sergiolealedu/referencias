@@ -12,12 +12,23 @@ import {
 const PAGE_SIZE_OPTIONS = [20, 50] as const;
 type PageSize = (typeof PAGE_SIZE_OPTIONS)[number];
 
+/** Colunas realmente clicáveis — usado para descartar ordenação salva de uma
+ *  coluna que não existe mais (ex.: "tags", removida da tabela). */
+export const SORTABLE_COLUMNS: readonly SortColumn[] = [
+  'title',
+  'author',
+  'year',
+  'status',
+  'usado',
+  'descartado',
+  'pdfNaoEncontrado',
+];
+
 const COLUMNS: { key: SortColumn; label: string }[] = [
   { key: 'title', label: 'Título' },
   { key: 'author', label: 'Autor' },
   { key: 'year', label: 'Ano' },
   { key: 'status', label: 'Status' },
-  { key: 'tags', label: 'Tags' },
   { key: 'usado', label: 'Usado' },
   { key: 'descartado', label: 'Desc.' },
   { key: 'pdfNaoEncontrado', label: 'PDF n/enc.' },
@@ -582,13 +593,6 @@ export function ArticleTable({
                       <span className={`status-badge status-${article.status}`}>
                         {article.status}
                       </span>
-                    </td>
-                    <td className="tags-cell" data-label="Tags">
-                      {article.tags.map((tag) => (
-                        <span key={tag} className="tag">
-                          {tag}
-                        </span>
-                      ))}
                     </td>
                     <td data-label="Usado">
                       <input
