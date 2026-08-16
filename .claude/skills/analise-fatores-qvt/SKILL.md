@@ -38,30 +38,29 @@ cegas parece bom e está errado.
 
 ## Triagem: o artigo entra na análise?
 
-Antes de extrair qualquer fator, responda quatro perguntas sobre o artigo:
+Antes de extrair qualquer fator, responda três perguntas — as mesmas dos três
+botões de triagem do app:
 
 1. **É da área de engenharia de software?** Venue, tema e método pertencem à
    computação/ES — não a HRI clínico, medicina ou educação que citam
-   "software" de passagem.
+   "software" de passagem. (botão "Não é eng. de software")
 2. **Fala de desenvolvimento de software?** O objeto é o trabalho de construir
-   software, não apenas o uso de tecnologia.
-3. **É sobre desenvolvedores?** Os sujeitos estudados são quem produz software
-   — não usuários finais, pacientes ou outras profissões.
-4. **Estuda bem-estar/QVT?** O bem-estar de quem desenvolve — ou algo que o
-   afete — é objeto de análise: desfecho medido, tema das entrevistas ou alvo
-   das conclusões. Estudos que só **descrevem comportamento** (quando ou onde
-   os devs trabalham, padrões de commits, preferência de local) reprovam aqui
-   mesmo passando nas três primeiras: sem efeito sobre bem-estar evidenciado,
-   não há polaridade a atribuir. Sinal claro: o próprio artigo dizendo "we do
-   not directly assess productivity or well-being".
+   software, não apenas o uso de tecnologia. (botão "Não é desenvolvimento")
+3. **É de QVT?** Duas condições juntas: os sujeitos estudados são quem
+   **produz** software (não usuários finais, pacientes ou outras profissões)
+   **e** o bem-estar deles — ou algo que o afete — é objeto de análise:
+   desfecho medido, tema das entrevistas ou alvo das conclusões. Estudos que
+   só **descrevem comportamento** (quando ou onde os devs trabalham, padrões
+   de commits, preferência de local) reprovam aqui: sem efeito sobre
+   bem-estar evidenciado, não há polaridade a atribuir. Sinal claro: o
+   próprio artigo dizendo "we do not directly assess productivity or
+   well-being". (botão "Não é QVT")
 
 Se **qualquer** resposta for não, **não gere o arquivo de delta** para esse
-artigo: informe no resumo qual pergunta reprovou e por quê, em uma frase. Isso
-deixa o usuário marcar o artigo nos botões de triagem do app ("Não é eng. de
-software" / "Não é desenvolvimento" / "Não é QVT" — este último cobre as
-perguntas 3 e 4) em vez de receber um delta vazio. Propostas de workshop,
-editoriais e calls for papers tipicamente reprovam: não têm dados próprios nem
-sujeitos.
+artigo: informe no resumo qual pergunta reprovou e por quê, em uma frase, para
+o usuário marcar o botão correspondente no app em vez de receber um delta
+vazio. Propostas de workshop, editoriais e calls for papers tipicamente
+reprovam: não têm dados próprios nem sujeitos.
 
 Um artigo pode passar na triagem e ainda assim não ter fator evidenciado — aí
 vale a regra normal: omitir o artigo do delta e dizer que foi lido e não tinha
@@ -222,7 +221,7 @@ sem mexer nos artigos, p. ex. renomear um fator que entrou com o nome errado.
 
 Entregue o JSON em um bloco próprio (ou arquivo), sem comentários dentro dele.
 **Fora** do bloco, liste uma linha por artigo: chave, quantos fatores, se
-conseguiu ler o PDF e o veredito da triagem (aprovado, ou qual das quatro
+conseguiu ler o PDF e o veredito da triagem (aprovado, ou qual das três
 perguntas reprovou). O usuário precisa disso para distinguir "artigo sem
 fatores", "não consegui abrir o PDF" e "fora do escopo".
 
