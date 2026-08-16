@@ -11,8 +11,12 @@ permissions:
   packages: write
   id-token: write
 
+# Um grupo só para os deploys de servidor: eles nunca rodam dois ao mesmo tempo
+# no droplet. O Android fica em outro grupo de propósito — o GitHub mantém no
+# máximo UM run pendente por grupo, então compartilhar o grupo fazia um
+# workflow cancelar o outro (foi o que engoliu o deploy da v1.1.64).
 concurrency:
-  group: production-deploy
+  group: deploy-server
   cancel-in-progress: false
 
 jobs:

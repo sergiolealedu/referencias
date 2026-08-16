@@ -11,8 +11,10 @@ on:
 permissions:
   contents: write
 
+# Grupo próprio: o build roda nos runners do GitHub e só toca o droplet no
+# passo final (envio do APK), então não disputa recursos com o deploy.
 concurrency:
-  group: production-deploy
+  group: release-android
   cancel-in-progress: false
 
 jobs:
