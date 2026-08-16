@@ -36,6 +36,29 @@ explicitamente** em vez de analisar só pelo abstract: o abstract raramente
 menciona os fatores, que aparecem em resultados e discussão. Um delta feito às
 cegas parece bom e está errado.
 
+## Triagem: o artigo entra na análise?
+
+Antes de extrair qualquer fator, responda três perguntas sobre o artigo:
+
+1. **É da área de engenharia de software?** Venue, tema e método pertencem à
+   computação/ES — não a HRI clínico, medicina ou educação que citam
+   "software" de passagem.
+2. **Fala de desenvolvimento de software?** O objeto é o trabalho de construir
+   software, não apenas o uso de tecnologia.
+3. **É sobre desenvolvedores?** Os sujeitos estudados são quem produz software
+   — não usuários finais, pacientes ou outras profissões.
+
+Se **qualquer** resposta for não, **não gere o arquivo de delta** para esse
+artigo: informe no resumo qual pergunta reprovou e por quê, em uma frase. Isso
+deixa o usuário marcar o artigo nos botões de triagem do app ("Não é eng. de
+software" / "Não é desenvolvimento" / "Não é QVT") em vez de receber um delta
+vazio. Propostas de workshop, editoriais e calls for papers tipicamente
+reprovam: não têm dados próprios nem sujeitos.
+
+Um artigo pode passar na triagem e ainda assim não ter fator evidenciado — aí
+vale a regra normal: omitir o artigo do delta e dizer que foi lido e não tinha
+fatores.
+
 ## O que é fator, o que não é
 
 Fator é o que **influencia** o bem-estar: práticas, condições de trabalho,
@@ -190,9 +213,10 @@ inteiro de grafias — o que ficar de fora se perde. Use para corrigir catálogo
 sem mexer nos artigos, p. ex. renomear um fator que entrou com o nome errado.
 
 Entregue o JSON em um bloco próprio (ou arquivo), sem comentários dentro dele.
-**Fora** do bloco, liste uma linha por artigo: chave, quantos fatores e se
-conseguiu ler o PDF. O usuário precisa disso para saber se um retorno curto foi
-"artigo sem fatores" ou "não consegui abrir o PDF".
+**Fora** do bloco, liste uma linha por artigo: chave, quantos fatores, se
+conseguiu ler o PDF e o veredito da triagem (aprovado, ou qual das três
+perguntas reprovou). O usuário precisa disso para distinguir "artigo sem
+fatores", "não consegui abrir o PDF" e "fora do escopo".
 
 **Falha parcial:** se só alguns PDFs abrirem, gere o delta apenas para os
 artigos que você leu e liste os não analisados no resumo externo. Nunca inclua
