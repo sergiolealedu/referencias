@@ -236,6 +236,7 @@ export function parseFactorsDeltaFile(text: string): FactorsDeltaItem[] {
       .filter((f): f is Record<string, unknown> => Boolean(f) && typeof f === 'object')
       .map((f) => ({
         label: typeof f.label === 'string' ? f.label.trim() : '',
+        canonical: typeof f.canonical === 'string' ? f.canonical.trim() : undefined,
         polarity: f.polarity === 'negative' ? ('negative' as const) : ('positive' as const),
         description: typeof f.description === 'string' ? f.description : '',
         aliases: Array.isArray(f.aliases)

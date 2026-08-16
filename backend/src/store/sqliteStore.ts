@@ -230,7 +230,7 @@ export class SqliteStore {
   async addFactorsToArticle(
     groupId: number,
     key: string,
-    entradas: ArticleFactorInput[],
+    entradas: (ArticleFactorInput & { canonical?: string })[],
   ): Promise<Article> {
     const atual = await this.getArticle(groupId, key);
 
@@ -239,10 +239,14 @@ export class SqliteStore {
     for (const entrada of entradas) {
       const label = entrada.label?.trim();
       if (!label) continue;
+      // "label" é a grafia deste artigo (serve para achar o trecho no PDF);
+      // "canonical" é o nome que o fator recebe no catálogo quando é novo.
+      // Sem essa separação, frases longas do texto virariam nome de fator.
+      const canonical = entrada.canonical?.trim();
       const { factor, catalog: proximo } = ensureFactorInCatalog(catalog, {
         id: entrada.factorId,
-        name: label,
-        aliases: entrada.aliases ?? [],
+        name: canonical || label,
+        aliases: [...(entrada.aliases ?? []), label],
       });
       catalog = proximo;
       resolvidos.push({

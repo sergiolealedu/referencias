@@ -209,6 +209,7 @@ export interface FactorsDeltaItem {
   factors: {
     factorId?: string;
     label: string;
+    canonical?: string;
     polarity?: FactorPolarity;
     description?: string;
     aliases?: string[];
