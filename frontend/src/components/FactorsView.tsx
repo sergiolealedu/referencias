@@ -185,11 +185,19 @@ export function FactorsView({
     <div className="factors-view">
       <div className="factors-view-toolbar">
         <div className="factors-view-toolbar-text">
-          <h2>Fatores</h2>
-          <p className="factors-view-subtitle">
-            Lista consolidada dos fatores digitados nos artigos, com detalhes de cada
-            ocorrência.
-          </p>
+          {/* Contadores na mesma linha do título: antes ocupavam uma faixa
+              própria e o topo comia altura da lista. */}
+          <h2>
+            Fatores
+            <span className="factors-view-counts" aria-live="polite">
+              {filtered.length === factors.length
+                ? `${factors.length} fator(es)`
+                : `${filtered.length} de ${factors.length} fator(es)`}
+              {' · '}
+              {usedCount} com artigos
+              {unusedCount > 0 ? ` · ${unusedCount} sem uso` : ''}
+            </span>
+          </h2>
         </div>
         <div className="factors-view-actions">
           <button type="button" onClick={handleExport} disabled={importing}>
@@ -256,15 +264,6 @@ export function FactorsView({
 
       {!isLoading && !error && factors.length > 0 && (
         <>
-          <div className="factors-view-summary" aria-live="polite">
-            <span>
-              {filtered.length === factors.length
-                ? `${factors.length} fator(es)`
-                : `${filtered.length} de ${factors.length} fator(es)`}
-            </span>
-            <span>{usedCount} com artigos</span>
-            {unusedCount > 0 && <span>{unusedCount} sem uso</span>}
-          </div>
 
           {filtered.length === 0 ? (
             <p className="empty-state">Nenhum fator corresponde à busca.</p>
