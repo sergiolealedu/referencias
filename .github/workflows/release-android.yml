@@ -114,6 +114,30 @@ jobs:
       - name: Collect Android artifacts
         run: node scripts/android-collect-artifacts.mjs "${{ steps.version.outputs.version }}"
 
+      # O Gradle só aplica signingConfig quando keystore.properties existe, e sem
+      # ele o assembleRelease sai sem assinatura nenhuma — sem erro. Um APK assim
+      # não instala no Android 11+, e a v1.1.86 foi publicada assim sem ninguém
+      # notar. Aqui a assinatura passa a ser conferida no artefato de verdade.
+      - name: Verify APK signature
+        env:
+          ANDROID_SIGNING_CONFIGURED: ${{ steps.android_signing.outputs.configured }}
+          APK: release/referencias-${{ steps.version.outputs.version }}.apk
+        run: |
+          APKSIGNER=$(find "$ANDROID_SDK_ROOT/build-tools" -name apksigner | sort | tail -1)
+          if [ -z "$APKSIGNER" ]; then
+            echo "::error title=apksigner ausente::build-tools sem apksigner"
+            exit 1
+          fi
+          if "$APKSIGNER" verify --print-certs "$APK"; then
+            echo "APK assinado."
+            exit 0
+          fi
+          if [ "$ANDROID_SIGNING_CONFIGURED" = "true" ]; then
+            echo "::error title=APK não assinado::Os secrets ANDROID_KEYSTORE_* estão definidos, mas a assinatura não foi aplicada. Confira alias e senhas."
+            exit 1
+          fi
+          echo "::warning title=APK sem assinatura::Sem os secrets ANDROID_KEYSTORE_*, este APK não instala no Android 11+ e o .aab não é aceito pelo Google Play."
+
       - name: Generate release notes
         id: notes
         env:
@@ -130,7 +154,10 @@ jobs:
             if [ "$ANDROID_SIGNING_CONFIGURED" = "true" ]; then
               echo "Build assinado com o keystore de release configurado nos secrets do repositório."
             else
-              echo "> Configure os secrets \`ANDROID_KEYSTORE_*\` para gerar builds assinados para produção."
+              echo "> ⚠️ **Build sem assinatura.** Este APK **não instala** no Android 11 ou superior,"
+              echo "> e o \`.aab\` não é aceito pelo Google Play. Configure os secrets"
+              echo "> \`ANDROID_KEYSTORE_BASE64\`, \`ANDROID_KEYSTORE_PASSWORD\`, \`ANDROID_KEY_ALIAS\`"
+              echo "> e \`ANDROID_KEY_PASSWORD\` para gerar builds instaláveis."
             fi
             echo EOF
           } >> "$GITHUB_OUTPUT"
