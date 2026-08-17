@@ -124,12 +124,14 @@ recorte um pedaço **contíguo e sem vírgula** que ainda seja localizável com
 Ctrl+F — em vez de reescrever a frase, que quebraria a busca.
 
 `polarity` é o efeito do fator (`positive` melhora o bem-estar, `negative`
-piora), não a qualidade do artigo. `description` tem duas partes: seu resumo
-da evidência em português (com seção e participantes) seguido da citação
-**verbatim** do trecho, entre aspas e sem traduzir. Ex.: `Seção 4.2.1: prazos
-minaram a confiança de entregar a tempo (P2) — “the pressure from task urgency
-and deadlines could lead to feeling a lack of competence”.` Vírgula é
-permitida aqui.
+piora), não a qualidade do artigo.
+
+`description` é a citação **verbatim** do trecho que evidencia o fator, entre
+aspas e sem traduzir, precedida apenas da referência — seção e participantes.
+**Não escreva resumo nem tradução em português:** na tela Fatores essa parte
+fica lado a lado com a citação e vira só uma repetição do que está entre aspas.
+Ex.: `Seção 4.2.1 (P2): “the pressure from task urgency and deadlines could
+lead to feeling a lack of competence”.` Vírgula é permitida aqui.
 
 ## Exemplos
 
@@ -179,7 +181,7 @@ permitida aqui.
           "canonical": "Pressão por atualização",
           "aliases": ["Upskilling"],
           "polarity": "negative",
-          "description": "Seção 4.1.1: a pressão por atualização constante minou competência e pertencimento (P9) — “This ongoing pressure to learn new skills and tools challenged their relatedness”."
+          "description": "Seção 4.1.1 (P9): “This ongoing pressure to learn new skills and tools challenged their relatedness”."
         }
       ]
     }
