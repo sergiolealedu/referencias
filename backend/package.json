@@ -27,7 +27,7 @@
     "detect:duplicates": "tsx scripts/detect-duplicates.ts"
   },
   "dependencies": {
-    "better-sqlite3": "^12.11.1",
+    "better-sqlite3": "12.9.0",
     "cors": "^2.8.5",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
