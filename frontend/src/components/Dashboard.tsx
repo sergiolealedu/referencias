@@ -24,6 +24,7 @@ type ChartMode = 'usage' | 'duplicates';
 type ViewMode = 'year' | 'total';
 
 type UsageSegment =
+  | 'comFatores'
   | 'usados'
   | 'comPdf'
   | 'naoEngSw'
@@ -38,6 +39,9 @@ type ChartSegment = UsageSegment | DuplicateSegment;
 // Ordem de empilhamento (base → topo): cada artigo entra em apenas um segmento,
 // pela primeira condição que satisfizer.
 const USAGE_SEGMENTS: { key: UsageSegment; label: string }[] = [
+  // Ter fator é a maior prioridade na classificação e o estado mais avançado
+  // da análise, então abre o empilhamento.
+  { key: 'comFatores', label: 'Com fator' },
   { key: 'usados', label: 'Em uso' },
   { key: 'comPdf', label: 'Com PDF' },
   { key: 'naoEngSw', label: 'Não é eng. SW' },
@@ -69,6 +73,7 @@ function initialVisibility(chartMode: ChartMode): Record<ChartSegment, boolean> 
 
 type ChartPoint = {
   year: string;
+  comFatores: number;
   usados: number;
   comPdf: number;
   naoEngSw: number;
@@ -135,6 +140,7 @@ function buildChartData(
   if (span > 15) {
     return sorted.map((point) => ({
       year: String(point.year),
+      comFatores: point.comFatores,
       usados: point.usados,
       comPdf: point.comPdf,
       naoEngSw: point.naoEngSw,
@@ -145,6 +151,7 @@ function buildChartData(
       unicos: point.unicos,
       repetidos: point.repetidos,
       total:
+        point.comFatores +
         point.usados +
         point.comPdf +
         point.naoEngSw +
@@ -163,6 +170,7 @@ function buildChartData(
     const point = byYear.get(year);
     filled.push({
       year: String(year),
+      comFatores: point?.comFatores ?? 0,
       usados: point?.usados ?? 0,
       comPdf: point?.comPdf ?? 0,
       naoEngSw: point?.naoEngSw ?? 0,
@@ -173,6 +181,7 @@ function buildChartData(
       unicos: point?.unicos ?? 0,
       repetidos: point?.repetidos ?? 0,
       total:
+        (point?.comFatores ?? 0) +
         (point?.usados ?? 0) +
         (point?.comPdf ?? 0) +
         (point?.naoEngSw ?? 0) +
@@ -190,6 +199,7 @@ function buildChartData(
 type SeriesTotals = Omit<GroupArticleStats['series'][number], 'year'>;
 
 const EMPTY_TOTALS: SeriesTotals = {
+  comFatores: 0,
   usados: 0,
   comPdf: 0,
   naoEngSw: 0,
@@ -204,6 +214,7 @@ const EMPTY_TOTALS: SeriesTotals = {
 function sumSeries(series: GroupArticleStats['series']): SeriesTotals {
   return series.reduce(
     (acc, point) => ({
+      comFatores: acc.comFatores + point.comFatores,
       usados: acc.usados + point.usados,
       comPdf: acc.comPdf + point.comPdf,
       naoEngSw: acc.naoEngSw + point.naoEngSw,
@@ -227,6 +238,7 @@ function buildConsolidatedSeries(
     for (const point of group.series) {
       const existing = byYear.get(point.year) ?? { ...EMPTY_TOTALS };
       byYear.set(point.year, {
+        comFatores: existing.comFatores + point.comFatores,
         usados: existing.usados + point.usados,
         comPdf: existing.comPdf + point.comPdf,
         naoEngSw: existing.naoEngSw + point.naoEngSw,
@@ -398,6 +410,18 @@ function GroupChartContent({
           </>
         ) : (
           <>
+            {visibleSegments.comFatores && (
+              <Bar
+                dataKey="comFatores"
+                name="Com fator"
+                stackId={stackId}
+                fill={STACK_COLORS.comFatores}
+                minPointSize={4}
+                radius={barRadius('comFatores')}
+              >
+                <LabelList dataKey="comFatores" content={renderSegmentLabel} />
+              </Bar>
+            )}
             {visibleSegments.usados && (
               <Bar
                 dataKey="usados"
@@ -553,6 +577,7 @@ function GroupChart({
           year: 'Total',
           ...totals,
           total:
+            totals.comFatores +
             totals.usados +
             totals.comPdf +
             totals.naoEngSw +
@@ -639,7 +664,7 @@ function GroupChart({
             {' · '}
             {chartMode === 'duplicates'
               ? `${totals.unicos} únicos · ${totals.repetidos} repetidos`
-              : `${totalGeral} artigos no gráfico · ${totals.usados} em uso · ${totals.comPdf} com PDF · ${totals.naoEngSw} não é eng. SW · ${totals.naoDev} não é dev · ${totals.naoQvt} não é QVT · ${totals.descartados} descartados · ${totals.outros} outros · ${totals.repetidos} repetidos`}
+              : `${totalGeral} artigos no gráfico · ${totals.comFatores} com fator · ${totals.usados} em uso · ${totals.comPdf} com PDF · ${totals.naoEngSw} não é eng. SW · ${totals.naoDev} não é dev · ${totals.naoQvt} não é QVT · ${totals.descartados} descartados · ${totals.outros} outros · ${totals.repetidos} repetidos`}
           </p>
         </div>
         <div className="dashboard-chart-actions">

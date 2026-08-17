@@ -150,6 +150,7 @@ export interface GroupInput {
 }
 
 export const ARTICLE_CATEGORIAS = [
+  'comFatores',
   'usados',
   'comPdf',
   'naoEngSw',
@@ -162,6 +163,7 @@ export const ARTICLE_CATEGORIAS = [
 export type ArticleCategoria = (typeof ARTICLE_CATEGORIAS)[number];
 
 export const ARTICLE_CATEGORIA_LABELS: Record<ArticleCategoria, string> = {
+  comFatores: 'Com fator',
   usados: 'Em uso',
   comPdf: 'Com PDF',
   naoEngSw: 'Não é eng. SW',
@@ -361,6 +363,7 @@ export interface AppSettings {
 
 export interface YearArticleStats {
   year: number;
+  comFatores: number;
   usados: number;
   comPdf: number;
   naoEngSw: number;

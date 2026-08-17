@@ -1,5 +1,6 @@
 /** Paleta de cores dos segmentos do dashboard — compartilhada entre o gráfico e a exportação. */
 export const STACK_COLORS = {
+  comFatores: '#a78bfa',
   usados: '#6ee7b7',
   comPdf: '#7dd3fc',
   naoEngSw: '#fdba74',

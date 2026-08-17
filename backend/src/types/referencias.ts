@@ -104,6 +104,7 @@ export interface GroupSummary {
 }
 
 export const ARTICLE_CATEGORIAS = [
+  'comFatores',
   'usados',
   'comPdf',
   'naoEngSw',
@@ -196,6 +197,7 @@ export interface BibtexImportOptions {
 
 export interface YearArticleStats {
   year: number;
+  comFatores: number;
   usados: number;
   comPdf: number;
   naoEngSw: number;

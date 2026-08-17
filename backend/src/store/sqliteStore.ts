@@ -46,13 +46,22 @@ interface FilterClause {
 // Mesma ordem de prioridade usada em getArticleStatsByYear: cada artigo cai em
 // exatamente uma categoria, pela primeira condição que satisfizer.
 // Prioridade (cada artigo cai em exatamente uma categoria):
-// repetido → usado → motivo de descarte → descartado → com PDF → outros.
-// Repetido vence tudo; e o descarte vem antes de "com PDF", ou seja, um artigo
-// descartado continua descartado mesmo que já tenha o PDF baixado.
-const NAO_REPETIDO = (a: string) => `${a}.status != 'duplicate'`;
+// com fator → repetido → usado → motivo de descarte → descartado → com PDF →
+// outros.
+// Ter fator vence tudo: é o estado mais avançado da análise. Depois vem
+// repetido; e o descarte vem antes de "com PDF", ou seja, um artigo descartado
+// continua descartado mesmo que já tenha o PDF baixado.
+/** Artigo já analisado: tem ao menos um fator associado. Vence todas as outras. */
+const COM_FATORES = (a: string) =>
+  `COALESCE(json_array_length(${a}.factors_json), 0) > 0`;
+const SEM_FATORES = (a: string) => `NOT (${COM_FATORES(a)})`;
+
+const NAO_REPETIDO = (a: string) =>
+  `${SEM_FATORES(a)} AND ${a}.status != 'duplicate'`;
 
 const CATEGORIA_SQL: Record<string, (alias: string) => string> = {
-  repetidos: (a) => `${a}.status = 'duplicate'`,
+  comFatores: (a) => COM_FATORES(a),
+  repetidos: (a) => `${SEM_FATORES(a)} AND ${a}.status = 'duplicate'`,
   usados: (a) => `${NAO_REPETIDO(a)} AND ${a}.usado = 1`,
   naoEngSw: (a) =>
     `${NAO_REPETIDO(a)} AND ${a}.usado = 0 AND ${a}.motivo_descarte = 'nao_eng_sw'`,
@@ -1197,14 +1206,15 @@ export class SqliteStore {
           g.title AS group_title,
           g.versao AS versao,
           CAST(COALESCE(NULLIF(json_extract(a.fields_json, '$.year'), ''), '0') AS INTEGER) AS year,
-          SUM(CASE WHEN a.status != 'duplicate' AND a.usado = 1 THEN 1 ELSE 0 END) AS usados,
-          SUM(CASE WHEN a.status != 'duplicate' AND a.usado = 0 AND a.motivo_descarte = 'nao_eng_sw' THEN 1 ELSE 0 END) AS nao_eng_sw,
-          SUM(CASE WHEN a.status != 'duplicate' AND a.usado = 0 AND a.motivo_descarte = 'nao_dev' THEN 1 ELSE 0 END) AS nao_dev,
-          SUM(CASE WHEN a.status != 'duplicate' AND a.usado = 0 AND a.motivo_descarte = 'nao_qvt' THEN 1 ELSE 0 END) AS nao_qvt,
-          SUM(CASE WHEN a.status != 'duplicate' AND a.usado = 0 AND a.motivo_descarte IS NULL AND a.descartado = 1 THEN 1 ELSE 0 END) AS descartados,
-          SUM(CASE WHEN a.status != 'duplicate' AND a.usado = 0 AND a.motivo_descarte IS NULL AND a.descartado = 0 AND TRIM(a.caminho) != '' THEN 1 ELSE 0 END) AS com_pdf,
-          SUM(CASE WHEN a.status != 'duplicate' AND a.usado = 0 AND a.motivo_descarte IS NULL AND a.descartado = 0 AND TRIM(a.caminho) = '' THEN 1 ELSE 0 END) AS outros,
-          SUM(CASE WHEN a.status = 'duplicate' THEN 1 ELSE 0 END) AS repetidos,
+          SUM(CASE WHEN COALESCE(json_array_length(a.factors_json), 0) > 0 THEN 1 ELSE 0 END) AS com_fatores,
+          SUM(CASE WHEN NOT (COALESCE(json_array_length(a.factors_json), 0) > 0) AND a.status != 'duplicate' AND a.usado = 1 THEN 1 ELSE 0 END) AS usados,
+          SUM(CASE WHEN NOT (COALESCE(json_array_length(a.factors_json), 0) > 0) AND a.status != 'duplicate' AND a.usado = 0 AND a.motivo_descarte = 'nao_eng_sw' THEN 1 ELSE 0 END) AS nao_eng_sw,
+          SUM(CASE WHEN NOT (COALESCE(json_array_length(a.factors_json), 0) > 0) AND a.status != 'duplicate' AND a.usado = 0 AND a.motivo_descarte = 'nao_dev' THEN 1 ELSE 0 END) AS nao_dev,
+          SUM(CASE WHEN NOT (COALESCE(json_array_length(a.factors_json), 0) > 0) AND a.status != 'duplicate' AND a.usado = 0 AND a.motivo_descarte = 'nao_qvt' THEN 1 ELSE 0 END) AS nao_qvt,
+          SUM(CASE WHEN NOT (COALESCE(json_array_length(a.factors_json), 0) > 0) AND a.status != 'duplicate' AND a.usado = 0 AND a.motivo_descarte IS NULL AND a.descartado = 1 THEN 1 ELSE 0 END) AS descartados,
+          SUM(CASE WHEN NOT (COALESCE(json_array_length(a.factors_json), 0) > 0) AND a.status != 'duplicate' AND a.usado = 0 AND a.motivo_descarte IS NULL AND a.descartado = 0 AND TRIM(a.caminho) != '' THEN 1 ELSE 0 END) AS com_pdf,
+          SUM(CASE WHEN NOT (COALESCE(json_array_length(a.factors_json), 0) > 0) AND a.status != 'duplicate' AND a.usado = 0 AND a.motivo_descarte IS NULL AND a.descartado = 0 AND TRIM(a.caminho) = '' THEN 1 ELSE 0 END) AS outros,
+          SUM(CASE WHEN NOT (COALESCE(json_array_length(a.factors_json), 0) > 0) AND a.status = 'duplicate' THEN 1 ELSE 0 END) AS repetidos,
           SUM(CASE WHEN a.status != 'duplicate' THEN 1 ELSE 0 END) AS unicos
         FROM groups g
         JOIN articles a ON a.group_id = g.id
@@ -1220,6 +1230,7 @@ export class SqliteStore {
       year: number;
       usados: number;
       com_pdf: number;
+      com_fatores: number;
       nao_eng_sw: number;
       nao_dev: number;
       nao_qvt: number;
@@ -1245,6 +1256,7 @@ export class SqliteStore {
         year: row.year,
         usados: row.usados,
         comPdf: row.com_pdf,
+        comFatores: row.com_fatores,
         naoEngSw: row.nao_eng_sw,
         naoDev: row.nao_dev,
         naoQvt: row.nao_qvt,
