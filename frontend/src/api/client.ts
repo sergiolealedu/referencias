@@ -170,6 +170,18 @@ export const api = {
     return request<FactorsAnalysisExport>(`/factors/export-analise${qs}`);
   },
 
+  deleteFactor: (id: string, cascata = false) =>
+    request<{ ocorrenciasRemovidas: number }>(
+      `/factors/${encodeURIComponent(id)}${cascata ? '?cascata=true' : ''}`,
+      { method: 'DELETE' },
+    ),
+
+  removeFactorFromArticle: (factorId: string, groupId: number, key: string) =>
+    request<Article>(
+      `/factors/${encodeURIComponent(factorId)}/ocorrencia?groupId=${groupId}&key=${encodeURIComponent(key)}`,
+      { method: 'DELETE' },
+    ),
+
   applyFactorsDelta: (delta: FactorsDelta) =>
     request<FactorsDeltaResult>('/factors/apply-delta', {
       method: 'POST',

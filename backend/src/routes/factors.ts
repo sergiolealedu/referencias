@@ -525,6 +525,48 @@ export function createFactorsRouter(): Router {
     }
   });
 
+  /** Remove a ocorrência do fator em um artigo, sem tocar no catálogo. */
+  router.delete('/:id/ocorrencia', async (req, res) => {
+    try {
+      const factorId = req.params.id;
+      const groupId = Number(req.query.groupId);
+      const key = typeof req.query.key === 'string' ? req.query.key.trim() : '';
+      if (!factorId || Number.isNaN(groupId) || !key) {
+        res.status(400).json({ error: 'Informe groupId e key do artigo' });
+        return;
+      }
+      const article = await storeFrom(req).removeFactorFromArticle(
+        groupId,
+        key,
+        factorId,
+      );
+      res.json(article);
+    } catch (error) {
+      handleRouteError(error, res);
+    }
+  });
+
+  /**
+   * Apaga o fator. Por padrão recusa se houver artigos usando (409); com
+   * ?cascata=true remove também as ocorrências.
+   */
+  router.delete('/:id', async (req, res) => {
+    try {
+      const factorId = req.params.id;
+      if (!factorId) {
+        res.status(400).json({ error: 'ID do fator inválido' });
+        return;
+      }
+      const resultado = await storeFrom(req).deleteFactor(
+        factorId,
+        req.query.cascata === 'true',
+      );
+      res.json(resultado);
+    } catch (error) {
+      handleRouteError(error, res);
+    }
+  });
+
   router.patch('/:id', async (req, res) => {
     try {
       const id = req.params.id;

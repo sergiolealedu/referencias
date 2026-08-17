@@ -106,6 +106,64 @@ export function FactorsView({
     }
   };
 
+  const handleDeleteFactor = async (factor: FactorOverview) => {
+    const emUso = factor.articleCount;
+    const aviso =
+      emUso > 0
+        ? `Excluir o fator "${factor.name}"?\n\nEle aparece em ${emUso} artigo(s) e essas ocorrências também serão removidas.`
+        : `Excluir o fator "${factor.name}" do catálogo?`;
+    if (!window.confirm(aviso)) return;
+
+    setTransferError(false);
+    setTransferMessage(null);
+    setImporting(true);
+    try {
+      // Cascata só quando há ocorrências: sem ela o backend recusa com 409.
+      const r = await api.deleteFactor(factor.id, emUso > 0);
+      await queryClient.invalidateQueries({ queryKey: ['factors'] });
+      await queryClient.invalidateQueries({ queryKey: ['articles'] });
+      setTransferMessage(
+        r.ocorrenciasRemovidas > 0
+          ? `Fator "${factor.name}" excluído · ${r.ocorrenciasRemovidas} ocorrência(s) removida(s).`
+          : `Fator "${factor.name}" excluído.`,
+      );
+    } catch (err) {
+      setTransferError(true);
+      setTransferMessage((err as Error).message);
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const handleRemoveOccurrence = async (
+    factor: FactorOverview,
+    occurrence: FactorOccurrence,
+  ) => {
+    const aviso = `Remover o fator "${factor.name}" do artigo "${occurrence.articleTitle}"?\n\nO fator continua no catálogo.`;
+    if (!window.confirm(aviso)) return;
+
+    setTransferError(false);
+    setTransferMessage(null);
+    setImporting(true);
+    try {
+      await api.removeFactorFromArticle(
+        factor.id,
+        occurrence.groupId,
+        occurrence.articleKey,
+      );
+      await queryClient.invalidateQueries({ queryKey: ['factors'] });
+      await queryClient.invalidateQueries({ queryKey: ['articles'] });
+      setTransferMessage(
+        `Fator removido de "${occurrence.articleKey}".`,
+      );
+    } catch (err) {
+      setTransferError(true);
+      setTransferMessage((err as Error).message);
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const handleImportFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -316,7 +374,22 @@ export function FactorsView({
                 {selected ? (
                   <>
                     <header className="factors-view-detail-header">
-                      <h3>{selected.name}</h3>
+                      <div className="factors-view-detail-title">
+                        <h3>{selected.name}</h3>
+                        <button
+                          type="button"
+                          className="danger factors-view-delete"
+                          onClick={() => handleDeleteFactor(selected)}
+                          disabled={importing}
+                          title={
+                            selected.articleCount > 0
+                              ? `Exclui o fator e suas ${selected.articleCount} ocorrência(s)`
+                              : 'Exclui o fator do catálogo'
+                          }
+                        >
+                          Excluir fator
+                        </button>
+                      </div>
                       <p className="factors-view-detail-spellings">
                         {formatAllSpellings(selected)}
                       </p>
@@ -368,6 +441,17 @@ export function FactorsView({
                                   PDF n/enc.
                                 </span>
                               )}
+                              <button
+                                type="button"
+                                className="danger factors-view-occurrence-delete"
+                                onClick={() =>
+                                  handleRemoveOccurrence(selected, occurrence)
+                                }
+                                disabled={importing}
+                                title="Remove o fator deste artigo; o catálogo continua igual"
+                              >
+                                Remover
+                              </button>
                             </div>
 
                             <button

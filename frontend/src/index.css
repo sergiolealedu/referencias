@@ -2209,9 +2209,31 @@ pre.error {
   border-bottom: 1px solid var(--border);
 }
 
+.factors-view-detail-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
 .factors-view-detail-header h3 {
   margin: 0;
   font-size: 1rem;
+}
+
+/* Botões de exclusão: mesma cor do button.danger, mas discretos para não
+   competirem com o conteúdo do fator. */
+.factors-view-delete {
+  flex-shrink: 0;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+}
+
+.factors-view-occurrence-delete {
+  margin-left: auto;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.6875rem;
+  line-height: 1.4;
 }
 
 .factors-view-detail-spellings {

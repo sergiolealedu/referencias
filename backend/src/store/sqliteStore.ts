@@ -223,6 +223,67 @@ export class SqliteStore {
     return this.readFactorCatalog();
   }
 
+  /** Artigos que registram este fator, em qualquer grupo. */
+  private articlesUsingFactor(factorId: string): { group_id: number; entry_key: string }[] {
+    return this.db
+      .prepare(
+        `SELECT a.group_id, a.entry_key FROM articles a
+         WHERE EXISTS (
+           SELECT 1 FROM json_each(a.factors_json) je
+           WHERE json_extract(je.value, '$.factorId') = ?
+         )`,
+      )
+      .all(factorId) as { group_id: number; entry_key: string }[];
+  }
+
+  /** Remove um fator de um artigo, preservando os demais fatores dele. */
+  async removeFactorFromArticle(
+    groupId: number,
+    key: string,
+    factorId: string,
+  ): Promise<Article> {
+    const atual = await this.getArticle(groupId, key);
+    const restantes = atual.factors.filter((f) => f.factorId !== factorId);
+    if (restantes.length === atual.factors.length) {
+      throw new StoreError(
+        `Artigo "${key}" não registra o fator informado`,
+        'NOT_FOUND',
+      );
+    }
+    return this.updateArticle(groupId, key, { factors: restantes });
+  }
+
+  /**
+   * Apaga o fator do catálogo. Sem `removerOcorrencias`, recusa enquanto houver
+   * artigos usando — apagar deixaria as ocorrências apontando para um id órfão.
+   */
+  async deleteFactor(
+    factorId: string,
+    removerOcorrencias = false,
+  ): Promise<{ ocorrenciasRemovidas: number }> {
+    const catalog = this.readFactorCatalog();
+    if (!catalog.some((f) => f.id === factorId)) {
+      throw new StoreError(`Fator "${factorId}" não encontrado`, 'NOT_FOUND');
+    }
+
+    const emUso = this.articlesUsingFactor(factorId);
+    if (emUso.length > 0 && !removerOcorrencias) {
+      throw new StoreError(
+        `${emUso.length} artigo(s) usam este fator. Remova as ocorrências ou confirme a exclusão em cascata.`,
+        'CONFLICT',
+      );
+    }
+
+    // As ocorrências saem primeiro: gravar artigo depois de apagar o fator o
+    // recriaria no catálogo, porque salvar um artigo re-resolve suas grafias.
+    for (const row of emUso) {
+      await this.removeFactorFromArticle(row.group_id, row.entry_key, factorId);
+    }
+
+    this.db.prepare('DELETE FROM factors WHERE id = ?').run(factorId);
+    return { ocorrenciasRemovidas: emUso.length };
+  }
+
   /** Todos os grupos em que existe um artigo com esta chave. */
   async findArticleGroupsByKey(key: string): Promise<number[]> {
     const rows = this.db
