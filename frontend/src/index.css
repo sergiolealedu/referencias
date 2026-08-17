@@ -2216,6 +2216,12 @@ pre.error {
   gap: 0.75rem;
 }
 
+/* Mestre-detalhe é só do mobile: no desktop a lista está sempre ao lado, e um
+   botão "voltar" não teria para onde voltar. */
+.factors-view-back {
+  display: none;
+}
+
 .factors-view-detail-header h3 {
   margin: 0;
   font-size: 1rem;
@@ -2811,13 +2817,59 @@ body.dashboard-fullscreen-open {
     width: 100%;
   }
 
+  /* Uma coisa por vez: ou a lista de fatores, ou o detalhe de um fator. As
+     duas metades empilhadas deixavam ~28vh para cada e nada era legível. */
   .factors-view-layout {
     grid-template-columns: 1fr;
-    grid-template-rows: minmax(120px, 28vh) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .factors-view-layout:not(.is-detail-open) .factors-view-detail,
+  .factors-view-layout.is-detail-open .factors-view-list {
+    display: none;
   }
 
   .factors-view-detail {
     min-height: 0;
+  }
+
+  .factors-view-back {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    order: -1;
+    padding: 0.3rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    font-size: 0.8125rem;
+  }
+
+  /* Título e botões precisam de duas linhas: "← Fatores", o nome do fator e
+     "Excluir fator" não cabem lado a lado em tela estreita. */
+  .factors-view-detail-title {
+    flex-wrap: wrap;
+    gap: 0.4rem 0.5rem;
+  }
+
+  .factors-view-detail-title h3 {
+    flex: 1 1 100%;
+    order: 1;
+  }
+
+  .factors-view-delete {
+    order: 0;
+    margin-left: auto;
+  }
+
+  /* Topo recolhido: sai tudo que não é dado — busca, contadores e os botões de
+     exportar/importar — e a lista (ou o detalhe) fica com a tela inteira. */
+  .app.header-collapsed .factors-view-toolbar {
+    display: none;
+  }
+
+  .app.header-collapsed .factors-view {
+    padding-top: 0.5rem;
   }
 
   .factors-view-list button {
@@ -3190,8 +3242,10 @@ body.dashboard-fullscreen-open {
     flex: 1 1 100%;
   }
 
+  /* Nada a repartir: em 480px o mestre-detalhe já dá a tela inteira ao painel
+     visível. A regra antiga fatiava a altura em duas faixas. */
   .factors-view-layout {
-    grid-template-rows: minmax(110px, 24vh) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
   }
 }
 

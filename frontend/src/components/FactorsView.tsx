@@ -39,6 +39,12 @@ export function FactorsView({
   const { data: factors = [], isLoading, error } = useFactorOverviews();
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  /**
+   * No mobile a tela é mestre-detalhe: ou a lista, ou o detalhe. No desktop os
+   * dois painéis convivem e esta flag não muda nada — quem esconde um ou outro
+   * é o CSS, dentro do @media, para o desktop nunca depender do estado mobile.
+   */
+  const [detailOpen, setDetailOpen] = useState(false);
   const queryClient = useQueryClient();
   const importInputRef = useRef<HTMLInputElement>(null);
   const deltaInputRef = useRef<HTMLInputElement>(null);
@@ -122,6 +128,8 @@ export function FactorsView({
       const r = await api.deleteFactor(factor.id, emUso > 0);
       await queryClient.invalidateQueries({ queryKey: ['factors'] });
       await queryClient.invalidateQueries({ queryKey: ['articles'] });
+      // O fator aberto deixou de existir: no mobile volta para a lista.
+      setDetailOpen(false);
       setTransferMessage(
         r.ocorrenciasRemovidas > 0
           ? `Fator "${factor.name}" excluído · ${r.ocorrenciasRemovidas} ocorrência(s) removida(s).`
@@ -225,6 +233,8 @@ export function FactorsView({
     if (!factors.some((factor) => factor.id === focusFactorId)) return;
     setQuery('');
     setSelectedId(focusFactorId);
+    // Vindo de um chip na lista de artigos, o alvo é o detalhe daquele fator.
+    setDetailOpen(true);
     onFocusConsumed?.();
   }, [focusFactorId, factors, onFocusConsumed]);
 
@@ -326,7 +336,9 @@ export function FactorsView({
           {filtered.length === 0 ? (
             <p className="empty-state">Nenhum fator corresponde à busca.</p>
           ) : (
-            <div className="factors-view-layout">
+            <div
+              className={`factors-view-layout${detailOpen ? ' is-detail-open' : ''}`}
+            >
               <aside className="factors-view-list" aria-label="Lista de fatores">
                 <ul>
                   {filtered.map((factor) => {
@@ -336,7 +348,10 @@ export function FactorsView({
                         <button
                           type="button"
                           className={active ? 'is-active' : ''}
-                          onClick={() => setSelectedId(factor.id)}
+                          onClick={() => {
+                            setSelectedId(factor.id);
+                            setDetailOpen(true);
+                          }}
                           aria-current={active ? 'true' : undefined}
                         >
                           <span className="factors-view-list-name">{factor.name}</span>
@@ -375,6 +390,15 @@ export function FactorsView({
                   <>
                     <header className="factors-view-detail-header">
                       <div className="factors-view-detail-title">
+                        {/* Só aparece no mobile, onde a lista dá lugar ao
+                            detalhe; no desktop os dois ficam lado a lado. */}
+                        <button
+                          type="button"
+                          className="factors-view-back"
+                          onClick={() => setDetailOpen(false)}
+                        >
+                          ← Fatores
+                        </button>
                         <h3>{selected.name}</h3>
                         <button
                           type="button"
