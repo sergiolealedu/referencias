@@ -25,8 +25,11 @@ if (!storePassword || !keyAlias || !keyPassword) {
 const keystorePath = join(androidDir, 'referencias-release.jks');
 writeFileSync(keystorePath, Buffer.from(keystoreBase64, 'base64'));
 
+// Caminho absoluto com barras normais: em .properties a barra invertida é
+// escape, então um caminho do Windows chegaria corrompido ao Gradle.
 const keystoreProps = [
-  'storeFile=referencias-release.jks',
+  `storeFile=${keystorePath.replace(/\\/g, '/')}`,
+  `storeType=${process.env.ANDROID_KEYSTORE_TYPE?.trim() || 'PKCS12'}`,
   `storePassword=${storePassword}`,
   `keyAlias=${keyAlias}`,
   `keyPassword=${keyPassword}`,

@@ -29,7 +29,23 @@ android {
             if (keystorePropsFile.exists()) {
                 def keystoreProps = new Properties()
                 keystoreProps.load(new FileInputStream(keystorePropsFile))
-                storeFile file(keystoreProps['storeFile'])
+                // rootProject, não file(): o keystore é gravado ao lado do
+                // keystore.properties, em android/, e file() aqui resolveria em
+                // android/app/. Com o caminho errado, validateSigningRelease
+                // falha sem dizer que o problema é o caminho.
+                def keystoreFile = rootProject.file(keystoreProps['storeFile'])
+                if (!keystoreFile.exists()) {
+                    throw new GradleException(
+                        "Keystore de assinatura não encontrado: ${keystoreFile}. " +
+                        "Confira storeFile em ${keystorePropsFile}.")
+                }
+                storeFile keystoreFile
+                // O keytool moderno gera PKCS12. O JDK lê PKCS12 mesmo quando o
+                // tipo pedido é JKS (modo de compatibilidade), mas declarar o
+                // tipo dispensa depender desse padrão.
+                if (keystoreProps['storeType']) {
+                    storeType keystoreProps['storeType']
+                }
                 storePassword keystoreProps['storePassword']
                 keyAlias keystoreProps['keyAlias']
                 keyPassword keystoreProps['keyPassword']
