@@ -24,7 +24,8 @@
     "build": "tsc && node -e \"const fs=require('node:fs');fs.copyFileSync('src/store/schema.sql','dist/store/schema.sql');fs.mkdirSync('dist/registry',{recursive:true});fs.copyFileSync('src/registry/schema.sql','dist/registry/schema.sql');\"",
     "start": "node dist/server.js",
     "migrate:json": "tsx scripts/migrate-json-to-sqlite.ts",
-    "detect:duplicates": "tsx scripts/detect-duplicates.ts"
+    "detect:duplicates": "tsx scripts/detect-duplicates.ts",
+    "clean:descricoes": "tsx scripts/clean-factor-descriptions.ts"
   },
   "dependencies": {
     "better-sqlite3": "12.9.0",

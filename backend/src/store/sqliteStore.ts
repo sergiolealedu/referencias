@@ -35,6 +35,7 @@ import {
   ensureFactorInCatalog,
   replaceSpellings,
   resolveArticleFactors,
+  stripPortugueseRestatement,
   type ArticleFactorInput,
 } from '../utils/factors.js';
 
@@ -1359,6 +1360,70 @@ export class SqliteStore {
     return [...byGroup.values()].sort((a, b) =>
       a.groupTitle.localeCompare(b.groupTitle, 'pt-BR', { sensitivity: 'base' }),
     );
+  }
+
+  /**
+   * Tira o resumo em português das descrições de fator já gravadas. Sem
+   * `apply` só relata: é reescrita heurística em texto de pesquisa, então a
+   * conferência vem antes da gravação.
+   */
+  async cleanFactorDescriptions(
+    apply = false,
+  ): Promise<{
+    ocorrencias: number;
+    reescritas: { key: string; label: string; antes: string; depois: string }[];
+    revisar: { key: string; label: string; motivo: string; atual: string }[];
+    gravado: boolean;
+  }> {
+    const rows = this.db
+      .prepare(
+        `SELECT id, entry_key, factors_json FROM articles
+         WHERE COALESCE(json_array_length(factors_json), 0) > 0`,
+      )
+      .all() as Array<{ id: number; entry_key: string; factors_json: string }>;
+
+    const reescritas: { key: string; label: string; antes: string; depois: string }[] = [];
+    const revisar: { key: string; label: string; motivo: string; atual: string }[] = [];
+    const pendentes: { id: number; factors_json: string }[] = [];
+    let ocorrencias = 0;
+
+    for (const row of rows) {
+      const factors = JSON.parse(row.factors_json) as ArticleFactor[];
+      let mudou = false;
+      for (const factor of factors) {
+        ocorrencias += 1;
+        const descricao = factor.description ?? '';
+        if (!descricao.trim()) continue;
+        const r = stripPortugueseRestatement(descricao);
+        if (r.tipo === 'reescrita') {
+          reescritas.push({
+            key: row.entry_key,
+            label: factor.label,
+            antes: descricao,
+            depois: r.description,
+          });
+          factor.description = r.description;
+          mudou = true;
+        } else if (r.tipo === 'revisar') {
+          revisar.push({
+            key: row.entry_key,
+            label: factor.label,
+            motivo: r.motivo,
+            atual: descricao,
+          });
+        }
+      }
+      if (mudou) pendentes.push({ id: row.id, factors_json: JSON.stringify(factors) });
+    }
+
+    if (apply && pendentes.length > 0) {
+      const update = this.db.prepare('UPDATE articles SET factors_json = ? WHERE id = ?');
+      this.db.transaction(() => {
+        for (const p of pendentes) update.run(p.factors_json, p.id);
+      })();
+    }
+
+    return { ocorrencias, reescritas, revisar, gravado: apply && pendentes.length > 0 };
   }
 
   async cleanAuthorFields(): Promise<{ updated: number }> {

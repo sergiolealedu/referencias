@@ -239,8 +239,8 @@ Mecânico, antes de responder:
 - Nenhum `label`, `canonical` ou `description` está vazio.
 - Nenhum `label`, `canonical` ou item de `aliases` contém vírgula ou
   ponto-e-vírgula.
-- Toda `description` traz o resumo em PT **e** a citação verbatim do texto
-  original.
+- Toda `description` é referência (seção e participantes) + citação verbatim,
+  **sem** resumo ou tradução em português.
 - Todo `polarity` é exatamente `positive` ou `negative`.
 - Todo `groupId` é número, sem aspas.
 

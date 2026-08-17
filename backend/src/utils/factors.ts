@@ -225,3 +225,52 @@ export function resolveArticleFactors(
 
   return { factors, catalog: nextCatalog };
 }
+
+/** Primeira citação entre aspas curvas ou retas, com corpo de tamanho útil. */
+const CITACAO_RE = /[“"']([^“”"']{12,})[”"']/;
+/** Referência de seção: "Seção 4.2.1", "Section 5", "Sec. 3.1", "§4". */
+const SECAO_RE = /(?:Se[çc][ãa]o|Section|Sect\.?|Sec\.?|§)\s*\d[\w.]*/i;
+/** Marcador de participantes/tabela entre parênteses: "(P2)", "(P3, P7)", "(n=12)". */
+const PARENTESES_RE = /\(([^()]{1,40})\)/g;
+
+export type LimpezaDescricao =
+  | { tipo: 'inalterada' }
+  | { tipo: 'reescrita'; description: string }
+  | { tipo: 'revisar'; motivo: string };
+
+/**
+ * Tira da `description` o resumo em português que antecede a citação. O prompt
+ * antigo pedia "resumo em PT — citação verbatim", e na tela Fatores as duas
+ * partes ficam lado a lado: o resumo virou repetição do que está entre aspas.
+ *
+ * Só reescreve o que entende por inteiro — referência da seção + citação. Sem
+ * referência reconhecível, devolve `revisar` em vez de apagar texto que talvez
+ * seja a única pista de onde o trecho está no PDF.
+ */
+export function stripPortugueseRestatement(description: string): LimpezaDescricao {
+  const original = description.trim();
+  if (!original) return { tipo: 'inalterada' };
+
+  const citacao = CITACAO_RE.exec(original);
+  if (!citacao) {
+    return { tipo: 'revisar', motivo: 'sem citação entre aspas' };
+  }
+
+  const prefixo = original.slice(0, citacao.index);
+  const secao = SECAO_RE.exec(prefixo)?.[0];
+  if (!secao) {
+    return { tipo: 'revisar', motivo: 'sem referência de seção antes da citação' };
+  }
+
+  // O último parêntese antes da citação costuma trazer o participante. Ele
+  // frequentemente vem junto da seção ("(Seção 4.1.1, P9)"): tira-se a seção e
+  // fica o participante. Se não sobrar nada, o parêntese era só a referência.
+  const parenteses = [...prefixo.matchAll(PARENTESES_RE)]
+    .map((m) => m[1].replace(SECAO_RE, '').replace(/^[\s,;]+|[\s,;]+$/g, ''))
+    .filter((texto) => texto.length > 0);
+  const participantes = parenteses.at(-1);
+
+  const referencia = participantes ? `${secao} (${participantes})` : secao;
+  const limpa = `${referencia}: “${citacao[1].trim()}”.`;
+  return limpa === original ? { tipo: 'inalterada' } : { tipo: 'reescrita', description: limpa };
+}
