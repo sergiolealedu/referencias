@@ -13,7 +13,7 @@ import type { LabelProps } from 'recharts';
 
 import { useArticleStatsByYear, useDetectDuplicates, useGroups } from '../hooks/useApi';
 import type { GroupArticleStats } from '../types/referencias';
-import { STACK_COLORS } from '../utils/chartColors';
+import { STACK_COLORS, TOTAL_COLOR } from '../utils/chartColors';
 import { copyChartPatternPngToClipboard, copyChartPngToClipboard } from '../utils/chartExport';
 import { usePersistedState } from '../utils/persistedState';
 import { collectVersoes, getLatestVersao } from '../utils/versao';
@@ -266,6 +266,8 @@ interface GroupChartProps {
   expanded?: boolean;
   chartMode?: ChartMode;
   viewMode?: ViewMode;
+  /** Falso: uma barra só por ano, somando os segmentos visíveis. */
+  breakdown?: boolean;
   visibleSegments?: Record<ChartSegment, boolean>;
   onVisibleSegmentsChange?: (next: Record<ChartSegment, boolean>) => void;
   onToggleExpand?: () => void;
@@ -310,11 +312,13 @@ function GroupChartContent({
   chartData,
   chartMode = 'usage',
   viewMode = 'year',
+  breakdown = true,
   visibleSegments,
 }: {
   chartData: ChartPoint[];
   chartMode?: ChartMode;
   viewMode?: ViewMode;
+  breakdown?: boolean;
   visibleSegments: Record<ChartSegment, boolean>;
 }) {
   const grouped = viewMode === 'total';
@@ -323,8 +327,29 @@ function GroupChartContent({
     .filter((segment) => visibleSegments[segment.key])
     .map((segment) => segment.key);
 
+  // Sem divisão por status, cada barra vale a soma dos segmentos ligados — os
+  // botões de segmento seguem filtrando o que entra na conta.
+  const dados = useMemo(
+    () =>
+      breakdown
+        ? chartData
+        : chartData.map((point) => ({
+            ...point,
+            visivel: visibleKeys.reduce((soma, key) => soma + point[key], 0),
+          })),
+    [chartData, breakdown, visibleKeys],
+  );
+
   const yMax = useMemo(() => {
     if (visibleKeys.length === 0) return 1;
+    if (!breakdown) {
+      return Math.max(
+        ...chartData.map((point) =>
+          visibleKeys.reduce((sum, key) => sum + point[key], 0),
+        ),
+        1,
+      );
+    }
     if (grouped) {
       return Math.max(
         ...chartData.flatMap((point) => visibleKeys.map((key) => point[key])),
@@ -337,7 +362,7 @@ function GroupChartContent({
       ),
       1,
     );
-  }, [chartData, visibleKeys, grouped]);
+  }, [chartData, visibleKeys, grouped, breakdown]);
 
   const topSegment = visibleKeys[visibleKeys.length - 1];
   const stackId = grouped ? undefined : 'articles';
@@ -357,7 +382,7 @@ function GroupChartContent({
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart
-        data={chartData}
+        data={dados}
         margin={{ top: 16, right: 24, left: 8, bottom: 8 }}
         barCategoryGap="18%"
         barSize={barSize}
@@ -381,7 +406,17 @@ function GroupChartContent({
           labelFormatter={(label) => (viewMode === 'total' ? `${label}` : `Ano ${label}`)}
           formatter={(value, name) => [value ?? 0, name ?? '']}
         />
-        {chartMode === 'duplicates' ? (
+        {!breakdown ? (
+          <Bar
+            dataKey="visivel"
+            name="Artigos"
+            fill={TOTAL_COLOR}
+            minPointSize={4}
+            radius={[4, 4, 0, 0]}
+          >
+            <LabelList dataKey="visivel" content={renderSegmentLabel} />
+          </Bar>
+        ) : chartMode === 'duplicates' ? (
           <>
             {visibleSegments.unicos && (
               <Bar
@@ -534,6 +569,7 @@ function GroupChart({
   expanded = false,
   chartMode = 'usage',
   viewMode = 'year',
+  breakdown = true,
   visibleSegments: visibleSegmentsProp,
   onVisibleSegmentsChange,
   onToggleExpand,
@@ -604,6 +640,11 @@ function GroupChart({
   );
 
   const legendItems = useMemo(() => {
+    // Barra única: a legenda por categoria descreveria cores que não estão no
+    // gráfico. Fica só o total.
+    if (!breakdown) {
+      return [{ label: `Total: ${totalVisivel}`, color: null }];
+    }
     const itens = segmentsForMode(chartMode)
       .filter((segment) => visibleSegments[segment.key])
       .map((segment) => ({
@@ -612,7 +653,7 @@ function GroupChart({
       }));
     // Sem cor: entra na legenda como texto, sem quadradinho.
     return [...itens, { label: `Total: ${totalVisivel}`, color: null }];
-  }, [chartMode, visibleSegments, totals, totalVisivel]);
+  }, [chartMode, visibleSegments, totals, totalVisivel, breakdown]);
 
   const handleCopyPng = async () => {
     const container = chartContainerRef.current;
@@ -726,6 +767,7 @@ function GroupChart({
               chartData={chartData}
               chartMode={chartMode}
               viewMode={viewMode}
+              breakdown={breakdown}
               visibleSegments={visibleSegments}
             />
           </div>
@@ -747,6 +789,7 @@ export function Dashboard({ toolbarCollapsed = false }: { toolbarCollapsed?: boo
   const [viewMode, setViewMode] = usePersistedState<ViewMode>('dash.modo', () =>
     window.matchMedia('(max-width: 900px)').matches ? 'total' : 'year',
   );
+  const [breakdown, setBreakdown] = usePersistedState<boolean>('dash.porStatus', true);
   const [chartVisibility, setChartVisibility] = usePersistedState<
     Record<string, Record<ChartSegment, boolean>>
   >('dash.segmentos', {});
@@ -802,7 +845,9 @@ export function Dashboard({ toolbarCollapsed = false }: { toolbarCollapsed?: boo
           <div className="dashboard-toolbar-text">
             <h2>Dashboard por grupo</h2>
             <p className="dashboard-subtitle">
-              Barras empilhadas por ano, ou lado a lado no modo Consolidado. "Todos" soma todos os grupos.
+              Por ano ou consolidado, empilhado por status ou numa barra só. Os
+              botões de categoria escolhem o que entra na conta nos dois casos.
+              "Todos" soma todos os grupos.
             </p>
           </div>
           <div className="dashboard-toolbar-actions">
@@ -842,6 +887,26 @@ export function Dashboard({ toolbarCollapsed = false }: { toolbarCollapsed?: boo
               onClick={() => setViewMode('total')}
             >
               Consolidado
+            </button>
+          </div>
+          <div className="dashboard-view-toggle" role="group" aria-label="Divisão das barras">
+            <button
+              type="button"
+              className={`dashboard-view-toggle-btn${breakdown ? ' is-active' : ''}`}
+              aria-pressed={breakdown}
+              onClick={() => setBreakdown(true)}
+              title="Cada barra empilha as categorias"
+            >
+              Por status
+            </button>
+            <button
+              type="button"
+              className={`dashboard-view-toggle-btn${!breakdown ? ' is-active' : ''}`}
+              aria-pressed={!breakdown}
+              onClick={() => setBreakdown(false)}
+              title="Uma barra por ano, somando as categorias ligadas"
+            >
+              Sem divisão
             </button>
           </div>
           {availableVersoes.length > 0 && (
@@ -887,6 +952,7 @@ export function Dashboard({ toolbarCollapsed = false }: { toolbarCollapsed?: boo
             extraMeta={`${stats.length} ${stats.length === 1 ? 'grupo' : 'grupos'}`}
             series={consolidatedSeries}
             viewMode={viewMode}
+            breakdown={breakdown}
             visibleSegments={getChartVisibility('consolidated', 'usage')}
             onVisibleSegmentsChange={(next) => setChartVisibilityFor('consolidated', next)}
             onToggleExpand={() => setExpandedChart('consolidated')}
@@ -900,6 +966,7 @@ export function Dashboard({ toolbarCollapsed = false }: { toolbarCollapsed?: boo
               versao={group.versao}
               series={group.series}
               viewMode={viewMode}
+              breakdown={breakdown}
               visibleSegments={getChartVisibility(`group-${group.groupId}`, 'usage')}
               onVisibleSegmentsChange={(next) =>
                 setChartVisibilityFor(`group-${group.groupId}`, next)
@@ -925,6 +992,7 @@ export function Dashboard({ toolbarCollapsed = false }: { toolbarCollapsed?: boo
             extraMeta={`${stats.length} ${stats.length === 1 ? 'grupo' : 'grupos'}`}
             series={consolidatedSeries}
             viewMode={viewMode}
+            breakdown={breakdown}
             visibleSegments={getChartVisibility('consolidated', 'usage')}
             onVisibleSegmentsChange={(next) => setChartVisibilityFor('consolidated', next)}
             expanded
@@ -945,6 +1013,7 @@ export function Dashboard({ toolbarCollapsed = false }: { toolbarCollapsed?: boo
             versao={expandedGroup.versao}
             series={expandedGroup.series}
             viewMode={viewMode}
+            breakdown={breakdown}
             visibleSegments={getChartVisibility(`group-${expandedGroup.groupId}`, 'usage')}
             onVisibleSegmentsChange={(next) =>
               setChartVisibilityFor(`group-${expandedGroup.groupId}`, next)

@@ -12,5 +12,11 @@ export const STACK_COLORS = {
   repetidos: '#e9a8fd',
 } as const;
 
+/**
+ * Barra única do modo sem divisão por status. Neutra de propósito: reaproveitar
+ * a cor de um segmento sugeriria que a barra é daquela categoria.
+ */
+export const TOTAL_COLOR = '#cbd5e1';
+
 /** Ordem estável usada para atribuir um padrão de achurado a cada cor na exportação em P&B. */
-export const CHART_COLOR_ORDER: string[] = Object.values(STACK_COLORS);
+export const CHART_COLOR_ORDER: string[] = [...Object.values(STACK_COLORS), TOTAL_COLOR];
