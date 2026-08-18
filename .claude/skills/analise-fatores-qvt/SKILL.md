@@ -62,6 +62,25 @@ o usuário marcar o botão correspondente no app em vez de receber um delta
 vazio. Propostas de workshop, editoriais e calls for papers tipicamente
 reprovam: não têm dados próprios nem sujeitos.
 
+### Tipo de veículo
+
+Além das três perguntas, confira **onde o artigo saiu**. Isso é critério de
+inclusão, não de escopo — e por isso não tem botão no app.
+
+- **Literatura branca** (journal, conferência ou workshop com revisão por
+  pares) entra normalmente.
+- **Cinza de 1º nível** — livro, capítulo de livro de editora acadêmica,
+  revista profissional (p. ex. IEEE Software), relatório técnico
+  institucional — **entra**, mas registre o aviso na linha de resumo do
+  artigo: há controle editorial, não revisão por pares formal. Vale checar se
+  os achados vêm de estudos primários revisados dos mesmos autores; se vierem,
+  diga qual é o primário, porque é dele que os fatores deveriam ser creditados.
+- **Cinza de 2º/3º nível** — blog, wiki, slides, vídeo, site de Q&A, notícia,
+  preprint sem revisão — **reprova** e não gera delta.
+
+Quando o veículo reprova, diga isso no resumo e **não** mande marcar um dos
+três botões: usar "Não é QVT" para excluir por veículo suja o dado de triagem.
+
 Um artigo pode passar na triagem e ainda assim não ter fator evidenciado — aí
 vale a regra normal: omitir o artigo do delta e dizer que foi lido e não tinha
 fatores.
@@ -226,6 +245,12 @@ Entregue o JSON em um bloco próprio (ou arquivo), sem comentários dentro dele.
 conseguiu ler o PDF e o veredito da triagem (aprovado, ou qual das três
 perguntas reprovou). O usuário precisa disso para distinguir "artigo sem
 fatores", "não consegui abrir o PDF" e "fora do escopo".
+
+**Seja curto nesse resumo.** Veredito e fatores em uma linha, no máximo duas.
+Não reproduza a tabela de fatores no chat: ela já vai no delta, e repetir
+`label`, `canonical` e citação só obriga o usuário a rolar. Ressalva só quando
+for grave e mudar o uso da evidência — qualidade do estudo, evidência de
+segunda mão, amostra compartilhada com outro artigo do corpus, veículo cinza.
 
 **Falha parcial:** se só alguns PDFs abrirem, gere o delta apenas para os
 artigos que você leu e liste os não analisados no resumo externo. Nunca inclua
