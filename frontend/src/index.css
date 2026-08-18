@@ -2235,11 +2235,76 @@ pre.error {
   font-size: 0.75rem;
 }
 
-.factors-view-occurrence-delete {
+.factors-view-edit {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.factors-view-edit:hover:not(:disabled) {
+  background: #f1f5f9;
+}
+
+.factors-view-occurrence-edit {
   margin-left: auto;
   padding: 0.1rem 0.45rem;
   font-size: 0.6875rem;
   line-height: 1.4;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+/* Depois do botão de editar, então sem margin-left: os dois ficam colados à
+   direita, na ordem editar → remover. */
+.factors-view-occurrence-delete {
+  padding: 0.1rem 0.45rem;
+  font-size: 0.6875rem;
+  line-height: 1.4;
+}
+
+.factors-view-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.factors-view-edit-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.factors-view-edit-form input,
+.factors-view-edit-form select,
+.factors-view-edit-form textarea {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+  min-width: 0;
+}
+
+.factors-view-edit-form textarea {
+  resize: vertical;
+}
+
+.factors-view-edit-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.factors-view-edit-actions {
+  display: flex;
+  gap: 0.5rem;
 }
 
 .factors-view-detail-spellings {
@@ -2857,9 +2922,11 @@ body.dashboard-fullscreen-open {
     order: 1;
   }
 
-  .factors-view-delete {
+  /* O margin-left:auto vive no botão de editar, que vem antes: os dois ficam
+     juntos à direita da primeira linha. */
+  .factors-view-delete,
+  .factors-view-edit {
     order: 0;
-    margin-left: auto;
   }
 
   /* Topo recolhido: sai tudo que não é dado — busca, contadores e os botões de

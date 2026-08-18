@@ -20,6 +20,13 @@ const updateFactorSchema = z.object({
   spellings: z.array(z.string()).optional(),
 });
 
+const updateOccurrenceSchema = z.object({
+  /** Grafia verbatim do artigo. */
+  label: z.string().min(1).optional(),
+  polarity: z.enum(['positive', 'negative']).optional(),
+  description: z.string().optional(),
+});
+
 const importFactorsSchema = z.object({
   factors: z
     .array(
@@ -568,6 +575,29 @@ export function createFactorsRouter(): Router {
   });
 
   /** Remove a ocorrência do fator em um artigo, sem tocar no catálogo. */
+  /** Edita uma ocorrência: grafia, polaridade ou descrição naquele artigo. */
+  router.patch('/:id/ocorrencia', async (req, res) => {
+    try {
+      const factorId = req.params.id;
+      const groupId = Number(req.query.groupId);
+      const key = typeof req.query.key === 'string' ? req.query.key.trim() : '';
+      if (!factorId || Number.isNaN(groupId) || !key) {
+        res.status(400).json({ error: 'Informe groupId e key do artigo' });
+        return;
+      }
+      const body = updateOccurrenceSchema.parse(req.body ?? {});
+      const article = await storeFrom(req).updateFactorOccurrence(
+        groupId,
+        key,
+        factorId,
+        body,
+      );
+      res.json(article);
+    } catch (error) {
+      handleRouteError(error, res);
+    }
+  });
+
   router.delete('/:id/ocorrencia', async (req, res) => {
     try {
       const factorId = req.params.id;

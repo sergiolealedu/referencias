@@ -176,6 +176,17 @@ export const api = {
       { method: 'DELETE' },
     ),
 
+  updateFactorOccurrence: (
+    factorId: string,
+    groupId: number,
+    key: string,
+    patch: { label?: string; polarity?: 'positive' | 'negative'; description?: string },
+  ) =>
+    request<Article>(
+      `/factors/${encodeURIComponent(factorId)}/ocorrencia?groupId=${groupId}&key=${encodeURIComponent(key)}`,
+      { method: 'PATCH', body: JSON.stringify(patch) },
+    ),
+
   removeFactorFromArticle: (factorId: string, groupId: number, key: string) =>
     request<Article>(
       `/factors/${encodeURIComponent(factorId)}/ocorrencia?groupId=${groupId}&key=${encodeURIComponent(key)}`,

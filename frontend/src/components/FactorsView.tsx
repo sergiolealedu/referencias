@@ -45,6 +45,16 @@ export function FactorsView({
    * é o CSS, dentro do @media, para o desktop nunca depender do estado mobile.
    */
   const [detailOpen, setDetailOpen] = useState(false);
+  const [editandoFator, setEditandoFator] = useState(false);
+  const [nomeDraft, setNomeDraft] = useState('');
+  const [grafiasDraft, setGrafiasDraft] = useState('');
+  /** Ocorrência em edição, identificada por grupo+chave do artigo. */
+  const [ocorrenciaEmEdicao, setOcorrenciaEmEdicao] = useState<string | null>(null);
+  const [ocorrenciaDraft, setOcorrenciaDraft] = useState({
+    label: '',
+    polarity: 'positive' as FactorOccurrence['polarity'],
+    description: '',
+  });
   const queryClient = useQueryClient();
   const importInputRef = useRef<HTMLInputElement>(null);
   const deltaInputRef = useRef<HTMLInputElement>(null);
@@ -104,6 +114,90 @@ export function FactorsView({
           r.ambiguos.length > 0 ||
           r.erros.length > 0,
       );
+    } catch (err) {
+      setTransferError(true);
+      setTransferMessage((err as Error).message);
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const abrirEdicaoFator = (factor: FactorOverview) => {
+    setTransferMessage(null);
+    setNomeDraft(factor.name);
+    setGrafiasDraft(formatAllSpellings(factor));
+    setEditandoFator(true);
+  };
+
+  const salvarFator = async (factor: FactorOverview) => {
+    const nome = nomeDraft.trim();
+    if (!nome) {
+      setTransferError(true);
+      setTransferMessage('O nome do fator não pode ficar vazio.');
+      return;
+    }
+    if (/[,;]/.test(nome)) {
+      setTransferError(true);
+      setTransferMessage('O nome não pode conter vírgula nem ponto-e-vírgula: são separadores de grafia.');
+      return;
+    }
+
+    setTransferError(false);
+    setTransferMessage(null);
+    setImporting(true);
+    try {
+      // O nome vai também na lista de grafias: sem ele ali, o backend elegeria a
+      // primeira grafia como nome e a renomeação seria descartada em silêncio.
+      const grafias = [nome, ...grafiasDraft.split(/[,;]/)]
+        .map((g) => g.trim())
+        .filter(Boolean);
+      await api.updateFactor(factor.id, { name: nome, spellings: grafias });
+      await queryClient.invalidateQueries({ queryKey: ['factors'] });
+      await queryClient.invalidateQueries({ queryKey: ['articles'] });
+      setEditandoFator(false);
+      setTransferMessage(`Fator salvo como "${nome}".`);
+    } catch (err) {
+      setTransferError(true);
+      setTransferMessage((err as Error).message);
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const abrirEdicaoOcorrencia = (occurrence: FactorOccurrence) => {
+    setTransferMessage(null);
+    setOcorrenciaEmEdicao(`${occurrence.groupId}-${occurrence.articleKey}`);
+    setOcorrenciaDraft({
+      label: occurrence.label,
+      polarity: occurrence.polarity,
+      description: occurrence.description,
+    });
+  };
+
+  const salvarOcorrencia = async (
+    factor: FactorOverview,
+    occurrence: FactorOccurrence,
+  ) => {
+    const label = ocorrenciaDraft.label.trim();
+    if (!label) {
+      setTransferError(true);
+      setTransferMessage('A grafia do artigo não pode ficar vazia.');
+      return;
+    }
+
+    setTransferError(false);
+    setTransferMessage(null);
+    setImporting(true);
+    try {
+      await api.updateFactorOccurrence(factor.id, occurrence.groupId, occurrence.articleKey, {
+        label,
+        polarity: ocorrenciaDraft.polarity,
+        description: ocorrenciaDraft.description,
+      });
+      await queryClient.invalidateQueries({ queryKey: ['factors'] });
+      await queryClient.invalidateQueries({ queryKey: ['articles'] });
+      setOcorrenciaEmEdicao(null);
+      setTransferMessage(`Ocorrência de "${occurrence.articleKey}" salva.`);
     } catch (err) {
       setTransferError(true);
       setTransferMessage((err as Error).message);
@@ -402,6 +496,20 @@ export function FactorsView({
                         <h3>{selected.name}</h3>
                         <button
                           type="button"
+                          className="factors-view-edit"
+                          onClick={() =>
+                            editandoFator
+                              ? setEditandoFator(false)
+                              : abrirEdicaoFator(selected)
+                          }
+                          disabled={importing}
+                          aria-expanded={editandoFator}
+                          title="Renomeia o fator e edita suas grafias no catálogo"
+                        >
+                          {editandoFator ? 'Cancelar' : 'Editar'}
+                        </button>
+                        <button
+                          type="button"
                           className="danger factors-view-delete"
                           onClick={() => handleDeleteFactor(selected)}
                           disabled={importing}
@@ -414,9 +522,44 @@ export function FactorsView({
                           Excluir fator
                         </button>
                       </div>
-                      <p className="factors-view-detail-spellings">
-                        {formatAllSpellings(selected)}
-                      </p>
+                      {editandoFator ? (
+                        <form
+                          className="factors-view-edit-form"
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            void salvarFator(selected);
+                          }}
+                        >
+                          <label>
+                            <span>Nome no catálogo</span>
+                            <input
+                              value={nomeDraft}
+                              onChange={(e) => setNomeDraft(e.target.value)}
+                              autoFocus
+                            />
+                          </label>
+                          <label>
+                            <span>Grafias (separadas por vírgula)</span>
+                            <input
+                              value={grafiasDraft}
+                              onChange={(e) => setGrafiasDraft(e.target.value)}
+                            />
+                          </label>
+                          <p className="factors-view-edit-hint">
+                            Estas grafias são como o app reconhece o fator ao aplicar
+                            um delta. Tirar uma daqui não altera os artigos.
+                          </p>
+                          <div className="factors-view-edit-actions">
+                            <button type="submit" className="primary" disabled={importing}>
+                              {importing ? 'Salvando…' : 'Salvar'}
+                            </button>
+                          </div>
+                        </form>
+                      ) : (
+                        <p className="factors-view-detail-spellings">
+                          {formatAllSpellings(selected)}
+                        </p>
+                      )}
                       <div className="factors-view-detail-stats">
                         <span>{selected.articleCount} ocorrência(s)</span>
                         <span className="factor-chip polarity-positive">
@@ -435,7 +578,11 @@ export function FactorsView({
                       </p>
                     ) : (
                       <ul className="factors-view-occurrences">
-                        {selected.occurrences.map((occurrence) => (
+                        {selected.occurrences.map((occurrence) => {
+                          const emEdicao =
+                            ocorrenciaEmEdicao ===
+                            `${occurrence.groupId}-${occurrence.articleKey}`;
+                          return (
                           <li
                             key={`${occurrence.groupId}-${occurrence.articleKey}-${occurrence.polarity}-${occurrence.label}`}
                             className="factors-view-occurrence"
@@ -467,6 +614,20 @@ export function FactorsView({
                               )}
                               <button
                                 type="button"
+                                className="factors-view-occurrence-edit"
+                                onClick={() =>
+                                  emEdicao
+                                    ? setOcorrenciaEmEdicao(null)
+                                    : abrirEdicaoOcorrencia(occurrence)
+                                }
+                                disabled={importing}
+                                aria-expanded={emEdicao}
+                                title="Edita polaridade, grafia e descrição neste artigo"
+                              >
+                                {emEdicao ? 'Cancelar' : 'Editar'}
+                              </button>
+                              <button
+                                type="button"
                                 className="danger factors-view-occurrence-delete"
                                 onClick={() =>
                                   handleRemoveOccurrence(selected, occurrence)
@@ -495,7 +656,64 @@ export function FactorsView({
                               {occurrenceMeta(occurrence)}
                             </p>
 
-                            {occurrence.description ? (
+                            {emEdicao ? (
+                              <form
+                                className="factors-view-edit-form"
+                                onSubmit={(e) => {
+                                  e.preventDefault();
+                                  void salvarOcorrencia(selected, occurrence);
+                                }}
+                              >
+                                <label>
+                                  <span>Polaridade</span>
+                                  <select
+                                    value={ocorrenciaDraft.polarity}
+                                    onChange={(e) =>
+                                      setOcorrenciaDraft((d) => ({
+                                        ...d,
+                                        polarity: e.target
+                                          .value as FactorOccurrence['polarity'],
+                                      }))
+                                    }
+                                  >
+                                    <option value="positive">Positivo</option>
+                                    <option value="negative">Negativo</option>
+                                  </select>
+                                </label>
+                                <label>
+                                  <span>Grafia neste artigo (verbatim)</span>
+                                  <input
+                                    value={ocorrenciaDraft.label}
+                                    onChange={(e) =>
+                                      setOcorrenciaDraft((d) => ({ ...d, label: e.target.value }))
+                                    }
+                                  />
+                                </label>
+                                <label>
+                                  <span>Descrição</span>
+                                  <textarea
+                                    rows={4}
+                                    value={ocorrenciaDraft.description}
+                                    onChange={(e) =>
+                                      setOcorrenciaDraft((d) => ({
+                                        ...d,
+                                        description: e.target.value,
+                                      }))
+                                    }
+                                  />
+                                </label>
+                                <p className="factors-view-edit-hint">
+                                  A grafia nova entra como sinônimo do fator; a antiga
+                                  continua no catálogo até ser removida em "Editar" no
+                                  cabeçalho.
+                                </p>
+                                <div className="factors-view-edit-actions">
+                                  <button type="submit" className="primary" disabled={importing}>
+                                    {importing ? 'Salvando…' : 'Salvar'}
+                                  </button>
+                                </div>
+                              </form>
+                            ) : occurrence.description ? (
                               <p className="factors-view-occurrence-description">
                                 {occurrence.description}
                               </p>
@@ -505,7 +723,8 @@ export function FactorsView({
                               </p>
                             )}
                           </li>
-                        ))}
+                          );
+                        })}
                       </ul>
                     )}
                   </>

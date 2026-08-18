@@ -18,6 +18,7 @@ import type {
   FactorDefinition,
   FactorOccurrence,
   FactorOverview,
+  FactorPolarity,
   GroupMeta,
   GroupSummary,
   PaginatedArticles,
@@ -252,6 +253,38 @@ export class SqliteStore {
       );
     }
     return this.updateArticle(groupId, key, { factors: restantes });
+  }
+
+  /**
+   * Edita uma ocorrência: a grafia do artigo, a polaridade ou a descrição.
+   * O factorId vai no lugar, então trocar a grafia mantém o vínculo com o fator
+   * do catálogo (a grafia nova entra como sinônimo) em vez de criar outro.
+   */
+  async updateFactorOccurrence(
+    groupId: number,
+    key: string,
+    factorId: string,
+    patch: { label?: string; polarity?: FactorPolarity; description?: string },
+  ): Promise<Article> {
+    const atual = await this.getArticle(groupId, key);
+    const alvo = atual.factors.find((f) => f.factorId === factorId);
+    if (!alvo) {
+      throw new StoreError(
+        `Artigo "${key}" não registra o fator informado`,
+        'NOT_FOUND',
+      );
+    }
+    const proximos = atual.factors.map((f) =>
+      f.factorId === factorId
+        ? {
+            ...f,
+            label: patch.label?.trim() || f.label,
+            polarity: patch.polarity ?? f.polarity,
+            description: patch.description ?? f.description,
+          }
+        : f,
+    );
+    return this.updateArticle(groupId, key, { factors: proximos });
   }
 
   /**
