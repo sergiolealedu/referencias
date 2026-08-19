@@ -40,25 +40,35 @@ const importFactorsSchema = z.object({
     .max(5000),
 });
 
-const deltaItemSchema = z.object({
-  key: z.string().trim().min(1),
-  /** Opcional: sem ele o artigo é procurado em todos os grupos. */
-  groupId: z.number().int().optional(),
-  factors: z
-    .array(
-      z.object({
-        factorId: z.string().trim().min(1).optional(),
-        /** Grafia deste artigo — é o que fica na ocorrência. */
-        label: z.string().trim().min(1),
-        /** Nome do fator no catálogo quando ele ainda não existe. */
-        canonical: z.string().trim().min(1).optional(),
-        polarity: z.enum(['positive', 'negative']).optional(),
-        description: z.string().optional(),
-        aliases: z.array(z.string()).optional(),
-      }),
-    )
-    .min(1),
-});
+const deltaItemSchema = z
+  .object({
+    key: z.string().trim().min(1),
+    /** Opcional: sem ele o artigo é procurado em todos os grupos. */
+    groupId: z.number().int().optional(),
+    factors: z
+      .array(
+        z.object({
+          factorId: z.string().trim().min(1).optional(),
+          /** Grafia deste artigo — é o que fica na ocorrência. */
+          label: z.string().trim().min(1),
+          /** Nome do fator no catálogo quando ele ainda não existe. */
+          canonical: z.string().trim().min(1).optional(),
+          polarity: z.enum(['positive', 'negative']).optional(),
+          description: z.string().optional(),
+          aliases: z.array(z.string()).optional(),
+        }),
+      )
+      .optional(),
+    /**
+     * Fatores a DESVINCULAR deste artigo, por qualquer grafia do catálogo.
+     * Roda antes de "factors", então um item pode remover e recadastrar.
+     * Só remove a ocorrência; o fator continua no catálogo.
+     */
+    removeFactors: z.array(z.string().trim().min(1)).max(500).optional(),
+  })
+  .refine((item) => (item.factors?.length ?? 0) + (item.removeFactors?.length ?? 0) > 0, {
+    message: 'Item sem fatores para aplicar ou remover',
+  });
 
 /**
  * Operação de catálogo dentro do delta, aplicada ANTES dos artigos: renomeia
@@ -410,6 +420,12 @@ export function createFactorsRouter(): Router {
           '  motivo (qual pergunta da triagem reprovou) em vez do JSON.',
           '- Se "fatoresAtuais" já trouxer um fator, só o repita se for corrigir a',
           '  polaridade ou a descrição — o envio sobrescreve o que existe.',
+          '- Para DESVINCULAR um fator de um artigo (ex.: migrar evidência para a',
+          '  fonte primária ou desfazer um fator aplicado por engano), inclua no item',
+          '  "removeFactors": lista de grafias do fator (qualquer grafia do catálogo).',
+          '  As remoções rodam antes dos "factors" do mesmo item; a remoção desfaz só',
+          '  a ocorrência naquele artigo e o fator segue no catálogo. Um item pode',
+          '  ter só "removeFactors", sem "factors".',
           '- Não invente fatores para preencher: é melhor devolver pouco e correto.',
           '- Entregue o JSON no formato de "formatoResposta" em um bloco próprio (ou',
           '  arquivo), sem comentários dentro dele. Esse JSON é o arquivo que será',
@@ -484,9 +500,11 @@ export function createFactorsRouter(): Router {
 
       let aplicados = 0;
       let fatoresAplicados = 0;
+      let fatoresRemovidos = 0;
       let fatoresCatalogo = 0;
       const naoEncontrados: string[] = [];
       const fatoresNaoEncontrados: string[] = [];
+      const remocoesNaoEncontradas: string[] = [];
       const ambiguos: { key: string; grupos: number[] }[] = [];
       const erros: { key: string; motivo: string }[] = [];
 
@@ -536,20 +554,43 @@ export function createFactorsRouter(): Router {
             }
           }
 
-          await store.addFactorsToArticle(
-            grupos[0],
-            item.key,
-            item.factors.map((f) => ({
-              factorId: f.factorId,
-              label: f.label,
-              canonical: f.canonical,
-              polarity: f.polarity ?? 'positive',
-              description: f.description ?? '',
-              aliases: f.aliases ?? [],
-            })),
-          );
+          // Remoções primeiro: um item pode desvincular a ocorrência antiga e
+          // recadastrar a corrigida na mesma aplicação.
+          for (const termo of item.removeFactors ?? []) {
+            const alvo = findFactorBySpelling(await store.listFactors(), termo);
+            if (!alvo) {
+              remocoesNaoEncontradas.push(`${item.key}: ${termo}`);
+              continue;
+            }
+            try {
+              await store.removeFactorFromArticle(grupos[0], item.key, alvo.id);
+              fatoresRemovidos += 1;
+            } catch (error) {
+              // Ocorrência ausente não é erro fatal: o estado final é o pedido.
+              if (error instanceof StoreError && error.code === 'NOT_FOUND') {
+                remocoesNaoEncontradas.push(`${item.key}: ${termo}`);
+                continue;
+              }
+              throw error;
+            }
+          }
+
+          if (item.factors?.length) {
+            await store.addFactorsToArticle(
+              grupos[0],
+              item.key,
+              item.factors.map((f) => ({
+                factorId: f.factorId,
+                label: f.label,
+                canonical: f.canonical,
+                polarity: f.polarity ?? 'positive',
+                description: f.description ?? '',
+                aliases: f.aliases ?? [],
+              })),
+            );
+            fatoresAplicados += item.factors.length;
+          }
           aplicados += 1;
-          fatoresAplicados += item.factors.length;
         } catch (error) {
           if (error instanceof StoreError && error.code === 'NOT_FOUND') {
             naoEncontrados.push(item.key);
@@ -563,9 +604,11 @@ export function createFactorsRouter(): Router {
         recebidos: (body.items ?? []).length,
         aplicados,
         fatoresAplicados,
+        fatoresRemovidos,
         fatoresCatalogo,
         naoEncontrados,
         fatoresNaoEncontrados,
+        remocoesNaoEncontradas,
         ambiguos,
         erros,
       });

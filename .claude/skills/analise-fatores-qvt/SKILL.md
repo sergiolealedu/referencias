@@ -220,6 +220,25 @@ sinônimo leva lista vazia (`[]`).
 - Omita artigos sem nenhum fator evidenciado.
 - Se `fatoresAtuais` já traz um fator, só o repita para corrigir polaridade ou
   descrição: o envio **sobrescreve** o que existe naquele fator.
+- Para **desvincular** um fator de um artigo — típico ao migrar evidência de
+  um veículo secundário para a fonte primária, ou ao corrigir um fator
+  aplicado por engano — use `removeFactors` no item: uma lista de grafias
+  (qualquer grafia do catálogo serve). As remoções rodam **antes** dos
+  `factors` do mesmo item, então dá para remover e recadastrar de uma vez.
+  A remoção desfaz só a ocorrência naquele artigo; o fator segue no catálogo.
+  Um item pode ter só `removeFactors`, sem `factors`.
+
+```json
+{
+  "items": [
+    {
+      "key": "Graziotin2019109",
+      "groupId": 1783072880903,
+      "removeFactors": ["Pressão de prazos", "Dívida técnica"]
+    }
+  ]
+}
+```
 - Vários artigos e vários grupos cabem no mesmo `items`.
 
 O delta também aceita ajustes de catálogo, numa lista `factors` no topo do

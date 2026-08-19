@@ -208,7 +208,7 @@ export interface FactorsImportResult {
 export interface FactorsDeltaItem {
   key: string;
   groupId?: number;
-  factors: {
+  factors?: {
     factorId?: string;
     label: string;
     canonical?: string;
@@ -216,6 +216,8 @@ export interface FactorsDeltaItem {
     description?: string;
     aliases?: string[];
   }[];
+  /** Fatores a desvincular do artigo, por qualquer grafia; roda antes de "factors". */
+  removeFactors?: string[];
 }
 
 /**
@@ -239,9 +241,11 @@ export interface FactorsDeltaResult {
   recebidos: number;
   aplicados: number;
   fatoresAplicados: number;
+  fatoresRemovidos?: number;
   fatoresCatalogo: number;
   naoEncontrados: string[];
   fatoresNaoEncontrados: string[];
+  remocoesNaoEncontradas?: string[];
   ambiguos: { key: string; grupos: number[] }[];
   erros: { key: string; motivo: string }[];
 }

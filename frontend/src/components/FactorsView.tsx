@@ -89,6 +89,7 @@ export function FactorsView({
 
       const partes = [`${r.aplicados} de ${r.recebidos} artigo(s) atualizado(s)`];
       if (r.fatoresAplicados) partes.push(`${r.fatoresAplicados} fator(es)`);
+      if (r.fatoresRemovidos) partes.push(`${r.fatoresRemovidos} ocorrência(s) removida(s)`);
       if (r.fatoresCatalogo) partes.push(`${r.fatoresCatalogo} fator(es) do catálogo ajustado(s)`);
       if (r.naoEncontrados.length) {
         partes.push(
@@ -98,6 +99,11 @@ export function FactorsView({
       if (r.fatoresNaoEncontrados?.length) {
         partes.push(
           `fatores não encontrados no catálogo: ${r.fatoresNaoEncontrados.slice(0, 5).join(', ')}${r.fatoresNaoEncontrados.length > 5 ? '…' : ''}`,
+        );
+      }
+      if (r.remocoesNaoEncontradas?.length) {
+        partes.push(
+          `remoções sem correspondência: ${r.remocoesNaoEncontradas.slice(0, 5).join(', ')}${r.remocoesNaoEncontradas.length > 5 ? '…' : ''}`,
         );
       }
       if (r.ambiguos.length) {

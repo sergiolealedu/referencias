@@ -242,7 +242,10 @@ export function parseFactorsDeltaFile(text: string): FactorsDelta {
     const item = bruto as Record<string, unknown>;
     const key = typeof item.key === 'string' ? item.key.trim() : '';
     const fatoresBrutos = Array.isArray(item.factors) ? item.factors : [];
-    if (!key || fatoresBrutos.length === 0) continue;
+    const removeFactors = (textList(item.removeFactors) ?? [])
+      .map((v) => v.trim())
+      .filter(Boolean);
+    if (!key || (fatoresBrutos.length === 0 && removeFactors.length === 0)) continue;
 
     const factors = fatoresBrutos
       .filter((f): f is Record<string, unknown> => Boolean(f) && typeof f === 'object')
@@ -255,11 +258,12 @@ export function parseFactorsDeltaFile(text: string): FactorsDelta {
       }))
       .filter((f) => f.label);
 
-    if (factors.length === 0) continue;
+    if (factors.length === 0 && removeFactors.length === 0) continue;
     items.push({
       key,
       ...(typeof item.groupId === 'number' ? { groupId: item.groupId } : {}),
-      factors,
+      ...(factors.length > 0 ? { factors } : {}),
+      ...(removeFactors.length > 0 ? { removeFactors } : {}),
     });
   }
 
