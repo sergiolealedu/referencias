@@ -35,7 +35,8 @@ CREATE TABLE IF NOT EXISTS articles (
 CREATE TABLE IF NOT EXISTS factors (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
-  aliases_json TEXT NOT NULL DEFAULT '[]'
+  aliases_json TEXT NOT NULL DEFAULT '[]',
+  category TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_articles_group ON articles(group_id);

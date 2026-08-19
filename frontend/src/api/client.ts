@@ -148,6 +148,10 @@ export const api = {
 
   listUsadoArticles: () => request<SearchResult[]>('/groups/usado-articles'),
 
+  /** Artigos com fator, de todos os grupos, alfabético pela chave BibTeX. */
+  listArticlesComFatores: () =>
+    request<SearchResult[]>('/groups/com-fatores-articles'),
+
   getGroup: (id: number) => request<GroupMeta>(`/groups/${id}`),
 
   listGroupTags: (groupId: number) => request<string[]>(`/groups/${groupId}/tags`),

@@ -520,11 +520,11 @@ export default function App() {
 
             onClick={() => setShowUsadoExport(true)}
 
-            title="Revisar e exportar entradas usadas de todos os grupos"
+            title="Revisar e exportar em BibTeX os artigos com fator, de todos os grupos, para o Overleaf"
 
           >
 
-            Exportar usados
+            Exportar com fatores
 
           </button>
 

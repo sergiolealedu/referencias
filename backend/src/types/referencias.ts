@@ -16,6 +16,8 @@ export interface FactorDefinition {
   id: string;
   name: string;
   aliases: string[];
+  /** Categoria temática (ex.: Individual, Técnico, Organizacional). */
+  category?: string | null;
 }
 
 /** Ocorrência de um fator em um artigo. */
@@ -48,6 +50,7 @@ export interface FactorOverview {
   id: string;
   name: string;
   aliases: string[];
+  category?: string | null;
   articleCount: number;
   positiveCount: number;
   negativeCount: number;

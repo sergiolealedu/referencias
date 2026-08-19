@@ -190,22 +190,38 @@ export class SqliteStore {
 
   private readFactorCatalog(): FactorDefinition[] {
     const rows = this.db
-      .prepare('SELECT id, name, aliases_json FROM factors ORDER BY name COLLATE NOCASE')
-      .all() as Array<{ id: string; name: string; aliases_json: string }>;
+      .prepare(
+        'SELECT id, name, aliases_json, category FROM factors ORDER BY name COLLATE NOCASE',
+      )
+      .all() as Array<{
+      id: string;
+      name: string;
+      aliases_json: string;
+      category: string | null;
+    }>;
     return rows.map((row) => ({
       id: row.id,
       name: row.name,
       aliases: JSON.parse(row.aliases_json) as string[],
+      category: row.category ?? null,
     }));
   }
 
   private writeFactorCatalog(catalog: FactorDefinition[]): void {
     const upsert = this.db.prepare(
-      `INSERT INTO factors (id, name, aliases_json) VALUES (?, ?, ?)
-       ON CONFLICT(id) DO UPDATE SET name = excluded.name, aliases_json = excluded.aliases_json`,
+      `INSERT INTO factors (id, name, aliases_json, category) VALUES (?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET
+         name = excluded.name,
+         aliases_json = excluded.aliases_json,
+         category = excluded.category`,
     );
     for (const factor of catalog) {
-      upsert.run(factor.id, factor.name, JSON.stringify(factor.aliases));
+      upsert.run(
+        factor.id,
+        factor.name,
+        JSON.stringify(factor.aliases),
+        factor.category?.trim() || null,
+      );
     }
   }
 
@@ -334,7 +350,7 @@ export class SqliteStore {
   async addFactorsToArticle(
     groupId: number,
     key: string,
-    entradas: (ArticleFactorInput & { canonical?: string })[],
+    entradas: (ArticleFactorInput & { canonical?: string; category?: string })[],
   ): Promise<Article> {
     const atual = await this.getArticle(groupId, key);
 
@@ -351,6 +367,7 @@ export class SqliteStore {
         id: entrada.factorId,
         name: canonical || label,
         aliases: [...(entrada.aliases ?? []), label],
+        category: entrada.category,
       });
       catalog = proximo;
       resolvidos.push({
@@ -389,6 +406,7 @@ export class SqliteStore {
           id: factor.id,
           name: factor.name,
           aliases: [...factor.aliases],
+          category: factor.category ?? null,
           articleCount: 0,
           positiveCount: 0,
           negativeCount: 0,
@@ -420,6 +438,7 @@ export class SqliteStore {
             id: factor.factorId,
             name: factor.label,
             aliases: [],
+            category: null,
             articleCount: 0,
             positiveCount: 0,
             negativeCount: 0,
@@ -465,6 +484,7 @@ export class SqliteStore {
     id?: string;
     name: string;
     aliases?: string[];
+    category?: string | null;
   }): Promise<FactorDefinition> {
     if (!input.name.trim()) {
       throw new StoreError('Nome do fator é obrigatório', 'VALIDATION');
@@ -475,10 +495,16 @@ export class SqliteStore {
     return structuredClone(factor);
   }
 
-  /** Atualiza grafias/traduções de um fator já existente no workspace. */
+  /** Atualiza grafias/traduções/categoria de um fator já existente no workspace. */
   async updateFactor(
     id: string,
-    patch: { name?: string; aliases?: string[]; spellings?: string[] },
+    patch: {
+      name?: string;
+      aliases?: string[];
+      spellings?: string[];
+      /** String vazia ou null limpa a categoria; undefined mantém. */
+      category?: string | null;
+    },
   ): Promise<FactorDefinition> {
     const catalog = this.readFactorCatalog();
     const current = catalog.find((factor) => factor.id === id);
@@ -489,6 +515,9 @@ export class SqliteStore {
     let next: FactorDefinition = { ...current, aliases: [...current.aliases] };
     if (patch.name?.trim()) {
       next = { ...next, name: patch.name.trim() };
+    }
+    if (patch.category !== undefined) {
+      next = { ...next, category: patch.category?.trim() || null };
     }
     if (patch.spellings) {
       next = replaceSpellings(next, patch.spellings);
@@ -528,6 +557,29 @@ export class SqliteStore {
          FROM articles a
          JOIN groups g ON g.id = a.group_id
          WHERE a.usado = 1
+         ORDER BY a.entry_key COLLATE NOCASE`,
+      )
+      .all() as Array<ArticleRow & { group_id: number; group_title: string }>;
+
+    return rows.map((row) => ({
+      groupId: row.group_id,
+      groupTitle: row.group_title,
+      article: rowToArticle(row),
+    }));
+  }
+
+  /**
+   * Artigos que já têm fator, de todos os grupos, em ordem alfabética pela
+   * chave BibTeX — é o corpus que vai para o Overleaf. Igual a
+   * listUsadoArticles, mas pelo critério de análise concluída em vez de "usado".
+   */
+  async listArticlesComFatores(): Promise<SearchResult[]> {
+    const rows = this.db
+      .prepare(
+        `SELECT g.id AS group_id, g.title AS group_title, a.*
+         FROM articles a
+         JOIN groups g ON g.id = a.group_id
+         WHERE COALESCE(json_array_length(a.factors_json), 0) > 0
          ORDER BY a.entry_key COLLATE NOCASE`,
       )
       .all() as Array<ArticleRow & { group_id: number; group_title: string }>;

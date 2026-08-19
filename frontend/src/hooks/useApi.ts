@@ -27,6 +27,20 @@ export function useUsadoArticles(enabled = true) {
   });
 }
 
+/**
+ * Chave prefixada com 'usado-articles' de propósito: as invalidações que já
+ * existem por todo o app usam esse prefixo, e o React Query invalida por
+ * prefixo — então este cache acompanha as mesmas mutações sem espalhar mais
+ * uma chave em vinte lugares.
+ */
+export function useArticlesComFatores(enabled = true) {
+  return useQuery({
+    queryKey: ['usado-articles', 'com-fatores'],
+    queryFn: api.listArticlesComFatores,
+    enabled,
+  });
+}
+
 export function useDetectDuplicates() {
   const queryClient = useQueryClient();
   return useMutation({

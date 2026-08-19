@@ -107,7 +107,7 @@ export function replaceSpellings(
 
 export function ensureFactorInCatalog(
   catalog: FactorDefinition[],
-  input: { id?: string; name: string; aliases?: string[] },
+  input: { id?: string; name: string; aliases?: string[]; category?: string | null },
 ): { factor: FactorDefinition; catalog: FactorDefinition[] } {
   const nextCatalog = catalog.map((f) => ({
     ...f,
@@ -151,6 +151,12 @@ export function ensureFactorInCatalog(
       name,
       aliases: [],
     };
+  }
+
+  // Categoria informada vale também para fator existente; ausente, mantém.
+  const category = input.category?.trim();
+  if (category) {
+    factor = { ...factor, category };
   }
 
   factor = upsert(mergeAliases(factor, aliasTokens));

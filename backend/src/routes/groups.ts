@@ -73,6 +73,15 @@ export function createGroupsRouter(): Router {
     }
   });
 
+  router.get('/com-fatores-articles', async (req, res) => {
+    try {
+      const items = await storeFrom(req).listArticlesComFatores();
+      res.json(items);
+    } catch (error) {
+      handleRouteError(error, res);
+    }
+  });
+
   router.get('/usado-articles', async (req, res) => {
     try {
       const items = await storeFrom(req).listUsadoArticles();

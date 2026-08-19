@@ -38,9 +38,17 @@ function ensureFactorsMigration(db: Database.Database): void {
     CREATE TABLE IF NOT EXISTS factors (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
-      aliases_json TEXT NOT NULL DEFAULT '[]'
+      aliases_json TEXT NOT NULL DEFAULT '[]',
+      category TEXT
     );
   `);
+}
+
+function ensureFactorCategoryMigration(db: Database.Database): void {
+  const columns = db.prepare('PRAGMA table_info(factors)').all() as Array<{ name: string }>;
+  if (!columns.some((column) => column.name === 'category')) {
+    db.exec(`ALTER TABLE factors ADD COLUMN category TEXT`);
+  }
 }
 
 function ensureRevisaoLiteraturaMigration(db: Database.Database): void {
@@ -73,6 +81,7 @@ export function openDatabase(dbPath: string): Database.Database {
   db.exec(schema);
   db.exec(FTS_TRIGGER_MIGRATION);
   ensureFactorsMigration(db);
+  ensureFactorCategoryMigration(db);
   ensureRevisaoLiteraturaMigration(db);
   ensurePdfNaoEncontradoMigration(db);
   ensureMotivoDescarteMigration(db);

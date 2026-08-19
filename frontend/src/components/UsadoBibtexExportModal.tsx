@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import { useUsadoArticles } from '../hooks/useApi';
+import { useArticlesComFatores } from '../hooks/useApi';
 import type { SearchResult } from '../types/referencias';
 import {
   articlesToBibtex,
@@ -14,7 +14,7 @@ interface UsadoBibtexExportModalProps {
 }
 
 export function UsadoBibtexExportModal({ onClose }: UsadoBibtexExportModalProps) {
-  const { data: usadoItems = [], isLoading, error } = useUsadoArticles();
+  const { data: usadoItems = [], isLoading, error } = useArticlesComFatores();
   const [checkedKeys, setCheckedKeys] = useState<Set<string>>(new Set());
   const [message, setMessage] = useState<string | null>(null);
 
@@ -78,7 +78,7 @@ export function UsadoBibtexExportModal({ onClose }: UsadoBibtexExportModalProps)
         await copyBibtexBulkToClipboard(selectedArticles);
         setMessage(`${selectedArticles.length} entrada(s) copiada(s).`);
       } else {
-        downloadBibtexBulk(selectedArticles, 'referencias-usados.bib');
+        downloadBibtexBulk(selectedArticles, 'referencias-com-fatores.bib');
         setMessage(`${selectedArticles.length} entrada(s) exportada(s).`);
       }
     } catch (err) {
@@ -90,7 +90,7 @@ export function UsadoBibtexExportModal({ onClose }: UsadoBibtexExportModalProps)
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal usado-export-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h3>Exportar BibTeX — usados</h3>
+          <h3>Exportar BibTeX — com fatores</h3>
           <button type="button" className="form-close" onClick={onClose} title="Fechar">
             ×
           </button>
@@ -98,15 +98,16 @@ export function UsadoBibtexExportModal({ onClose }: UsadoBibtexExportModalProps)
 
         <div className="modal-body">
           <p className="modal-subtitle">
-            Todos os grupos — ordem por id (chave BibTeX)
+            Artigos com fator, de todos os grupos, em ordem alfabética pela chave
+            BibTeX — pronto para colar no Overleaf.
           </p>
 
-          {isLoading && <p className="hint">Carregando entradas usadas...</p>}
+          {isLoading && <p className="hint">Carregando artigos com fatores...</p>}
 
           {error && <p className="error">Erro: {(error as Error).message}</p>}
 
           {!isLoading && !error && usadoItems.length === 0 && (
-            <p className="error">Nenhuma entrada marcada como usada.</p>
+            <p className="error">Nenhum artigo com fator associado ainda.</p>
           )}
 
           {!isLoading && !error && usadoItems.length > 0 && (
