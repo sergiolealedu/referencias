@@ -99,6 +99,10 @@ jobs:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_PASS: ${{ secrets.DEPLOY_PASSWORD }}
           DEPLOY_TAG: ${{ github.ref_name }}
+          # Para o droplet buscar a tag num repo privado. O token vale só
+          # enquanto este run existe, então nada fica guardado na máquina.
+          DEPLOY_REPO: ${{ github.repository }}
+          DEPLOY_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEPLOY_APP_DIR: ${{ vars.DEPLOY_APP_DIR }}
           DEPLOY_PM2_APP: ${{ vars.DEPLOY_PM2_APP }}
           DEPLOY_APP_USER: ${{ vars.DEPLOY_APP_USER }}

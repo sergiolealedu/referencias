@@ -36,19 +36,33 @@ def main() -> int:
     app_dir = env("DEPLOY_APP_DIR", "/opt/referencias")
     pm2_app = env("DEPLOY_PM2_APP", "referencias-api")
     app_user = env("DEPLOY_APP_USER", "referencias")
+    # Repo privado: o clone do droplet não tem credencial e o git ficava
+    # esperando usuário/senha num prompt que nunca vem — o deploy não falhava,
+    # travava, até o paramiko estourar o timeout de leitura. O token do próprio
+    # run resolve sem guardar segredo nenhum na máquina.
+    repo = os.environ.get("DEPLOY_REPO", "").strip()
+    repo_token = os.environ.get("DEPLOY_REPO_TOKEN", "").strip()
 
     for name, value in (
         ("tag", tag),
+        ("repo", repo),
         ("app_dir", app_dir),
         ("pm2_app", pm2_app),
         ("app_user", app_user),
     ):
         validate_shell_value(name, value)
 
+    # Sem token (repo público de novo), o remoto configurado basta.
+    if repo and repo_token:
+        validate_shell_value("repo_token", repo_token)
+        fetch_origem = f"'https://x-access-token:{repo_token}@github.com/{repo}.git'"
+    else:
+        fetch_origem = "origin"
+
     deploy_cmd = f"""set -euo pipefail
 cd '{app_dir}'
 echo '=== fetch tag {tag} ==='
-sudo -u {app_user} git fetch origin --tags
+sudo -u {app_user} env GIT_TERMINAL_PROMPT=0 timeout 180 git fetch {fetch_origem} --tags --force
 sudo -u {app_user} git checkout '{tag}'
 echo '=== commit ==='
 sudo -u {app_user} git log -1 --oneline

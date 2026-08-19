@@ -2222,6 +2222,12 @@ pre.error {
   display: none;
 }
 
+/* No desktop não há disputa por altura: grafias e contadores ficam sempre à
+   vista e o botão de recolher nem existe. */
+.factors-view-info-toggle {
+  display: none;
+}
+
 .factors-view-detail-header h3 {
   margin: 0;
   font-size: 1rem;
@@ -2896,6 +2902,27 @@ body.dashboard-fullscreen-open {
 
   .factors-view-detail {
     min-height: 0;
+  }
+
+  /* Recolhido por padrão: um fator com muitas grafias ocupava a tela toda e a
+     lista de ocorrências começava abaixo da dobra. */
+  .factors-view-detail-info:not(.is-open) {
+    display: none;
+  }
+
+  .factors-view-info-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    order: -1;
+    flex-shrink: 0;
+    min-width: 2rem;
+    padding: 0.3rem 0.45rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    font-size: 0.8125rem;
+    line-height: 1;
   }
 
   .factors-view-back {

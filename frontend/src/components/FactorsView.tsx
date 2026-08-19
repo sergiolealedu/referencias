@@ -46,6 +46,12 @@ export function FactorsView({
    */
   const [detailOpen, setDetailOpen] = useState(false);
   const [editandoFator, setEditandoFator] = useState(false);
+  /**
+   * Grafias e contadores do fator, recolhidos por padrão. Só o mobile respeita
+   * isso (ver @media): num fator com muitas grafias esse bloco empurrava a
+   * lista de ocorrências para fora da tela.
+   */
+  const [infoAberta, setInfoAberta] = useState(false);
   const [nomeDraft, setNomeDraft] = useState('');
   const [grafiasDraft, setGrafiasDraft] = useState('');
   /** Ocorrência em edição, identificada por grupo+chave do artigo. */
@@ -502,6 +508,15 @@ export function FactorsView({
                         <h3>{selected.name}</h3>
                         <button
                           type="button"
+                          className="factors-view-info-toggle"
+                          onClick={() => setInfoAberta((v) => !v)}
+                          aria-expanded={infoAberta}
+                          title={infoAberta ? 'Recolher grafias' : 'Ver grafias e contadores'}
+                        >
+                          {infoAberta ? '▴' : '▾'}
+                        </button>
+                        <button
+                          type="button"
                           className="factors-view-edit"
                           onClick={() =>
                             editandoFator
@@ -561,19 +576,24 @@ export function FactorsView({
                             </button>
                           </div>
                         </form>
-                      ) : (
-                        <p className="factors-view-detail-spellings">
-                          {formatAllSpellings(selected)}
-                        </p>
-                      )}
-                      <div className="factors-view-detail-stats">
-                        <span>{selected.articleCount} ocorrência(s)</span>
-                        <span className="factor-chip polarity-positive">
-                          +{selected.positiveCount} positivo(s)
-                        </span>
-                        <span className="factor-chip polarity-negative">
-                          −{selected.negativeCount} negativo(s)
-                        </span>
+                      ) : null}
+                      <div
+                        className={`factors-view-detail-info${infoAberta ? ' is-open' : ''}`}
+                      >
+                        {!editandoFator && (
+                          <p className="factors-view-detail-spellings">
+                            {formatAllSpellings(selected)}
+                          </p>
+                        )}
+                        <div className="factors-view-detail-stats">
+                          <span>{selected.articleCount} ocorrência(s)</span>
+                          <span className="factor-chip polarity-positive">
+                            +{selected.positiveCount} positivo(s)
+                          </span>
+                          <span className="factor-chip polarity-negative">
+                            −{selected.negativeCount} negativo(s)
+                          </span>
+                        </div>
                       </div>
                     </header>
 
