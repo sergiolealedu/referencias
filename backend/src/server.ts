@@ -18,6 +18,12 @@ import { getActiveWorkspace } from './workspaceManager.js';
 
 const app = express();
 
+// Atrás do nginx (127.0.0.1) e do Cloudflare. Sem isto o req.protocol ignora o
+// X-Forwarded-Proto e os links assinados de PDF saem como http://, mesmo com o
+// visitante em https. "loopback" confia só no proxy local, não em qualquer
+// cliente que mande o cabeçalho.
+app.set('trust proxy', 'loopback');
+
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
