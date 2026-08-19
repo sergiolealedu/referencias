@@ -36,7 +36,10 @@ from _common import (  # noqa: E402
     MOTIVOS,
     REPO_ROOT,
     STATUS_CONHECIDOS,
+    STATUS_NAO_ELEGIVEL,
     UUID_SUFFIX,
+    VEICULO_CINZA,
+    classify_veiculo,
     norm,
     open_snapshot,
     resolve_snapshot,
@@ -44,11 +47,36 @@ from _common import (  # noqa: E402
     table_columns,
 )
 
-# Veículos que a skill classifica como cinza de 2º/3º nível: reprovam por
-# veículo, e usar "Não é QVT" para excluí-los suja o dado de triagem.
-VEICULO_CINZA = re.compile(
-    r"\b(arxiv|preprint|blog|medium\.com|wiki|slides?|youtube|stack\s?overflow"
-    r"|reddit|substack|newsletter|white\s?paper)\b",
+# Registro que é o volume de anais em vez de um artigo. Duas pistas juntas já
+# bastam; uma só dá falso positivo (há artigo legítimo com "Proceedings" no
+# nome do veículo, e chave sem autor acontece por falha de import).
+ABSTRACT_DE_VOLUME = re.compile(
+    r"\bthe proceedings contain\b|\bcontains? \d+ (?:papers|contributions)\b"
+    r"|\bos anais cont[eê]m\b",
+    re.IGNORECASE,
+)
+TITULO_DE_VOLUME = re.compile(
+    r"^\s*(?:proceedings of|\d+(?:st|nd|rd|th) (?:international |annual )?"
+    r"(?:conference|symposium|workshop))"
+    r"|-\s*proceedings\s*(?:of|$)|\bconference proceedings\b",
+    re.IGNORECASE,
+)
+
+# Quem produz software — o sujeito que a pergunta 1 da triagem exige. Se o
+# próprio título fala disso, "não é eng. de software" é difícil de sustentar.
+SUJEITO_PRODUZ_SOFTWARE = re.compile(
+    r"\b(software (?:engineer|developer|practitioner|professional|team)s?"
+    r"|developers?|programmers?|devops|coders?|software industry"
+    r"|desenvolvedores?|engenheiros? de software)\b",
+    re.IGNORECASE,
+)
+# Veículos inequivocamente de engenharia de software.
+VEICULO_ES = re.compile(
+    r"\b(international conference on software engineering|empirical software engineering"
+    r"|transactions on software engineering|foundations of software engineering"
+    r"|automated software engineering|mining software repositories"
+    r"|software maintenance and evolution|journal of systems and software"
+    r"|ieee software|sigsoft)\b",
     re.IGNORECASE,
 )
 
@@ -103,6 +131,15 @@ class Article:
     @property
     def reprovado_triagem(self) -> bool:
         return self.motivo in MOTIVOS
+
+    @property
+    def nao_elegivel(self) -> bool:
+        """Fora do fluxo de triagem: não é artigo usável (anais, editorial, veículo).
+
+        Os checks de coerência de triagem não se aplicam — não ter motivo de
+        descarte é o estado correto, e não uma lacuna.
+        """
+        return self.status == STATUS_NAO_ELEGIVEL
 
     @property
     def categoria(self) -> str:
@@ -297,6 +334,33 @@ def run_checks(
         "Sem abstract e sem PDF, ainda em aberto",
         "Não há material para triar; ou consegue o texto ou registra que não foi possível.",
     )
+    f_naoeng_sobre_devs = check(
+        "nao-eng-sw-a-revisar", "alta",
+        "Reprovado por 'não é eng. de software', mas o texto fala de quem produz software",
+        "A pergunta 1 da triagem pede que veículo, tema e método sejam de computação/ES. "
+        "Quando o texto traz 'developer', 'programmer' ou 'software engineer' — mais ainda "
+        "se o veículo for ICSE, IEEE Software ou similar — a reprovação é difícil de "
+        "sustentar. Falso negativo é o pior erro numa revisão de literatura: o artigo "
+        "relevante sai do corpus sem deixar rastro. As linhas estão ordenadas por força "
+        "do sinal: menção no título primeiro, no abstract depois.",
+    )
+    f_cinza1_excluido = check(
+        "gray-cinza1-excluido", "alta",
+        "Marcado como literatura cinza e excluído, sendo cinza de 1º nível",
+        "Livro, capítulo de editora acadêmica, revista profissional e relatório técnico "
+        "institucional **entram** na análise — com aviso de que há controle editorial, não "
+        "revisão por pares. Só cinza de 2º/3º nível (blog, wiki, slides, preprint) reprova "
+        "por veículo. Marcar 'gray' é a anotação certa; excluir por causa dela, não. "
+        "O check exige status='gray' de propósito: cinza de 1º nível reprovado pelas três "
+        "perguntas da triagem é exclusão legítima e não aparece aqui.",
+    )
+    f_volume = check(
+        "registro-e-volume-nao-artigo", "media",
+        "Registro é o volume de anais, não um artigo",
+        "Entrada de proceedings inteiro ('The proceedings contain N papers', título "
+        "que é só o nome do evento, chave sem autor). Não é artigo: não tem o que "
+        "triar nem fator a extrair, e infla a contagem do corpus.",
+    )
 
     # --- fatores ------------------------------------------------------------
     f_fator_orfao = check(
@@ -395,7 +459,7 @@ def run_checks(
 
         if a.reprovado_triagem and not a.notes.strip():
             f_motivo_sem_nota.add(a, f"motivo={motivo}")
-        if a.descartado and not motivo:
+        if a.descartado and not motivo and not a.nao_elegivel:
             f_descartado_sem_motivo.add(a)
         nota = a.notes.strip().strip('"')
         if nota and (re.match(r"^[A-Za-z]:[\\/]", nota) or nota.lower().endswith(".pdf")):
@@ -408,6 +472,44 @@ def run_checks(
             and a.status != "duplicate"
         ):
             f_sem_material.add(a)
+
+        classe_veiculo = classify_veiculo(a.journal, a.source, a.entry_type)
+        if (
+            a.status == "gray"
+            and classe_veiculo == "cinza1"
+            and (a.descartado or a.reprovado_triagem)
+            and not a.usado
+        ):
+            f_cinza1_excluido.add(
+                a,
+                f"tipo={a.entry_type!r} veículo={a.journal[:40]!r} "
+                f"motivo={motivo} descartado={a.descartado}",
+            )
+
+        if motivo == "nao_eng_sw":
+            no_titulo = SUJEITO_PRODUZ_SOFTWARE.search(a.title)
+            # Só o início do abstract: menção tardia costuma ser trabalho relacionado.
+            no_abstract = SUJEITO_PRODUZ_SOFTWARE.search(a.abstract[:700])
+            veiculo_es = VEICULO_ES.search(a.journal)
+            if no_titulo or no_abstract:
+                onde = []
+                if no_titulo:
+                    onde.append(f"TÍTULO fala de {no_titulo.group(0)!r}")
+                else:
+                    onde.append(f"abstract fala de {no_abstract.group(0)!r}")
+                if veiculo_es:
+                    onde.append(f"veículo é de ES ({veiculo_es.group(0)})")
+                f_naoeng_sobre_devs.add(a, "; ".join(onde))
+
+        pistas_volume = []
+        if ABSTRACT_DE_VOLUME.search(a.abstract):
+            pistas_volume.append("abstract diz quantos papers o volume contém")
+        if TITULO_DE_VOLUME.search(a.title):
+            pistas_volume.append("título é o nome do evento/volume")
+        if a.key.isdigit():
+            pistas_volume.append("chave sem autor")
+        if len(pistas_volume) >= 2 and not a.nao_elegivel:
+            f_volume.add(a, "; ".join(pistas_volume))
 
         for factor in a.factors:
             fid = factor.get("factorId") or ""
@@ -430,13 +532,23 @@ def run_checks(
                     a, f"arquivo={base!r} esperado={safe_entry_key(a.key)!r}"
                 )
 
-        if a.title:
-            titulos[norm(a.title)].append(a)
-        else:
+        if not a.title:
             f_titulo_vazio.add(a)
+        elif not a.nao_elegivel:
+            # Não elegível não concorre a duplicata: já saiu do corpus.
+            titulos[norm(a.title)].append(a)
 
         if not a.year.isdigit() or not (1950 <= int(a.year) <= ano_atual + 1):
             f_ano.add(a, f"year={a.year!r}")
+
+    # Sinal forte primeiro: menção no título vence menção no abstract, e dentro de
+    # cada nível o veículo de ES vem antes. É a ordem em que vale reler.
+    f_naoeng_sobre_devs.rows.sort(
+        key=lambda r: (
+            0 if "TÍTULO" in r.get("detalhe", "") else 1,
+            0 if "veículo é de ES" in r.get("detalhe", "") else 1,
+        )
+    )
 
     for group in caminhos.values():
         if len(group) > 1:
@@ -494,6 +606,40 @@ def write_report(
     lines += ["\n## Distribuição por categoria\n", "| Categoria | Artigos |", "|---|---:|"]
     lines += [f"| {cat} | {n} |" for cat, n in cat_counts.most_common()]
 
+    # A triagem tem três perguntas independentes; se uma resposta concentra quase
+    # tudo, o botão provavelmente virou rejeição genérica.
+    motivos = Counter(a.motivo for a in articles if a.motivo in MOTIVOS)
+    if motivos:
+        total_motivos = sum(motivos.values())
+        lines += [
+            "\n## Reprovação por pergunta da triagem\n",
+            "| Motivo | Artigos | % das reprovações |",
+            "|---|---:|---:|",
+        ]
+        for motivo, n in motivos.most_common():
+            lines.append(f"| {motivo} | {n} | {100 * n / total_motivos:.0f}% |")
+        maior, n_maior = motivos.most_common(1)[0]
+        if total_motivos >= 30 and n_maior / total_motivos >= 0.8:
+            lines.append(
+                f"\n> ⚠️ `{maior}` responde por {100 * n_maior / total_motivos:.0f}% das "
+                f"reprovações. Distribuição assim concentrada sugere que esse botão está "
+                f"servindo de rejeição genérica em vez de resposta à pergunta específica — "
+                f"vale reler o check "
+                f"`nao-eng-sw-mas-e-sobre-quem-produz-software` com isso em mente."
+            )
+
+    # Cruzamento que explica o fluxo de trabalho: sem PDF a reprovação acontece
+    # na fase do abstract (sem motivo), com PDF ela recebe motivo.
+    com_pdf = Counter(a.categoria for a in articles if a.caminho.strip())
+    sem_pdf = Counter(a.categoria for a in articles if not a.caminho.strip())
+    todas = sorted(set(com_pdf) | set(sem_pdf), key=lambda c: -(com_pdf[c] + sem_pdf[c]))
+    lines += [
+        "\n## Categoria × PDF anexado\n",
+        "| Categoria | Com PDF | Sem PDF |",
+        "|---|---:|---:|",
+    ]
+    lines += [f"| {cat} | {com_pdf[cat]} | {sem_pdf[cat]} |" for cat in todas]
+
     lines += ["\n## Apontamentos\n", "| Sev | Check | Artigos |", "|---|---|---:|"]
     lines += [
         f"| {f.severity} | [{f.check}](#{f.check}) | {len(f.rows)} |" for f in findings
@@ -538,10 +684,19 @@ def write_report(
 
 
 def write_notes_queue(out_dir: Path, articles: list[Article]) -> int:
-    """Material para escrever as notas de rejeição: quem precisa e com que insumo."""
+    """Material para escrever as notas de rejeição: quem precisa e com que insumo.
+
+    Só entra quem tem PDF anexado. Sem o texto não há veredito de triagem a
+    registrar, e uma nota escrita só pelo abstract afirmaria mais do que se sabe.
+    Isso também mantém fora os repetidos, que chegam aqui pela flag `descartado`
+    mas não são rejeição de mérito.
+    """
     pend = [
         a for a in articles
-        if (a.reprovado_triagem or a.descartado) and not a.notes.strip()
+        if (a.reprovado_triagem or a.descartado)
+        and a.caminho.strip()
+        and a.status not in ("duplicate", STATUS_NAO_ELEGIVEL)
+        and not a.notes.strip()
     ]
     pend.sort(key=lambda a: (a.motivo or "zz", a.group_id, a.key))
     payload = {
@@ -558,6 +713,7 @@ def write_notes_queue(out_dir: Path, articles: list[Article]) -> int:
                 "journal": a.journal,
                 "entryType": a.entry_type,
                 "temPdf": bool(a.caminho.strip()),
+                "caminho": a.caminho,
                 "pdfNaoEncontrado": a.pdf_nao_encontrado,
                 "abstract": a.abstract,
                 "notaProposta": "",

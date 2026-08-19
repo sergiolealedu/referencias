@@ -220,6 +220,34 @@ Só o banco (workspace vazio no servidor):
 powershell -ExecutionPolicy Bypass -File C:\tmp2\exemplos\doutorado\refs\scripts\migrate\upload-db-only.ps1 -ServerHost ref.sergioleal.org
 ```
 
+### QA do corpus
+
+Roda sobre o snapshot de backup mais recente (somente leitura — nunca no banco de produção):
+
+```powershell
+python scripts/qa/audit-snapshot.py
+```
+
+Confere se algum PDF anexado é de outro artigo (precisa de snapshot **com** PDFs):
+
+```powershell
+python scripts/qa/check-pdf-content.py
+```
+
+Prepara o material de releitura dos artigos rejeitados:
+
+```powershell
+python scripts/qa/extract-triage-digest.py
+```
+
+Grava no servidor as notas e correções revisadas — dry-run sem `--apply`:
+
+```powershell
+python scripts/qa/apply-patches.py --input data/qa/<stamp>/notas-propostas.json
+```
+
+Detalhes e parâmetros: [`scripts/README.md`](scripts/README.md).
+
 ### Servidor Linux (bash)
 
 Instalação inicial no Droplet (alternativa manual, já logado no servidor):

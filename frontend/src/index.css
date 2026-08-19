@@ -1503,6 +1503,11 @@ button.factor-chip:focus-visible {
   color: #3730a3;
 }
 
+.status-not_eligible {
+  background: #cffafe;
+  color: #155e75;
+}
+
 .duplicate-link {
   display: block;
   margin-top: 0.25rem;

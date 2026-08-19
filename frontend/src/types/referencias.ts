@@ -15,6 +15,8 @@ export const ARTICLE_STATUSES = [
   'not_found',
   'gray',
   'manual_review',
+  /** Não elegível para a revisão: não é artigo usável (anais, editorial, veículo reprovado). */
+  'not_eligible',
 ] as const;
 
 export type ArticleStatus = typeof ARTICLE_STATUSES[number];

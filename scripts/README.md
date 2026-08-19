@@ -27,6 +27,10 @@ próprio caminho (`$PSScriptRoot` / `import.meta.url`), não do diretório atual
 | Gerar APK e copiar pro Drive | `npm run build:android:copy` |
 | Mandar o banco local pro servidor | `scripts/migrate/local-to-server.ps1` ⚠️ |
 | Gerar token de convite | `scripts/migrate/create-join-token.sh` (servidor) |
+| Auditar a triagem do corpus | `python scripts/qa/audit-snapshot.py` |
+| Conferir se algum PDF foi trocado | `python scripts/qa/check-pdf-content.py` |
+| Preparar a releitura dos rejeitados | `python scripts/qa/extract-triage-digest.py` |
+| Gravar notas e correções revisadas | `python scripts/qa/apply-patches.py --apply` ⚠️ |
 
 ---
 
@@ -245,6 +249,123 @@ remoto em `/tmp/referencias-backup`.
 
 ---
 
+## `qa/` — auditoria do corpus
+
+Rodam **sobre um snapshot de backup**, nunca contra o banco de produção: o `.db` é copiado
+(com o `-wal`) para uma pasta temporária antes de abrir. Precisam de Python 3 com `pypdf`
+para o check de PDF. Saída em `data/qa/<stamp>/` (fora do Git).
+
+> ⚠️ **A identidade de um artigo é `(group_id, entry_key)`, não a chave sozinha** — é o
+> `UNIQUE` da tabela, e a mesma chave aparece em grupos diferentes com triagem divergente
+> (o check `duplicata-tratada-diferente` mede isso). Indexar por `entry_key` num script
+> auxiliar pega silenciosamente a ocorrência errada e monta um delta que corrige a cópia
+> errada do artigo. A guarda otimista do `apply-patches.py` detecta, mas não conte com ela:
+> use o par sempre.
+
+### `audit-snapshot.py`
+
+Aponta incoerência de triagem: status fora do enum, `motivo_descarte` sem `descartado`,
+`usado` junto com descarte, artigo descartado que ficou com fator (e por isso saiu da fila
+de triagem, já que `comFatores` vence toda a prioridade de categoria), duplicata órfã ou
+tratada de forma diferente do original, exclusão por veículo registrada como "Não é QVT",
+fator fora do catálogo, PDF compartilhado entre dois artigos, rejeição sem nota.
+
+```powershell
+python scripts/qa/audit-snapshot.py                          # snapshot mais recente
+python scripts/qa/audit-snapshot.py --snapshot "G:\...\server-20260819-101500"
+```
+
+| Parâmetro | Padrão | O que faz |
+|---|---|---|
+| `--snapshot <path>` | `server-*` mais recente | Pasta do snapshot |
+| `--backup-root <path>` | `G:\Meu Drive\doutorado\app\backup` | Onde procurar snapshots |
+| `--out <path>` | `data/qa/<stamp>` | Pasta de saída |
+
+Gera `qa-report.md` (legível, com âncora por check), `qa-findings.json` e
+`notas-pendentes.json` — a fila de artigos rejeitados sem nota, já com título, veículo e
+abstract, pronta para preencher `notaProposta`.
+
+As regras de categoria espelham `CATEGORIA_SQL` em `backend/src/store/sqliteStore.ts`, e as
+de triagem, a skill `analise-fatores-qvt`. **Mudou lá, atualize aqui** — a divergência é
+silenciosa.
+
+### `check-pdf-content.py`
+
+Confere se o PDF anexado é o artigo do registro: extrai o texto das 3 primeiras páginas e
+compara com título, ano, sobrenome da chave e DOI. Pega o que o nome do arquivo não pega —
+PDF com nome certo e conteúdo de outro artigo, ou anais inteiros no lugar do capítulo.
+Exige snapshot feito **sem** `-ExcludePdfs`.
+
+```powershell
+python scripts/qa/check-pdf-content.py
+python scripts/qa/check-pdf-content.py --limit 40    # amostra rápida
+```
+
+Vereditos: `ok` (DOI ou título confirmam), `suspeito` (título e sobrenome ausentes),
+`ausente` (`caminho` preenchido, arquivo fora do snapshot), `ilegivel`, `sem-texto`
+(digitalização sem OCR — não dá para julgar) e `revisar` (casamento parcial). Saída em
+`pdf-content-report.md` e `pdf-content.json`.
+
+### `extract-triage-digest.py`
+
+Monta o material de leitura para reavaliar a triagem dos rejeitados: para cada artigo de
+`notas-pendentes.json`, junta título, veículo, abstract e — quando há PDF — os trechos em
+volta dos termos que respondem às três perguntas da skill (sujeitos, quem produz software,
+bem-estar, fora de escopo, tipo de trabalho). Existe para caber: o texto integral de
+centenas de PDFs não caberia numa leitura só, e referências e apêndices não decidem
+triagem.
+
+```powershell
+python scripts/qa/extract-triage-digest.py
+```
+
+| Parâmetro | Padrão | O que faz |
+|---|---|---|
+| `--pending <path>` | `data/qa/<stamp>/notas-pendentes.json` | Fila vinda do audit |
+| `--snapshot <path>` | mais recente | Onde estão os PDFs |
+| `--limit <n>` | 0 (todos) | Amostra |
+
+Saída `triagem-digest.jsonl` (~1,4 KB por artigo) e `triagem-digest-resumo.json`, que conta
+quantos artigos têm PDF, só abstract, ou nenhum material.
+
+### `apply-patches.py`
+
+Aplica no servidor as notas e as correções de triagem já revisadas, via
+`PATCH /api/groups/<id>/articles/<chave>`. Aceita os dois arquivos do fluxo:
+`notas-propostas.json` (itens com `notaProposta`) e `correcoes-propostas.json` (itens com
+`patch` e `esperado`).
+
+```powershell
+$env:REF_AUTH_TOKEN = '<token de sessão>'
+python scripts/qa/apply-patches.py --input data/qa/<stamp>/notas-propostas.json
+python scripts/qa/apply-patches.py --input data/qa/<stamp>/notas-propostas.json --apply
+```
+
+| Parâmetro | Padrão | O que faz |
+|---|---|---|
+| `--input <path>` | **obrigatório** | Arquivo de itens revisados |
+| `--base-url <url>` | `$REF_BASE_URL` ou `https://ref.sergioleal.org` | Servidor |
+| `--auth-token <t>` | `$REF_AUTH_TOKEN` | Sessão existente |
+| `--join-token <t>` | — | Registra device novo e entra no workspace |
+| `--apply` | off | Grava de verdade |
+| `--overwrite` | off | Sobrescreve nota já preenchida |
+| `--limit <n>` | 0 (todos) | Processa só os N primeiros (ensaio) |
+
+Três proteções, porque escreve no corpus real:
+
+1. **Guarda otimista.** Antes de gravar, compara os campos que vai mudar com o `esperado`
+   do snapshot. Se você editou o artigo no app nesse meio-tempo, o item é pulado como
+   `divergente` em vez de sobrescrever.
+2. Nota já preenchida no servidor nunca é sobrescrita sem `--overwrite`.
+3. Só aceita `notes`, `status`, `descartado`, `usado`, `revisaoLiteratura`,
+   `pdfNaoEncontrado` e `motivoDescarte`. `caminho`, `factors` e `tags` ficam de fora **de
+   propósito** — reescrevê-los em lote a partir de um snapshot apagaria análise. Campo fora
+   da lista aborta o script antes de qualquer requisição.
+
+Cada item vai para um log `.jsonl` com o valor anterior dos campos alterados.
+
+---
+
 ## `migrate/` — dados locais → servidor
 
 > ⚠️ Estes scripts **não** leem `deploy.txt`. Passe `-ServerHost` e tenha SSH por chave
@@ -400,3 +521,5 @@ e deixa o Gradle falhar depois.
 | `deploy/publish-server-remote.py` | 🟠 Deixa o servidor em detached HEAD na tag |
 | `android/build-and-copy-apk.ps1` | 🟢 Só sobrescreve APK de mesmo nome |
 | `migrate/create-join-token.sh`, `gen-token-local.mjs` | 🟢 Só inserem registros (token em texto claro no terminal) |
+| `qa/apply-patches.py --apply` | 🟠 Escreve em produção; sem `--apply` é dry-run, guarda otimista contra o snapshot, e recusa campo fora da lista permitida |
+| `qa/audit-snapshot.py`, `qa/check-pdf-content.py`, `qa/extract-triage-digest.py` | 🟢 Somente leitura, sobre a cópia do snapshot |
