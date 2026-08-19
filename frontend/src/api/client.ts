@@ -38,7 +38,7 @@ type ArticleWritePayload = Omit<Article, 'factors'> & {
 };
 import type { DeviceSession, JoinTokenInfo } from '../types/device';
 import type { WorkspaceInput, WorkspaceSummary, AccessSetup } from '../types/workspace';
-import { resolveApiBaseUrl } from '../utils/platform';
+import { isCapacitorWebView, isNativeApp, resolveApiBaseUrl } from '../utils/platform';
 
 function getApiBase(): string {
   return resolveApiBaseUrl();
@@ -309,10 +309,32 @@ export const api = {
   },
 
   openPdf: async (filePath: string) => {
-    const response = await fetch(api.pdfUrl(filePath), {
-      headers: { ...authHeaders() },
-    });
+    // App empacotado: a WebView do Android não tem visualizador de PDF nem aba
+    // nova, então um blob: não abre nada. O caminho é entregar ao sistema um
+    // link assinado, que dispensa o header de autenticação.
+    if (isNativeApp() || isCapacitorWebView()) {
+      const { url } = await api.createPdfShareLink(filePath);
+      window.open(url, '_blank');
+      return;
+    }
+
+    // A aba é aberta AGORA, ainda dentro do clique: depois do await o
+    // window.open cai fora do gesto do usuário e o bloqueador de pop-up o
+    // descarta em silêncio — era isso que fazia o botão não fazer nada. E sem
+    // "noopener", porque com ele o retorno é sempre null e não há como saber
+    // se foi bloqueado.
+    const janela = window.open('', '_blank');
+
+    let response: Response;
+    try {
+      response = await fetch(api.pdfUrl(filePath), { headers: { ...authHeaders() } });
+    } catch (error) {
+      janela?.close();
+      throw error;
+    }
+
     if (!response.ok) {
+      janela?.close();
       let message = `Erro ${response.status}`;
       try {
         const body = (await response.json()) as { error?: string };
@@ -322,9 +344,18 @@ export const api = {
       }
       throw new Error(message);
     }
+
     const blob = await response.blob();
     const url = URL.createObjectURL(blob);
-    window.open(url, '_blank', 'noopener,noreferrer');
+
+    if (!janela) {
+      URL.revokeObjectURL(url);
+      throw new Error(
+        'O navegador bloqueou a aba do PDF. Libere pop-ups para este site e tente de novo.',
+      );
+    }
+
+    janela.location.href = url;
     window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
   },
 

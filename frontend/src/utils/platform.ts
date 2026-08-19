@@ -11,7 +11,7 @@ export function isNativeApp(): boolean {
  * WebView do Capacitor (https://localhost ou capacitor://) mesmo se
  * isNativePlatform() ainda não estiver pronto no carregamento do módulo.
  */
-function isCapacitorWebView(): boolean {
+export function isCapacitorWebView(): boolean {
   if (typeof window === 'undefined') return false;
   const { protocol, hostname } = window.location;
   return (

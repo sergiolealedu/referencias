@@ -58,13 +58,16 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Sem --provenance: o npm não assina proveniência de repositório privado e
+      # o passo abortava, derrubando o deploy antes de chegar ao droplet. O
+      # --access acompanha a visibilidade do repo.
       - name: Publish backend to GitHub Packages
-        run: npm publish -w backend --provenance --access public
+        run: npm publish -w backend --access restricted
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish frontend to GitHub Packages
-        run: npm publish -w frontend --provenance --access public
+        run: npm publish -w frontend --access restricted
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
