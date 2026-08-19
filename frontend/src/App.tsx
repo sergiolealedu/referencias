@@ -422,16 +422,15 @@ export default function App() {
             <span className="app-build-version" title={`Build: ${BUILD_ID}`}>
               {BUILD_LABEL}
             </span>
+            {/* Workspace na mesma linha do título: como parágrafo
+                separado, gastava uma linha inteira do cabeçalho. */}
+            <span
+              className="subtitle"
+              title={showGlobalSettings() ? settings?.sqliteDbPath : undefined}
+            >
+              {activeWorkspace?.name ?? settings?.activeWorkspaceName ?? '…'}
+            </span>
           </h1>
-
-          <p
-            className="subtitle"
-            title={showGlobalSettings() ? settings?.sqliteDbPath : undefined}
-          >
-
-            Workspace: {activeWorkspace?.name ?? settings?.activeWorkspaceName ?? '…'}
-
-          </p>
 
         </div>
 

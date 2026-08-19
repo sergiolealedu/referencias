@@ -845,9 +845,7 @@ export function Dashboard({ toolbarCollapsed = false }: { toolbarCollapsed?: boo
           <div className="dashboard-toolbar-text">
             <h2>Dashboard por grupo</h2>
             <p className="dashboard-subtitle">
-              Por ano ou consolidado, empilhado por status ou numa barra só. Os
-              botões de categoria escolhem o que entra na conta nos dois casos.
-              "Todos" soma todos os grupos.
+              "Todos" soma os grupos. Os botões de categoria filtram nos dois modos.
             </p>
           </div>
           <div className="dashboard-toolbar-actions">
