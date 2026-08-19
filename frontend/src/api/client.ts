@@ -211,7 +211,13 @@ export const api = {
 
   updateFactor: (
     id: string,
-    patch: { name?: string; aliases?: string[]; spellings?: string[] },
+    patch: {
+      name?: string;
+      aliases?: string[];
+      spellings?: string[];
+      /** String vazia ou null limpa a categoria; undefined mantém. */
+      category?: string | null;
+    },
   ) =>
     request<FactorDefinition>(`/factors/${encodeURIComponent(id)}`, {
       method: 'PATCH',

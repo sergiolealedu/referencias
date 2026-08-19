@@ -11,6 +11,7 @@ const ensureFactorSchema = z.object({
   id: z.string().min(1).optional(),
   name: z.string().min(1, 'Nome do fator é obrigatório'),
   aliases: z.array(z.string()).optional(),
+  category: z.string().trim().max(120).nullable().optional(),
 });
 
 const updateFactorSchema = z.object({
@@ -18,6 +19,8 @@ const updateFactorSchema = z.object({
   aliases: z.array(z.string()).optional(),
   /** Lista completa de grafias/traduções (inclui o nome canônico). */
   spellings: z.array(z.string()).optional(),
+  /** Categoria temática; string vazia ou null limpa, undefined mantém. */
+  category: z.string().trim().max(120).nullable().optional(),
 });
 
 const updateOccurrenceSchema = z.object({
@@ -34,6 +37,7 @@ const importFactorsSchema = z.object({
         id: z.string().trim().min(1).optional(),
         name: z.string().trim().min(1),
         aliases: z.array(z.string()).optional(),
+        category: z.string().trim().max(120).nullable().optional(),
       }),
     )
     .min(1, 'Arquivo sem fatores')
@@ -56,6 +60,8 @@ const deltaItemSchema = z
           polarity: z.enum(['positive', 'negative']).optional(),
           description: z.string().optional(),
           aliases: z.array(z.string()).optional(),
+          /** Categoria temática do fator quando ele é novo no catálogo. */
+          category: z.string().trim().min(1).max(120).optional(),
         }),
       )
       .optional(),
@@ -83,6 +89,8 @@ const deltaFactorOpSchema = z.object({
   aliases: z.array(z.string()).optional(),
   /** Substitui TODAS as grafias (o que ficar de fora se perde); ignora "aliases". */
   spellings: z.array(z.string()).optional(),
+  /** Categoria temática do fator; string vazia limpa. */
+  category: z.string().trim().max(120).optional(),
 });
 
 const deltaSchema = z
@@ -172,6 +180,7 @@ export function createFactorsRouter(): Router {
             id: entrada.id,
             name: entrada.name,
             aliases: entrada.aliases ?? [],
+            category: entrada.category,
           });
           if (idsAntes.has(factor.id)) atualizados += 1;
           else {
@@ -274,8 +283,10 @@ export function createFactorsRouter(): Router {
           'no trabalho (QVT) de desenvolvedores de software que cada artigo evidencia.',
           '',
           'ENTRADA (neste mesmo arquivo):',
-          '- "catalogo": os fatores já cadastrados, cada um com o rótulo canônico em "label"',
-          '  e suas grafias equivalentes em "grafias" (português, inglês, sinônimos).',
+          '- "catalogo": os fatores já cadastrados, cada um com o rótulo canônico em "label",',
+          '  suas grafias equivalentes em "grafias" (português, inglês, sinônimos) e a',
+          '  "categoria" temática (Individual, Tarefa e carga de trabalho, Técnico e',
+          '  ferramentas, Equipe e relações, Processo de desenvolvimento, Organizacional).',
           '- "artigos": os artigos a analisar. Cada um traz "chave", "titulo", "ano",',
           '  "abstract", "fatoresAtuais" e "pdfUrl".',
           '',
@@ -349,6 +360,9 @@ export function createFactorsRouter(): Router {
           '  Além do rótulo do catálogo, "aliases" pode trazer outros sinônimos do',
           '  fator encontrados no artigo, em PT ou EN (ex.: "Upskilling", "Layoffs"):',
           '  todos viram grafias do fator no catálogo.',
+          '- "category": só para fator NOVO (sem correspondente em "catalogo"):',
+          '  escolha uma das categorias já usadas em "catalogo". Fator existente',
+          '  já tem categoria — omita o campo.',
           '- Não use vírgula nem ponto-e-vírgula dentro de "label", de "canonical" nem',
           '  de um item de "aliases": eles separam grafias, e você acabaria com duas',
           '  grafias truncadas. Se o trecho exato do artigo tiver vírgula, recorte um',
@@ -447,8 +461,9 @@ export function createFactorsRouter(): Router {
           '"Insegurança no emprego", "aliases": ["Layoffs"]}], "items": []}.',
           '"match" acha o fator por qualquer grafia atual; "name" renomeia (o nome antigo',
           'vira grafia); "aliases" soma grafias; "spellings" substitui o conjunto inteiro',
-          'de grafias — o que ficar de fora se perde. Use só quando for corrigir algo',
-          'errado no catálogo; do contrário, omita a lista.',
+          'de grafias — o que ficar de fora se perde; "category" troca a categoria',
+          'temática. Use só quando for corrigir algo errado no catálogo; do contrário,',
+          'omita a lista.',
         ].join('\n'),
         formatoResposta: {
           items: [
@@ -465,6 +480,8 @@ export function createFactorsRouter(): Router {
                   polarity: 'positive | negative',
                   description:
                     '<Seção X.Y (participantes): “citação verbatim do trecho, sem tradução”>',
+                  category:
+                    '<só para fator novo: uma categoria já usada em "catalogo"; omita se o fator já existe>',
                 },
               ],
             },
@@ -479,7 +496,11 @@ export function createFactorsRouter(): Router {
           semPdf: artigos.filter((a) => !a.pdfUrl).length,
           semAbstract: artigos.filter((a) => !a.abstract.trim()).length,
         },
-        catalogo: catalogo.map((f) => ({ label: f.name, grafias: f.aliases })),
+        catalogo: catalogo.map((f) => ({
+          label: f.name,
+          grafias: f.aliases,
+          categoria: f.category ?? null,
+        })),
         artigos,
       });
     } catch (error) {
@@ -529,6 +550,7 @@ export function createFactorsRouter(): Router {
           await store.updateFactor(alvo.id, {
             ...(nome ? { name: nome } : {}),
             spellings,
+            ...(op.category !== undefined ? { category: op.category } : {}),
           });
           fatoresCatalogo += 1;
         } catch (error) {
@@ -586,6 +608,7 @@ export function createFactorsRouter(): Router {
                 polarity: f.polarity ?? 'positive',
                 description: f.description ?? '',
                 aliases: f.aliases ?? [],
+                category: f.category,
               })),
             );
             fatoresAplicados += item.factors.length;

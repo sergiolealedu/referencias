@@ -2153,6 +2153,63 @@ pre.error {
   gap: 0.25rem;
 }
 
+/* Cabeçalho de categoria: fica acima dos itens e recolhe o grupo ao clicar.
+   Sobrescreve o seletor genérico `.factors-view-list button` logo abaixo. */
+.factors-view-list .factors-view-category-toggle {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.45rem 0.65rem;
+  border: none;
+  border-radius: 0;
+  background: #f1f5f9;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.factors-view-list .factors-view-category-toggle:hover {
+  background: #e2e8f0;
+}
+
+.factors-view-category-caret {
+  width: 0.9em;
+  flex-shrink: 0;
+}
+
+.factors-view-category-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.factors-view-category-count {
+  flex-shrink: 0;
+  font-weight: 600;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0 0.5em;
+  line-height: 1.5;
+}
+
+.factors-view-category-chip {
+  background: #f1f5f9;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+
 .factors-view-list button {
   display: flex;
   flex-direction: column;

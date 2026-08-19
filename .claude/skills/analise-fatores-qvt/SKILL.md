@@ -131,6 +131,12 @@ frases longas do texto viram nome de fator e o catálogo fica ilegível.
 idioma — repita esse rótulo em `canonical` **e** em `aliases`. É assim que
 artigos diferentes convergem no mesmo fator em vez de fragmentar o catálogo.
 
+Cada entrada de `catalogo` traz também a `categoria` temática do fator
+(Individual, Tarefa e carga de trabalho, Técnico e ferramentas, Equipe e
+relações, Processo de desenvolvimento, Organizacional). Ao propor um fator
+**novo**, inclua `category` com uma das categorias já usadas no catálogo —
+fator existente já tem categoria, e aí o campo deve ser omitido.
+
 Além do rótulo do catálogo, `aliases` pode trazer outros sinônimos do fator
 encontrados no artigo, em inglês ou português (ex.: `Upskilling`, `Layoffs`):
 todos viram grafias do fator e ajudam os próximos artigos a convergir. O nome
@@ -256,8 +262,9 @@ arquivo, aplicada **antes** dos artigos:
 
 `match` localiza o fator por qualquer grafia atual; `name` renomeia (o nome
 antigo vira grafia); `aliases` soma grafias; `spellings` substitui o conjunto
-inteiro de grafias — o que ficar de fora se perde. Use para corrigir catálogo
-sem mexer nos artigos, p. ex. renomear um fator que entrou com o nome errado.
+inteiro de grafias — o que ficar de fora se perde; `category` troca a categoria
+temática do fator. Use para corrigir catálogo sem mexer nos artigos, p. ex.
+renomear um fator que entrou com o nome errado.
 
 Entregue o JSON em um bloco próprio (ou arquivo), sem comentários dentro dele.
 **Fora** do bloco, liste uma linha por artigo: chave, quantos fatores, se

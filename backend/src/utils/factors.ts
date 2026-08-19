@@ -102,7 +102,8 @@ export function replaceSpellings(
 
   const nameKey = normalizeFactorKey(name);
   const aliases = tokens.filter((token) => normalizeFactorKey(token) !== nameKey);
-  return { id: factor.id, name, aliases };
+  // Espalha o fator para não perder campos que não são grafia (ex.: categoria).
+  return { ...factor, name, aliases };
 }
 
 export function ensureFactorInCatalog(

@@ -18,6 +18,23 @@ interface FactorsViewProps {
   onFocusConsumed?: () => void;
 }
 
+/** Fatores ainda não classificados caem neste grupo, sempre por último. */
+const SEM_CATEGORIA = 'Sem categoria';
+
+/** Sugestões do datalist ao editar; a lista real vem do que o catálogo usa. */
+const CATEGORIAS_SUGERIDAS = [
+  'Individual',
+  'Tarefa e carga de trabalho',
+  'Técnico e ferramentas',
+  'Equipe e relações',
+  'Processo de desenvolvimento',
+  'Organizacional',
+];
+
+function categoriaDe(factor: FactorOverview): string {
+  return factor.category?.trim() || SEM_CATEGORIA;
+}
+
 function polarityLabel(polarity: FactorOccurrence['polarity']): string {
   return polarity === 'positive' ? 'Positivo' : 'Negativo';
 }
@@ -54,6 +71,11 @@ export function FactorsView({
   const [infoAberta, setInfoAberta] = useState(false);
   const [nomeDraft, setNomeDraft] = useState('');
   const [grafiasDraft, setGrafiasDraft] = useState('');
+  const [categoriaDraft, setCategoriaDraft] = useState('');
+  /** Categorias recolhidas na lista; a busca ignora isso para não esconder resultado. */
+  const [categoriasRecolhidas, setCategoriasRecolhidas] = useState<Set<string>>(
+    () => new Set(),
+  );
   /** Ocorrência em edição, identificada por grupo+chave do artigo. */
   const [ocorrenciaEmEdicao, setOcorrenciaEmEdicao] = useState<string | null>(null);
   const [ocorrenciaDraft, setOcorrenciaDraft] = useState({
@@ -138,6 +160,7 @@ export function FactorsView({
     setTransferMessage(null);
     setNomeDraft(factor.name);
     setGrafiasDraft(formatAllSpellings(factor));
+    setCategoriaDraft(factor.category ?? '');
     setEditandoFator(true);
   };
 
@@ -163,7 +186,13 @@ export function FactorsView({
       const grafias = [nome, ...grafiasDraft.split(/[,;]/)]
         .map((g) => g.trim())
         .filter(Boolean);
-      await api.updateFactor(factor.id, { name: nome, spellings: grafias });
+      // Categoria vazia limpa no backend (vira null) e o fator volta ao grupo
+      // "Sem categoria" da lista.
+      await api.updateFactor(factor.id, {
+        name: nome,
+        spellings: grafias,
+        category: categoriaDraft.trim(),
+      });
       await queryClient.invalidateQueries({ queryKey: ['factors'] });
       await queryClient.invalidateQueries({ queryKey: ['articles'] });
       setEditandoFator(false);
@@ -322,6 +351,47 @@ export function FactorsView({
     });
   }, [factors, query]);
 
+  /**
+   * Lista agrupada por categoria, em ordem alfabética pt-BR com "Sem categoria"
+   * por último. Dentro de cada grupo a ordem do catálogo (por nome) é mantida.
+   */
+  const agrupados = useMemo(() => {
+    const porCategoria = new Map<string, FactorOverview[]>();
+    for (const factor of filtered) {
+      const categoria = categoriaDe(factor);
+      const lista = porCategoria.get(categoria);
+      if (lista) lista.push(factor);
+      else porCategoria.set(categoria, [factor]);
+    }
+    return [...porCategoria.entries()].sort(([a], [b]) => {
+      if (a === SEM_CATEGORIA) return 1;
+      if (b === SEM_CATEGORIA) return -1;
+      return a.localeCompare(b, 'pt-BR', { sensitivity: 'base' });
+    });
+  }, [filtered]);
+
+  /** Categorias em uso no catálogo inteiro, para o datalist do formulário. */
+  const categoriasExistentes = useMemo(() => {
+    const nomes = new Set(CATEGORIAS_SUGERIDAS);
+    for (const factor of factors) {
+      const categoria = factor.category?.trim();
+      if (categoria) nomes.add(categoria);
+    }
+    return [...nomes].sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+  }, [factors]);
+
+  // Com busca ativa, tudo fica visível: recolher categoria esconderia resultado.
+  const buscaAtiva = query.trim().length > 0;
+
+  const alternarCategoria = (categoria: string) => {
+    setCategoriasRecolhidas((prev) => {
+      const next = new Set(prev);
+      if (next.has(categoria)) next.delete(categoria);
+      else next.add(categoria);
+      return next;
+    });
+  };
+
   useEffect(() => {
     if (filtered.length === 0) {
       setSelectedId(null);
@@ -336,9 +406,17 @@ export function FactorsView({
   // limpa a busca para o fator aparecer na lista e o seleciona.
   useEffect(() => {
     if (!focusFactorId) return;
-    if (!factors.some((factor) => factor.id === focusFactorId)) return;
+    const alvo = factors.find((factor) => factor.id === focusFactorId);
+    if (!alvo) return;
     setQuery('');
     setSelectedId(focusFactorId);
+    // A categoria do fator focado precisa estar aberta para ele aparecer.
+    setCategoriasRecolhidas((prev) => {
+      if (!prev.has(categoriaDe(alvo))) return prev;
+      const next = new Set(prev);
+      next.delete(categoriaDe(alvo));
+      return next;
+    });
     // Vindo de um chip na lista de artigos, o alvo é o detalhe daquele fator.
     setDetailOpen(true);
     onFocusConsumed?.();
@@ -446,46 +524,75 @@ export function FactorsView({
               className={`factors-view-layout${detailOpen ? ' is-detail-open' : ''}`}
             >
               <aside className="factors-view-list" aria-label="Lista de fatores">
-                <ul>
-                  {filtered.map((factor) => {
-                    const active = factor.id === selected?.id;
-                    return (
-                      <li key={factor.id} ref={active ? activeItemRef : undefined}>
-                        <button
-                          type="button"
-                          className={active ? 'is-active' : ''}
-                          onClick={() => {
-                            setSelectedId(factor.id);
-                            setDetailOpen(true);
-                          }}
-                          aria-current={active ? 'true' : undefined}
-                        >
-                          <span className="factors-view-list-name">{factor.name}</span>
-                          <span className="factors-view-list-meta">
-                            {factor.articleCount} artigo(s)
-                            {factor.articleCount > 0 && (
-                              <>
-                                {' · '}
-                                <span className="polarity-positive-text">
-                                  +{factor.positiveCount}
-                                </span>
-                                {' / '}
-                                <span className="polarity-negative-text">
-                                  −{factor.negativeCount}
-                                </span>
-                              </>
-                            )}
-                          </span>
-                          {factor.aliases.length > 0 && (
-                            <span className="factors-view-list-aliases">
-                              {factor.aliases.join(' · ')}
-                            </span>
-                          )}
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
+                {agrupados.map(([categoria, itens]) => {
+                  const recolhida = !buscaAtiva && categoriasRecolhidas.has(categoria);
+                  return (
+                    <section key={categoria} className="factors-view-category">
+                      <button
+                        type="button"
+                        className="factors-view-category-toggle"
+                        onClick={() => alternarCategoria(categoria)}
+                        aria-expanded={!recolhida}
+                        title={recolhida ? 'Expandir categoria' : 'Recolher categoria'}
+                      >
+                        <span className="factors-view-category-caret" aria-hidden="true">
+                          {recolhida ? '▸' : '▾'}
+                        </span>
+                        <span className="factors-view-category-name">{categoria}</span>
+                        <span className="factors-view-category-count">
+                          {itens.length}
+                        </span>
+                      </button>
+                      {!recolhida && (
+                        <ul>
+                          {itens.map((factor) => {
+                            const active = factor.id === selected?.id;
+                            return (
+                              <li
+                                key={factor.id}
+                                ref={active ? activeItemRef : undefined}
+                              >
+                                <button
+                                  type="button"
+                                  className={active ? 'is-active' : ''}
+                                  onClick={() => {
+                                    setSelectedId(factor.id);
+                                    setDetailOpen(true);
+                                  }}
+                                  aria-current={active ? 'true' : undefined}
+                                >
+                                  <span className="factors-view-list-name">
+                                    {factor.name}
+                                  </span>
+                                  <span className="factors-view-list-meta">
+                                    {factor.articleCount} artigo(s)
+                                    {factor.articleCount > 0 && (
+                                      <>
+                                        {' · '}
+                                        <span className="polarity-positive-text">
+                                          +{factor.positiveCount}
+                                        </span>
+                                        {' / '}
+                                        <span className="polarity-negative-text">
+                                          −{factor.negativeCount}
+                                        </span>
+                                      </>
+                                    )}
+                                  </span>
+                                  {factor.aliases.length > 0 && (
+                                    <span className="factors-view-list-aliases">
+                                      {factor.aliases.join(' · ')}
+                                    </span>
+                                  )}
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </section>
+                  );
+                })}
               </aside>
 
               <section
@@ -566,9 +673,24 @@ export function FactorsView({
                               onChange={(e) => setGrafiasDraft(e.target.value)}
                             />
                           </label>
+                          <label>
+                            <span>Categoria</span>
+                            <input
+                              value={categoriaDraft}
+                              onChange={(e) => setCategoriaDraft(e.target.value)}
+                              list="factor-category-options"
+                              placeholder={SEM_CATEGORIA}
+                            />
+                            <datalist id="factor-category-options">
+                              {categoriasExistentes.map((categoria) => (
+                                <option key={categoria} value={categoria} />
+                              ))}
+                            </datalist>
+                          </label>
                           <p className="factors-view-edit-hint">
                             Estas grafias são como o app reconhece o fator ao aplicar
-                            um delta. Tirar uma daqui não altera os artigos.
+                            um delta. Tirar uma daqui não altera os artigos. Categoria
+                            vazia manda o fator para "{SEM_CATEGORIA}".
                           </p>
                           <div className="factors-view-edit-actions">
                             <button type="submit" className="primary" disabled={importing}>
@@ -586,6 +708,9 @@ export function FactorsView({
                           </p>
                         )}
                         <div className="factors-view-detail-stats">
+                          <span className="factor-chip factors-view-category-chip">
+                            {categoriaDe(selected)}
+                          </span>
                           <span>{selected.articleCount} ocorrência(s)</span>
                           <span className="factor-chip polarity-positive">
                             +{selected.positiveCount} positivo(s)

@@ -157,7 +157,12 @@ export function downloadFactorsExport(factors: FactorDefinition[]): void {
   const payload: FactorsExport = {
     formatVersion: 1,
     exportedAt: new Date().toISOString(),
-    factors: factors.map((f) => ({ id: f.id, name: f.name, aliases: [...f.aliases] })),
+    factors: factors.map((f) => ({
+      id: f.id,
+      name: f.name,
+      aliases: [...f.aliases],
+      category: f.category ?? null,
+    })),
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], {
     type: 'application/json;charset=utf-8',
@@ -195,6 +200,7 @@ export function parseFactorsExportFile(text: string): FactorDefinition[] {
       id: typeof f.id === 'string' ? f.id : '',
       name: f.name.trim(),
       aliases: Array.isArray(f.aliases) ? f.aliases.filter((a) => typeof a === 'string') : [],
+      category: typeof f.category === 'string' && f.category.trim() ? f.category.trim() : null,
     }))
     .filter((f) => f.name);
 
@@ -255,6 +261,9 @@ export function parseFactorsDeltaFile(text: string): FactorsDelta {
         polarity: f.polarity === 'negative' ? ('negative' as const) : ('positive' as const),
         description: typeof f.description === 'string' ? f.description : '',
         aliases: textList(f.aliases) ?? [],
+        ...(typeof f.category === 'string' && f.category.trim()
+          ? { category: f.category.trim() }
+          : {}),
       }))
       .filter((f) => f.label);
 
@@ -274,6 +283,7 @@ export function parseFactorsDeltaFile(text: string): FactorsDelta {
       ...(typeof op.name === 'string' && op.name.trim() ? { name: op.name.trim() } : {}),
       ...(textList(op.aliases) ? { aliases: textList(op.aliases) } : {}),
       ...(textList(op.spellings) ? { spellings: textList(op.spellings) } : {}),
+      ...(typeof op.category === 'string' ? { category: op.category.trim() } : {}),
     }))
     .filter((op) => op.match);
 

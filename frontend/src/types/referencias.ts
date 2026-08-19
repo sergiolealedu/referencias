@@ -45,6 +45,8 @@ export interface FactorDefinition {
   id: string;
   name: string;
   aliases: string[];
+  /** Categoria temática (ex.: Individual, Técnico, Organizacional). */
+  category?: string | null;
 }
 
 /** Ocorrência de um fator em um artigo. */
@@ -77,6 +79,7 @@ export interface FactorOverview {
   id: string;
   name: string;
   aliases: string[];
+  category?: string | null;
   articleCount: number;
   positiveCount: number;
   negativeCount: number;
@@ -215,6 +218,8 @@ export interface FactorsDeltaItem {
     polarity?: FactorPolarity;
     description?: string;
     aliases?: string[];
+    /** Categoria temática do fator quando ele é novo no catálogo. */
+    category?: string;
   }[];
   /** Fatores a desvincular do artigo, por qualquer grafia; roda antes de "factors". */
   removeFactors?: string[];
@@ -230,6 +235,8 @@ export interface FactorsDeltaCatalogOp {
   name?: string;
   aliases?: string[];
   spellings?: string[];
+  /** Categoria temática; string vazia limpa. */
+  category?: string;
 }
 
 export interface FactorsDelta {
