@@ -30,11 +30,23 @@ gerar um delta que suja o catálogo.
 
 ## Ler o material
 
+**Sem PDF, o artigo sai da análise.** Não há exceção: o abstract raramente
+menciona os fatores, que aparecem em resultados e discussão, e um delta feito às
+cegas parece bom e está errado. Se o artigo vier sem `pdfUrl`, ou se o link não
+abrir, **não gere item de delta para ele** — nem vazio, nem "provisório".
+
 Baixe o PDF de `artigos[].pdfUrl` — o link é assinado e abre sem login, mas
-**expira** (veja `pdfExpiraEm`). Se não conseguir acessá-lo, **diga isso
-explicitamente** em vez de analisar só pelo abstract: o abstract raramente
-menciona os fatores, que aparecem em resultados e discussão. Um delta feito às
-cegas parece bom e está errado.
+**expira** (veja `pdfExpiraEm`).
+
+Liste os eliminados por falta de PDF **à parte** no resumo, separados dos que
+reprovaram na triagem. São coisas diferentes: um artigo sem PDF não foi julgado,
+apenas não pôde ser lido, e um dia o PDF pode aparecer.
+
+E não os marque com um dos três botões de triagem. Falta de PDF não é resposta a
+nenhuma das três perguntas — usar "Não é QVT" para isso suja o dado de triagem
+exatamente como usar esse botão para excluir por veículo. O app tem o campo
+próprio: a flag **PDF não encontrado**, e o status `not_found` quando a busca já
+se esgotou.
 
 ## Triagem: o artigo entra na análise?
 
@@ -266,7 +278,20 @@ inteiro de grafias — o que ficar de fora se perde; `category` troca a categori
 temática do fator. Use para corrigir catálogo sem mexer nos artigos, p. ex.
 renomear um fator que entrou com o nome errado.
 
-Entregue o JSON em um bloco próprio (ou arquivo), sem comentários dentro dele.
+**Entregue o delta como arquivo para download**, não como bloco de texto no chat.
+O app recebe arquivo em **Fatores → Aplicar delta em artigos**, e copiar do chat
+troca aspas tipográficas por retas, quebra `description` em citações longas e
+trunca sem avisar. Nome do arquivo espelhando a entrada:
+
+- um artigo: `delta-fatores-<chave>.json`
+- lote: `delta-fatores-lote-<AAAAMMDD>.json`
+
+UTF-8 sem BOM, sem comentários dentro do JSON. As aspas curvas das citações
+verbatim precisam sobreviver — é por elas que o `label` é encontrado com Ctrl+F
+no PDF.
+
+Se o ambiente não puder gerar arquivo, diga isso e entregue em bloco próprio,
+avisando que as aspas podem precisar de conferência.
 **Fora** do bloco, liste uma linha por artigo: chave, quantos fatores, se
 conseguiu ler o PDF e o veredito da triagem (aprovado, ou qual das três
 perguntas reprovou). O usuário precisa disso para distinguir "artigo sem
