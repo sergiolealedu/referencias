@@ -15,7 +15,9 @@ Três proteções, porque isto escreve no corpus real:
   1. `esperado` é uma guarda otimista — antes de gravar, compara os campos que
      vai mudar com o valor que o snapshot viu. Se você editou o artigo no app
      entre o backup e agora, o item é pulado em vez de sobrescrever.
-  2. Nota já preenchida no servidor nunca é sobrescrita sem --overwrite.
+  2. Nota já preenchida no servidor nunca é sobrescrita sem --overwrite — mas
+     só o campo `notes` é descartado: status e motivoDescarte do mesmo item
+     continuam sendo aplicados.
   3. Só um subconjunto de campos é aceito (ver CAMPOS_PERMITIDOS). `caminho`,
      `factors` e `tags` ficam de fora de propósito: reescrevê-los em lote a
      partir de um snapshot apagaria trabalho de análise.
@@ -293,23 +295,42 @@ def main() -> int:
                     contagem["divergente"] += 1
                     print(f"[{i}/{len(itens)}] DIVERGENTE {item['chave']} — mudou desde "
                           f"o snapshot: {'; '.join(divergentes)}")
-                elif "notes" in item["patch"] and nota_atual and not args.overwrite:
-                    entrada |= {"resultado": "pulado", "notaAtual": nota_atual}
-                    contagem["pulado"] += 1
-                    print(f"[{i}/{len(itens)}] pulado {item['chave']} — já tem nota")
-                elif not args.apply:
-                    entrada |= {
-                        "resultado": "simulado",
-                        "anterior": {k: atual.get(k) for k in item["patch"]},
-                    }
-                    contagem["simulado"] += 1
-                    print(f"[{i}/{len(itens)}] simulado {item['chave']} ({campos})")
                 else:
-                    anterior = {k: atual.get(k) for k in item["patch"]}
-                    api.patch(path, item["patch"])
-                    entrada |= {"resultado": "gravado", "anterior": anterior}
-                    contagem["gravado"] += 1
-                    print(f"[{i}/{len(itens)}] gravado {item['chave']} ({campos})")
+                    # Preservar nota é decisão sobre o campo `notes`, não sobre o
+                    # item: descartar o patch inteiro por causa dela deixaria de
+                    # aplicar status e motivoDescarte, que é como 4 artigos
+                    # ficaram sem o status pretendido na primeira rodada.
+                    patch = dict(item["patch"])
+                    nota_preservada = False
+                    if "notes" in patch and nota_atual and not args.overwrite:
+                        del patch["notes"]
+                        nota_preservada = True
+
+                    if not patch:
+                        entrada |= {"resultado": "pulado", "notaAtual": nota_atual}
+                        contagem["pulado"] += 1
+                        print(f"[{i}/{len(itens)}] pulado {item['chave']} — só tinha nota, "
+                              f"e ela já está preenchida")
+                        log.write(json.dumps(entrada, ensure_ascii=False) + "\n")
+                        continue
+
+                    restantes = ", ".join(sorted(patch))
+                    aviso = " (nota preservada)" if nota_preservada else ""
+                    anterior = {k: atual.get(k) for k in patch}
+
+                    if not args.apply:
+                        entrada |= {"resultado": "simulado", "patchEfetivo": patch,
+                                    "anterior": anterior, "notaPreservada": nota_preservada}
+                        contagem["simulado"] += 1
+                        print(f"[{i}/{len(itens)}] simulado {item['chave']} "
+                              f"({restantes}){aviso}")
+                    else:
+                        api.patch(path, patch)
+                        entrada |= {"resultado": "gravado", "patchEfetivo": patch,
+                                    "anterior": anterior, "notaPreservada": nota_preservada}
+                        contagem["gravado"] += 1
+                        print(f"[{i}/{len(itens)}] gravado {item['chave']} "
+                              f"({restantes}){aviso}")
             except ApiError as exc:
                 entrada |= {"resultado": "erro", "erro": str(exc)}
                 contagem["erro"] += 1
