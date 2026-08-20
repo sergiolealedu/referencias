@@ -46,6 +46,15 @@ from pathlib import Path
 
 DEFAULT_BASE_URL = "https://ref.sergioleal.org"
 
+# O domínio está atrás de Cloudflare, que devolve 403 "error code: 1010" para a
+# assinatura padrão do urllib ("Python-urllib/3.x"). Um User-Agent de navegador
+# passa. Se preferir identificar a ferramenta, crie a regra correspondente no
+# Cloudflare e troque com --user-agent.
+DEFAULT_USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/124.0 Safari/537.36 referencias-qa/1.0"
+)
+
 # Subconjunto de articlePatchSchema (backend/src/schemas/referencias.ts) que o QA
 # tem motivo para escrever. Deixar de fora caminho/factors/tags é proteção, não
 # limitação: um lote errado neles apagaria análise.
@@ -65,16 +74,25 @@ class ApiError(RuntimeError):
 
 
 class Api:
-    def __init__(self, base_url: str, auth_token: str | None, device_id: str | None):
+    def __init__(
+        self,
+        base_url: str,
+        auth_token: str | None,
+        device_id: str | None,
+        user_agent: str = DEFAULT_USER_AGENT,
+    ):
         self.base_url = base_url.rstrip("/")
         self.auth_token = auth_token
         self.device_id = device_id
+        self.user_agent = user_agent
 
     def request(self, method: str, path: str, body: dict | None = None) -> dict:
         url = f"{self.base_url}{path}"
         data = json.dumps(body).encode("utf-8") if body is not None else None
         req = urllib.request.Request(url, data=data, method=method)
         req.add_header("Content-Type", "application/json")
+        req.add_header("User-Agent", self.user_agent)
+        req.add_header("Accept", "application/json")
         if self.auth_token:
             req.add_header("X-Auth-Token", self.auth_token)
         if self.device_id:
@@ -130,15 +148,16 @@ def authenticate(
     auth_token: str | None,
     join_token: str | None,
     device_id: str | None = None,
+    user_agent: str = DEFAULT_USER_AGENT,
 ) -> Api:
     if device_id:
-        api = Api(base_url, None, device_id)
+        api = Api(base_url, None, device_id, user_agent)
         api.get("/api/device/session")   # valida a credencial antes de seguir
         print(f"[apply] device={device_id} (via X-Device-Id)")
         return api
 
     if auth_token:
-        api = Api(base_url, auth_token, None)
+        api = Api(base_url, auth_token, None, user_agent)
         session = api.get("/api/device/session")
         print(f"[apply] sessão existente: device={session.get('deviceId')}")
         return api
@@ -151,7 +170,7 @@ def authenticate(
         )
 
     device_id = str(uuid.uuid4())
-    api = Api(base_url, None, device_id)
+    api = Api(base_url, None, device_id, user_agent)
     session = api.request(
         "POST", "/api/device/register", {"deviceId": device_id, "label": "qa-apply"}
     )
@@ -220,6 +239,9 @@ def main() -> int:
     parser.add_argument("--device-id", default=None,
                         help="usa X-Device-Id em vez de token; o backend registra o "
                              "device na hora. Serve para o ensaio local.")
+    parser.add_argument("--user-agent", default=DEFAULT_USER_AGENT,
+                        help="User-Agent das requisições; o padrão do urllib é "
+                             "bloqueado pelo Cloudflare (403, error code 1010)")
     parser.add_argument("--workspace", default="tese-do-sergio",
                         help="id do workspace que o delta espera; o script recusa "
                              "escrever se o device estiver em outro (--workspace '' desliga)")
@@ -242,7 +264,8 @@ def main() -> int:
     modo = "APLICANDO" if args.apply else "dry-run (nada será gravado)"
     print(f"[apply] {len(itens)} item(ns) · {args.base_url} · {modo}")
 
-    api = authenticate(args.base_url, args.auth_token, args.join_token, args.device_id)
+    api = authenticate(args.base_url, args.auth_token, args.join_token,
+                       args.device_id, args.user_agent)
     if args.workspace:
         assert_workspace(api, args.workspace)
     log_path = args.log or args.input.with_name(
