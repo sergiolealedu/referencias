@@ -96,15 +96,6 @@ export function buildDuplicateMap(articles: ArticleIdentity[]): Map<string, Cano
     byId.set(articleId(article.groupId, article.key), article);
   }
 
-  const keyOccurrences = new Map<string, string[]>();
-  for (const article of articles) {
-    const normalizedKey = article.key.trim().toLowerCase();
-    if (!normalizedKey) continue;
-    const list = keyOccurrences.get(normalizedKey) ?? [];
-    list.push(articleId(article.groupId, article.key));
-    keyOccurrences.set(normalizedKey, list);
-  }
-
   const identityToArticles = new Map<string, string[]>();
 
   const addIdentity = (identity: string, id: string) => {
@@ -118,19 +109,24 @@ export function buildDuplicateMap(articles: ArticleIdentity[]): Map<string, Cano
     const doi = normalizeDoi(article.fields.doi ?? '');
     if (doi) addIdentity(`doi:${doi}`, id);
 
+    // Título longo identifica a obra sozinho. Não qualificar pelo ano é
+    // deliberado: a mesma obra entra no corpus com anos diferentes (ano de
+    // publicação vs. do evento), e `title|2024` nunca casava com `title|2025`.
     const title = normalizeTitle(article.fields.title ?? '');
     const year = (article.fields.year ?? '').trim();
-    if (title.length >= 10 && year) {
-      addIdentity(`title:${title}|${year}`, id);
-    } else if (title.length >= 25) {
+    if (title.length >= 25) {
       addIdentity(`title:${title}`, id);
+    } else if (title.length >= 10 && year) {
+      // Título curto é ambíguo demais para valer por si — exige o ano.
+      addIdentity(`title:${title}|${year}`, id);
     }
 
-    const normalizedKey = article.key.trim().toLowerCase();
-    const occurrences = keyOccurrences.get(normalizedKey);
-    if (normalizedKey && occurrences && occurrences.length > 1) {
-      addIdentity(`bibkey:${normalizedKey}`, id);
-    }
+    // A chave BibTeX **não** é identidade da obra: é o rótulo que o exportador
+    // gerou. Duas entradas keyed `2023` são dois anais diferentes, e
+    // `Huang2024`/`Li2024` são artigos distintos que colidiram no sobrenome+ano.
+    // Quando usávamos a chave como identidade isolada, ela produziu 15 vínculos
+    // no corpus — todos falsos, e nenhum verdadeiro que DOI ou título já não
+    // pegassem. Por isso não entra aqui.
   }
 
   const uf = new UnionFind();

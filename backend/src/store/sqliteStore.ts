@@ -47,6 +47,11 @@ interface FilterClause {
 
 // Mesma ordem de prioridade usada em getArticleStatsByYear: cada artigo cai em
 // exatamente uma categoria, pela primeira condição que satisfizer.
+// Status que a detecção de duplicatas não toca: são decisão humana.
+// `not_eligible` marca o que não é artigo usável (anais, editorial, veículo
+// reprovado) e `manual_review` o que está esperando uma segunda leitura.
+const STATUS_PRESERVADOS = new Set(['not_eligible', 'manual_review']);
+
 // Prioridade (cada artigo cai em exatamente uma categoria):
 // com fator → repetido → usado → motivo de descarte → descartado → com PDF →
 // outros.
@@ -1304,6 +1309,16 @@ export class SqliteStore {
 
     const tx = this.db.transaction(() => {
       for (const row of rows) {
+        // Status posto à mão não é sobrescrito: markDuplicate/clearDuplicate
+        // fazem `SET status = ...` sem condição, e apagariam a decisão de quem
+        // marcou o artigo como não elegível ou como pendente de revisão.
+        // Continuam no mapa de identidades, para que sirvam de canônico dos
+        // outros membros do cluster — só não são gravados.
+        if (STATUS_PRESERVADOS.has(row.status)) {
+          result.unchanged += 1;
+          continue;
+        }
+
         const id = `${row.group_id}:${row.entry_key}`;
         const target = duplicateMap.get(id);
         const isDuplicate = target != null;
