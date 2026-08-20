@@ -93,6 +93,28 @@ inclusão, não de escopo — e por isso não tem botão no app.
 Quando o veículo reprova, diga isso no resumo e **não** mande marcar um dos
 três botões: usar "Não é QVT" para excluir por veículo suja o dado de triagem.
 
+### Tipo de estudo
+
+**Estudo secundário não entra.** Revisão de literatura, revisão sistemática,
+scoping review, mapeamento, survey de literatura e taxonomia derivada de
+literatura ficam fora, mesmo publicados em journal com revisão por pares. O
+motivo é de método: a evidência é de outro artigo, e um fator creditado ao
+secundário conta a mesma evidência duas vezes e esconde de quem ela é.
+
+Como o veículo, isto é critério de inclusão e **não tem botão**: marque
+`not_eligible` e diga no resumo que é estudo secundário. Não use um dos três
+botões de triagem.
+
+**Mas leia as referências antes de descartar.** O secundário é mapa: os
+primários que ele resenha são candidatos ao corpus, e alguns podem não estar
+lá. Liste no resumo os primários que tratam de bem-estar de quem produz
+software, com autor e ano — é o subproduto mais útil de um secundário.
+
+O mesmo vale para artigo que só relata plano de pesquisa (protocolo, registered
+report, artigo de doctoral symposium): ele passa na triagem, mas não tem achado
+próprio. Aí não é `not_eligible` — o artigo é elegível, só não contribui fator
+ainda. Omita do delta e diga isso.
+
 Um artigo pode passar na triagem e ainda assim não ter fator evidenciado — aí
 vale a regra normal: omitir o artigo do delta e dizer que foi lido e não tinha
 fatores.
