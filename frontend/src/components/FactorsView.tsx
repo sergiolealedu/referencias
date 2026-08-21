@@ -488,8 +488,13 @@ export function FactorsView({
           </h2>
         </div>
         <div className="factors-view-actions">
-          <button type="button" onClick={handleExport} disabled={importing}>
-            Exportar fatores
+          <button
+            type="button"
+            onClick={handleExport}
+            disabled={importing}
+            title="Baixa o catálogo de fatores em JSON"
+          >
+            Exportar
           </button>
           <button
             type="button"
@@ -497,7 +502,7 @@ export function FactorsView({
             disabled={importing}
             title="Importa um catálogo exportado; grafias novas são somadas aos fatores existentes"
           >
-            {importing ? 'Importando…' : 'Importar fatores'}
+            {importing ? 'Importando…' : 'Importar'}
           </button>
           <input
             ref={importInputRef}
@@ -512,7 +517,7 @@ export function FactorsView({
             disabled={importing}
             title="Aplica um arquivo que liga fatores a artigos já existentes, pela chave BibTeX"
           >
-            {importing ? 'Aplicando…' : 'Aplicar delta em artigos'}
+            {importing ? 'Aplicando…' : 'Aplicar delta'}
           </button>
           <input
             ref={deltaInputRef}

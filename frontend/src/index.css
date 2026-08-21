@@ -3017,11 +3017,19 @@ body.dashboard-fullscreen-open {
   .factors-view-toolbar {
     flex-direction: column;
     align-items: stretch;
+    /* Em coluna, space-between transforma qualquer sobra em buraco entre as
+       faixas. Empilhado, tudo fica junto no topo. */
+    justify-content: flex-start;
+    gap: 0.4rem;
   }
 
   .factors-view-search {
     min-width: 0;
     width: 100%;
+    /* Zera o flex do desktop: numa coluna, aquele flex-basis de 200px vira
+       ALTURA e o grow ainda esticava — a busca ficava com 200px de caixa e o
+       campo flutuando no meio dela. */
+    flex: 0 0 auto;
   }
 
   .factors-view-view-controls {
