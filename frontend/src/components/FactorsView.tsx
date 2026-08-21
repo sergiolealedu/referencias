@@ -4,11 +4,17 @@ import { useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/client';
 import { useFactorOverviews } from '../hooks/useApi';
 import type { FactorOccurrence, FactorOverview } from '../types/referencias';
+import { usePersistedState } from '../utils/persistedState';
 import {
+  agruparPorCategoria,
+  categoriaDe,
+  compararFatores,
   downloadFactorsExport,
   formatAllSpellings,
   parseFactorsDeltaFile,
   parseFactorsExportFile,
+  SEM_CATEGORIA,
+  type OrdemFatores,
 } from '../utils/factors';
 
 interface FactorsViewProps {
@@ -17,9 +23,6 @@ interface FactorsViewProps {
   focusFactorId?: string | null;
   onFocusConsumed?: () => void;
 }
-
-/** Fatores ainda não classificados caem neste grupo, sempre por último. */
-const SEM_CATEGORIA = 'Sem categoria';
 
 /** Sugestões do datalist ao editar; a lista real vem do que o catálogo usa. */
 const CATEGORIAS_SUGERIDAS = [
@@ -30,10 +33,6 @@ const CATEGORIAS_SUGERIDAS = [
   'Processo de desenvolvimento',
   'Organizacional',
 ];
-
-function categoriaDe(factor: FactorOverview): string {
-  return factor.category?.trim() || SEM_CATEGORIA;
-}
 
 function polarityLabel(polarity: FactorOccurrence['polarity']): string {
   return polarity === 'positive' ? 'Positivo' : 'Negativo';
@@ -72,6 +71,10 @@ export function FactorsView({
   const [nomeDraft, setNomeDraft] = useState('');
   const [grafiasDraft, setGrafiasDraft] = useState('');
   const [categoriaDraft, setCategoriaDraft] = useState('');
+  const [agrupar, setAgrupar] = usePersistedState('fatores.agrupar', true);
+  const [ordem, setOrdem] = usePersistedState<OrdemFatores>('fatores.ordem', 'nome');
+  /** Esconde fator raro: 0 mostra tudo, inclusive os que não estão em artigo nenhum. */
+  const [minOcorrencias, setMinOcorrencias] = usePersistedState('fatores.minOcorrencias', 0);
   /** Categorias recolhidas na lista; a busca ignora isso para não esconder resultado. */
   const [categoriasRecolhidas, setCategoriasRecolhidas] = useState<Set<string>>(
     () => new Set(),
@@ -337,8 +340,9 @@ export function FactorsView({
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return factors;
-    return factors.filter((factor) => {
+    const min = Math.max(0, minOcorrencias);
+    const casaBusca = (factor: FactorOverview) => {
+      if (!q) return true;
       const spellings = [factor.name, ...factor.aliases].join(' ').toLowerCase();
       if (spellings.includes(q)) return true;
       return factor.occurrences.some(
@@ -348,27 +352,16 @@ export function FactorsView({
           occurrence.articleTitle.toLowerCase().includes(q) ||
           occurrence.groupTitle.toLowerCase().includes(q),
       );
-    });
-  }, [factors, query]);
+    };
+    return factors
+      .filter((factor) => factor.articleCount >= min && casaBusca(factor))
+      .sort((a, b) => compararFatores(a, b, ordem));
+  }, [factors, query, minOcorrencias, ordem]);
 
-  /**
-   * Lista agrupada por categoria, em ordem alfabética pt-BR com "Sem categoria"
-   * por último. Dentro de cada grupo a ordem do catálogo (por nome) é mantida.
-   */
-  const agrupados = useMemo(() => {
-    const porCategoria = new Map<string, FactorOverview[]>();
-    for (const factor of filtered) {
-      const categoria = categoriaDe(factor);
-      const lista = porCategoria.get(categoria);
-      if (lista) lista.push(factor);
-      else porCategoria.set(categoria, [factor]);
-    }
-    return [...porCategoria.entries()].sort(([a], [b]) => {
-      if (a === SEM_CATEGORIA) return 1;
-      if (b === SEM_CATEGORIA) return -1;
-      return a.localeCompare(b, 'pt-BR', { sensitivity: 'base' });
-    });
-  }, [filtered]);
+  const agrupados = useMemo(
+    () => agruparPorCategoria(filtered, ordem),
+    [filtered, ordem],
+  );
 
   /** Categorias em uso no catálogo inteiro, para o datalist do formulário. */
   const categoriasExistentes = useMemo(() => {
@@ -433,6 +426,49 @@ export function FactorsView({
   const usedCount = factors.filter((factor) => factor.articleCount > 0).length;
   const unusedCount = factors.length - usedCount;
 
+  /** Mesmo item nos dois modos: agrupado por categoria ou em lista única. */
+  const renderFactorItem = (factor: FactorOverview) => {
+    const active = factor.id === selected?.id;
+    return (
+      <li key={factor.id} ref={active ? activeItemRef : undefined}>
+        <button
+          type="button"
+          className={active ? 'is-active' : ''}
+          onClick={() => {
+            setSelectedId(factor.id);
+            setDetailOpen(true);
+          }}
+          aria-current={active ? 'true' : undefined}
+        >
+          <span className="factors-view-list-name">{factor.name}</span>
+          <span className="factors-view-list-meta">
+            {factor.articleCount} artigo(s)
+            {factor.articleCount > 0 && (
+              <>
+                {' · '}
+                <span className="polarity-positive-text">+{factor.positiveCount}</span>
+                {' / '}
+                <span className="polarity-negative-text">−{factor.negativeCount}</span>
+              </>
+            )}
+            {/* Na lista única a categoria não tem cabeçalho, então vem no item. */}
+            {!agrupar && (
+              <>
+                {' · '}
+                <span className="factors-view-list-categoria">{categoriaDe(factor)}</span>
+              </>
+            )}
+          </span>
+          {factor.aliases.length > 0 && (
+            <span className="factors-view-list-aliases">
+              {factor.aliases.join(' · ')}
+            </span>
+          )}
+        </button>
+      </li>
+    );
+  };
+
   return (
     <div className="factors-view">
       <div className="factors-view-toolbar">
@@ -495,6 +531,73 @@ export function FactorsView({
             placeholder="Nome, grafia, artigo ou descrição"
           />
         </label>
+        <div className="factors-view-view-controls">
+          <div
+            className="factors-view-segmented"
+            role="group"
+            aria-label="Agrupamento da lista"
+          >
+            <button
+              type="button"
+              className={agrupar ? 'is-active' : ''}
+              aria-pressed={agrupar}
+              onClick={() => setAgrupar(true)}
+              title="Uma seção por categoria, recolhível"
+            >
+              Categorias
+            </button>
+            <button
+              type="button"
+              className={!agrupar ? 'is-active' : ''}
+              aria-pressed={!agrupar}
+              onClick={() => setAgrupar(false)}
+              title="Lista corrida, sem separar por categoria"
+            >
+              Lista
+            </button>
+          </div>
+          <div
+            className="factors-view-segmented"
+            role="group"
+            aria-label="Ordem da lista"
+          >
+            <button
+              type="button"
+              className={ordem === 'nome' ? 'is-active' : ''}
+              aria-pressed={ordem === 'nome'}
+              onClick={() => setOrdem('nome')}
+              title="Ordem alfabética pelo nome do fator"
+            >
+              A–Z
+            </button>
+            <button
+              type="button"
+              className={ordem === 'ocorrencias' ? 'is-active' : ''}
+              aria-pressed={ordem === 'ocorrencias'}
+              onClick={() => setOrdem('ocorrencias')}
+              title="Mais artigos primeiro; empate resolvido pelo nome"
+            >
+              Ocorrências
+            </button>
+          </div>
+          <label className="factors-view-min">
+            {/* "≥" em vez de "Mín.": diz o mesmo em um terço da largura, e o
+                nome acessível vai no aria-label do campo. */}
+            <span aria-hidden="true">≥</span>
+            <input
+              type="number"
+              min={0}
+              step={1}
+              aria-label="Mínimo de artigos por fator"
+              value={minOcorrencias}
+              onChange={(e) => {
+                const n = Number(e.target.value);
+                setMinOcorrencias(Number.isFinite(n) && n > 0 ? Math.floor(n) : 0);
+              }}
+              title="Esconde fatores com menos artigos que este número; 0 mostra todos"
+            />
+          </label>
+        </div>
       </div>
 
       {transferMessage && (
@@ -518,81 +621,43 @@ export function FactorsView({
         <>
 
           {filtered.length === 0 ? (
-            <p className="empty-state">Nenhum fator corresponde à busca.</p>
+            <p className="empty-state">
+              {minOcorrencias > 0 && !buscaAtiva
+                ? `Nenhum fator com ${minOcorrencias} artigo(s) ou mais. Reduza o mínimo para ver os demais.`
+                : minOcorrencias > 0
+                  ? `Nenhum fator corresponde à busca com ${minOcorrencias} artigo(s) ou mais.`
+                  : 'Nenhum fator corresponde à busca.'}
+            </p>
           ) : (
             <div
               className={`factors-view-layout${detailOpen ? ' is-detail-open' : ''}`}
             >
               <aside className="factors-view-list" aria-label="Lista de fatores">
-                {agrupados.map(([categoria, itens]) => {
-                  const recolhida = !buscaAtiva && categoriasRecolhidas.has(categoria);
-                  return (
-                    <section key={categoria} className="factors-view-category">
-                      <button
-                        type="button"
-                        className="factors-view-category-toggle"
-                        onClick={() => alternarCategoria(categoria)}
-                        aria-expanded={!recolhida}
-                        title={recolhida ? 'Expandir categoria' : 'Recolher categoria'}
-                      >
-                        <span className="factors-view-category-caret" aria-hidden="true">
-                          {recolhida ? '▸' : '▾'}
-                        </span>
-                        <span className="factors-view-category-name">{categoria}</span>
-                        <span className="factors-view-category-count">
-                          {itens.length}
-                        </span>
-                      </button>
-                      {!recolhida && (
-                        <ul>
-                          {itens.map((factor) => {
-                            const active = factor.id === selected?.id;
-                            return (
-                              <li
-                                key={factor.id}
-                                ref={active ? activeItemRef : undefined}
-                              >
-                                <button
-                                  type="button"
-                                  className={active ? 'is-active' : ''}
-                                  onClick={() => {
-                                    setSelectedId(factor.id);
-                                    setDetailOpen(true);
-                                  }}
-                                  aria-current={active ? 'true' : undefined}
-                                >
-                                  <span className="factors-view-list-name">
-                                    {factor.name}
-                                  </span>
-                                  <span className="factors-view-list-meta">
-                                    {factor.articleCount} artigo(s)
-                                    {factor.articleCount > 0 && (
-                                      <>
-                                        {' · '}
-                                        <span className="polarity-positive-text">
-                                          +{factor.positiveCount}
-                                        </span>
-                                        {' / '}
-                                        <span className="polarity-negative-text">
-                                          −{factor.negativeCount}
-                                        </span>
-                                      </>
-                                    )}
-                                  </span>
-                                  {factor.aliases.length > 0 && (
-                                    <span className="factors-view-list-aliases">
-                                      {factor.aliases.join(' · ')}
-                                    </span>
-                                  )}
-                                </button>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      )}
-                    </section>
-                  );
-                })}
+                {agrupar ? (
+                  agrupados.map(([categoria, itens]) => {
+                    const recolhida = !buscaAtiva && categoriasRecolhidas.has(categoria);
+                    return (
+                      <section key={categoria} className="factors-view-category">
+                        <button
+                          type="button"
+                          className="factors-view-category-toggle"
+                          onClick={() => alternarCategoria(categoria)}
+                          aria-expanded={!recolhida}
+                          title={recolhida ? 'Expandir categoria' : 'Recolher categoria'}
+                        >
+                          <span className="factors-view-category-caret" aria-hidden="true">
+                            {recolhida ? '▸' : '▾'}
+                          </span>
+                          <span className="factors-view-category-name">{categoria}</span>
+                          <span className="factors-view-category-count">{itens.length}</span>
+                        </button>
+                        {!recolhida && <ul>{itens.map(renderFactorItem)}</ul>}
+                      </section>
+                    );
+                  })
+                ) : (
+                  <ul>{filtered.map(renderFactorItem)}</ul>
+                )}
               </aside>
 
               <section

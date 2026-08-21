@@ -294,3 +294,54 @@ export function parseFactorsDeltaFile(text: string): FactorsDelta {
   }
   return { ...(factors.length > 0 ? { factors } : {}), items };
 }
+
+/** Fatores ainda não classificados caem neste grupo, sempre por último. */
+export const SEM_CATEGORIA = 'Sem categoria';
+
+export function categoriaDe(factor: { category?: string | null }): string {
+  return factor.category?.trim() || SEM_CATEGORIA;
+}
+
+export type OrdemFatores = 'nome' | 'ocorrencias';
+
+type Ordenavel = { name: string; articleCount: number };
+
+/**
+ * Por ocorrências, desempate pelo nome: sem isso a ordem entre fatores de mesma
+ * contagem varia conforme a ordem de entrada e a lista "pisca" de lugar.
+ */
+export function compararFatores<T extends Ordenavel>(a: T, b: T, ordem: OrdemFatores): number {
+  if (ordem === 'ocorrencias' && b.articleCount !== a.articleCount) {
+    return b.articleCount - a.articleCount;
+  }
+  return a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' });
+}
+
+/**
+ * Agrupa por categoria. "Sem categoria" fica por último em qualquer ordem — é
+ * uma pendência de classificação, não um grupo que disputa posição. Entre os
+ * demais, por ocorrências o grupo com mais artigos vem primeiro; senão,
+ * alfabética pt-BR. A ordem dentro do grupo é a que já vem na entrada.
+ */
+export function agruparPorCategoria<T extends Ordenavel & { category?: string | null }>(
+  fatores: T[],
+  ordem: OrdemFatores,
+): [string, T[]][] {
+  const porCategoria = new Map<string, T[]>();
+  for (const factor of fatores) {
+    const categoria = categoriaDe(factor);
+    const lista = porCategoria.get(categoria);
+    if (lista) lista.push(factor);
+    else porCategoria.set(categoria, [factor]);
+  }
+  const totalDe = (itens: T[]) => itens.reduce((soma, f) => soma + f.articleCount, 0);
+  return [...porCategoria.entries()].sort(([a, itensA], [b, itensB]) => {
+    if (a === SEM_CATEGORIA) return 1;
+    if (b === SEM_CATEGORIA) return -1;
+    if (ordem === 'ocorrencias') {
+      const diferenca = totalDe(itensB) - totalDe(itensA);
+      if (diferenca !== 0) return diferenca;
+    }
+    return a.localeCompare(b, 'pt-BR', { sensitivity: 'base' });
+  });
+}
