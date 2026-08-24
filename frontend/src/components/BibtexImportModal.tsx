@@ -49,7 +49,12 @@ export function BibtexImportModal({ groupId, groupTitle, onClose }: BibtexImport
     { pageSize: 200, sortBy: originArticleSort === 'id' ? undefined : 'title' },
   );
 
-  const originArticles = originArticlesPage?.items ?? [];
+  // Sem memo o `?? []` devolve um array novo a cada render, e os três useMemo
+  // abaixo recalculam sempre — inclusive a ordenação da lista inteira.
+  const originArticles = useMemo(
+    () => originArticlesPage?.items ?? [],
+    [originArticlesPage],
+  );
 
   const importBibtex = useImportBibtex(groupId);
 

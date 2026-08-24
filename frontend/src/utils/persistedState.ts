@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 const PREFIX = 'referencias.ui.';
 
@@ -35,14 +35,19 @@ export function usePersistedState<T>(
   return [value, setValue];
 }
 
-/** `true` só no primeiro render — usado para não descartar estado restaurado. */
+/**
+ * `true` só no primeiro render — usado para não descartar estado restaurado.
+ *
+ * Sob `useCallback` porque a função entra em lista de dependência de efeito:
+ * devolvendo uma nova a cada render, o efeito rodaria sempre.
+ */
 export function useIsFirstRender(): () => boolean {
   const primeiro = useRef(true);
-  return () => {
+  return useCallback(() => {
     if (primeiro.current) {
       primeiro.current = false;
       return true;
     }
     return false;
-  };
+  }, []);
 }

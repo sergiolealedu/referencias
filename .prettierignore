@@ -1,0 +1,7 @@
+dist/
+node_modules/
+frontend/android/
+release/
+data/
+package-lock.json
+*.tsbuildinfo

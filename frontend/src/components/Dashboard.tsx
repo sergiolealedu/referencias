@@ -808,7 +808,7 @@ export function Dashboard({ toolbarCollapsed = false }: { toolbarCollapsed?: boo
     if (versaoFilterInitialized || availableVersoes.length === 0) return;
     setVersaoFilter(getLatestVersao(availableVersoes));
     setVersaoFilterInitialized(true);
-  }, [availableVersoes, versaoFilterInitialized]);
+  }, [availableVersoes, versaoFilterInitialized, setVersaoFilter]);
 
   useEffect(() => {
     if (expandedChart === null) return undefined;

@@ -32,6 +32,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Sem aviso tolerado: o linter só entrou depois de zerar os que existiam,
+      # então um aviso novo é sempre coisa introduzida agora.
+      - name: Lint
+        run: npm run lint -- --max-warnings 0
+
       # Antes do build: erro de tipo em teste ou script aparece aqui, não some.
       - name: Typecheck (inclui testes e scripts)
         run: npm run typecheck

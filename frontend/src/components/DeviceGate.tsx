@@ -43,7 +43,10 @@ export function DeviceGate({ children }: DeviceGateProps) {
   };
 
   useEffect(() => {
+    // Uma vez, na montagem. `bootstrap` é recriado a cada render, então entrar
+    // na lista de dependência faria a sessão ser reinicializada em loop.
     void bootstrap();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) {

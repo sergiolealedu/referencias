@@ -133,6 +133,10 @@ export function ArticleForm({
     setPdfMessage(null);
     setAbstractExpanded(false);
     setActiveTab('referencia');
+    // `factorCatalog` fica fora de propósito: este efeito é "o artigo mudou,
+    // recomece o formulário". Incluí-lo faria o formulário se resetar a cada
+    // recarga do catálogo, jogando fora o que estava sendo digitado.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [article, isNew]);
 
   useEffect(() => {

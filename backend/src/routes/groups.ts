@@ -500,7 +500,6 @@ export function createSearchRouter(): Router {
   return router;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function errorMiddleware(
   error: unknown,
   _req: Request,

@@ -1,195 +1,111 @@
 import { useEffect, useMemo, useState } from 'react';
 
-
-
 import { ArticleForm } from './components/ArticleForm';
-
-import { ArticleTable, SORTABLE_COLUMNS, type PageSize } from './components/ArticleTable';
-
+import { ArticleTable } from './components/ArticleTable';
 import { BibtexImportModal } from './components/BibtexImportModal';
-
 import { GroupImportModal } from './components/GroupImportModal';
-
 import { RevisaoUsadosModal } from './components/RevisaoUsadosModal';
-
 import { Dashboard } from './components/Dashboard';
 import { FactorsView } from './components/FactorsView';
-
 import { SettingsModal } from './components/SettingsModal';
-
 import { WorkspaceAccessModal } from './components/WorkspaceAccessModal';
-
 import { UsadoBibtexExportModal } from './components/UsadoBibtexExportModal';
-
 import { FiltersBar } from './components/FiltersBar';
-
 import { GroupSidebar } from './components/GroupSidebar';
-
 import {
-
   useArticles,
-
   useArticle,
-
   useClearGroupArticles,
-
   useGroup,
-
   useGroupTags,
-
   useGroups,
-
   useSettings,
-
   useActiveWorkspace,
-
   useDeviceSession,
-
 } from './hooks/useApi';
-
 import type { ArticleFilters, SortColumn, SortDirection } from './types/referencias';
-
 import { api } from './api/client';
-
 import { APP_TITLE, BUILD_ID, BUILD_LABEL } from './buildInfo';
 import { downloadAbstractsNaoUsados, downloadGroupExport } from './utils/groupExport';
+import { SORTABLE_COLUMNS, type PageSize } from './utils/articleTableOptions';
 import { usePersistedState, useIsFirstRender } from './utils/persistedState';
 import { showGlobalSettings } from './utils/platform';
 
-
-
 type ArticleTarget = { groupId: number; key: string };
-
 type AppView = 'articles' | 'dashboard' | 'factors';
 
-
-
 export default function App() {
-
   const { data: groups = [] } = useGroups();
-
-  const [selectedGroupId, setSelectedGroupId] = usePersistedState<number | null>('grupo', null);
-
+  const [selectedGroupId, setSelectedGroupId] = usePersistedState<number | null>(
+    'grupo',
+    null,
+  );
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
-
   const [openTarget, setOpenTarget] = useState<ArticleTarget | null>(null);
-
   const [showForm, setShowForm] = useState(false);
-
   const [isNewArticle, setIsNewArticle] = useState(false);
-
   const [filters, setFilters] = usePersistedState<ArticleFilters>('filtros', {});
-
   const [page, setPage] = usePersistedState('pagina', 1);
-
   const [pageSize, setPageSize] = usePersistedState<PageSize>('porPagina', 20);
-
-  const [sortColumn, setSortColumn] = usePersistedState<SortColumn | null>('ordenarPor', null);
-
-  const [sortDirection, setSortDirection] = usePersistedState<SortDirection>('ordem', 'asc');
-
+  const [sortColumn, setSortColumn] = usePersistedState<SortColumn | null>(
+    'ordenarPor',
+    null,
+  );
+  const [sortDirection, setSortDirection] = usePersistedState<SortDirection>(
+    'ordem',
+    'asc',
+  );
   const [findKey, setFindKey] = useState<string | undefined>();
-
   const [showImport, setShowImport] = useState(false);
-
   const [showGroupImport, setShowGroupImport] = useState(false);
-
   const [exportingGroup, setExportingGroup] = useState(false);
-
   const [exportingAbstracts, setExportingAbstracts] = useState(false);
-
   const [showRevisaoUsados, setShowRevisaoUsados] = useState(false);
-
   const [showUsadoExport, setShowUsadoExport] = useState(false);
-
   const [showWorkspaceAccess, setShowWorkspaceAccess] = useState(false);
-
   const [showSettings, setShowSettings] = useState(false);
-
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
-
   const [view, setView] = usePersistedState<AppView>('aba', 'articles');
-
   /** Fator a abrir na aba Fatores (clique num chip da lista de artigos). */
   const [focusFactorId, setFocusFactorId] = useState<string | null>(null);
-
   const { data: settings } = useSettings();
-
   const { data: activeWorkspace } = useActiveWorkspace();
-
   const { data: deviceSession } = useDeviceSession();
-
   const displayGroupId = openTarget?.groupId ?? selectedGroupId;
 
-
-
   useEffect(() => {
-
     if (groups.length > 0 && selectedGroupId === null) {
-
       setSelectedGroupId(groups[0].id);
-
     }
-
-  }, [groups, selectedGroupId]);
-
-
+  }, [groups, selectedGroupId, setSelectedGroupId]);
 
   const articleParams = useMemo(
-
     () => ({
-
       ...filters,
-
       page,
-
       pageSize,
-
       sortBy: sortColumn ?? undefined,
-
       sortDir: sortColumn ? sortDirection : undefined,
-
       findKey,
-
     }),
-
     [filters, page, pageSize, sortColumn, sortDirection, findKey],
-
   );
 
-
-
   const { data: group } = useGroup(displayGroupId);
-
   const { data: availableTags = [] } = useGroupTags(displayGroupId);
-
   const clearGroupArticles = useClearGroupArticles(displayGroupId);
-
   const {
-
     data: articlesPage,
-
     isLoading,
-
     error,
-
   } = useArticles(displayGroupId, articleParams);
 
-
-
   useEffect(() => {
-
     if (articlesPage?.foundPage && articlesPage.foundPage !== page) {
-
       setPage(articlesPage.foundPage);
-
       setFindKey(undefined);
-
     }
-
-  }, [articlesPage?.foundPage, page]);
-
-
+  }, [articlesPage?.foundPage, page, setPage]);
 
   // Ordenação salva pode apontar para uma coluna que já não existe na tabela.
   useEffect(() => {
@@ -201,80 +117,52 @@ export default function App() {
   const ehPrimeiroRender = useIsFirstRender();
 
   useEffect(() => {
-
     // No primeiro render esses valores vêm do localStorage, não de uma ação do
     // usuário — resetar aqui jogaria fora a página restaurada.
     if (ehPrimeiroRender()) return;
-
     setPage(1);
-
     setFindKey(undefined);
-
-  }, [filters, displayGroupId, pageSize, sortColumn, sortDirection]);
-
-
+  }, [
+    filters,
+    displayGroupId,
+    pageSize,
+    sortColumn,
+    sortDirection,
+    ehPrimeiroRender,
+    setPage,
+  ]);
 
   const formTarget: ArticleTarget | null = isNewArticle
-
     ? null
-
-    : openTarget ??
-
+    : (openTarget ??
       (showForm && selectedGroupId !== null && selectedKey
-
         ? { groupId: selectedGroupId, key: selectedKey }
-
-        : null);
-
-
+        : null));
 
   const {
-
     data: formArticle,
-
     isPending: formPending,
-
     isFetching: formFetching,
-
   } = useArticle(formTarget?.groupId ?? null, formTarget?.key ?? null);
 
-
-
   const formArticleReady =
-
     formTarget !== null &&
-
     formArticle !== undefined &&
-
     formArticle.entry.key === formTarget.key;
 
   const handleSelectGroup = (id: number | null) => {
-
     setOpenTarget(null);
-
     setSelectedGroupId(id);
-
     setSelectedKey(null);
-
     setShowForm(false);
-
   };
-
-
 
   const handleSelectArticle = (key: string) => {
-
     setOpenTarget(null);
-
     setSelectedKey(key);
-
     setIsNewArticle(false);
-
     setShowForm(true);
-
   };
-
-
 
   const handleNavigateToFactor = (factorId: string) => {
     setFocusFactorId(factorId);
@@ -282,76 +170,41 @@ export default function App() {
   };
 
   const handleNavigateToArticle = (groupId: number, key: string) => {
-
     setFilters({});
-
     setSortColumn(null);
-
     setSortDirection('asc');
-
     setOpenTarget({ groupId, key });
-
     setSelectedGroupId(groupId);
-
     setSelectedKey(key);
-
     setIsNewArticle(false);
-
     setShowForm(true);
-
     setFindKey(key);
-
     setView('articles');
-
   };
-
-
 
   const handleClearGroupArticles = async () => {
-
     if (!group || group.articleCount === 0) return;
-
     if (
-
       !window.confirm(
-
         `Apagar todos os ${group.articleCount} artigo(s) do grupo "${group.title}"?\n\nO grupo será mantido; esta ação não pode ser desfeita.`,
-
       )
-
     ) {
-
       return;
-
     }
-
     try {
-
       await clearGroupArticles.mutateAsync();
-
     } catch (err) {
-
       window.alert(`Não foi possível apagar os artigos: ${(err as Error).message}`);
-
       return;
-
     }
-
     setOpenTarget(null);
-
     setSelectedKey(null);
-
     setShowForm(false);
-
     setIsNewArticle(false);
-
   };
-
-
 
   const handleExportAbstracts = async () => {
     if (displayGroupId === null || !group) return;
-
     setExportingAbstracts(true);
     try {
       const payload = await api.exportGroupAbstractsNaoUsados(displayGroupId);
@@ -368,55 +221,30 @@ export default function App() {
   };
 
   const handleExportGroup = async () => {
-
     if (displayGroupId === null || !group) return;
-
     setExportingGroup(true);
-
     try {
-
       const payload = await api.exportGroup(displayGroupId);
-
       downloadGroupExport(payload);
-
     } catch (err) {
-
       window.alert(`Não foi possível exportar o grupo: ${(err as Error).message}`);
-
     } finally {
-
       setExportingGroup(false);
-
     }
-
   };
-
-
 
   const resetViewState = () => {
-
     setSelectedGroupId(null);
-
     setSelectedKey(null);
-
     setOpenTarget(null);
-
     setShowForm(false);
-
     setFilters({});
-
   };
 
-
-
   return (
-
     <div className={`app${headerCollapsed ? ' header-collapsed' : ''}`}>
-
       <header className={`app-header${headerCollapsed ? ' is-collapsed' : ''}`}>
-
         <div className="app-header-text">
-
           <h1>
             {APP_TITLE}
             <span className="app-build-version" title={`Build: ${BUILD_ID}`}>
@@ -431,9 +259,7 @@ export default function App() {
               {activeWorkspace?.name ?? settings?.activeWorkspaceName ?? '…'}
             </span>
           </h1>
-
         </div>
-
         <button
           type="button"
           className="app-header-collapse-toggle"
@@ -443,67 +269,36 @@ export default function App() {
         >
           {headerCollapsed ? '▾' : '▴'}
         </button>
-
         <div className="app-header-actions">
-
           <button
-
             type="button"
-
             className="workspace-switcher"
-
             onClick={() => setShowWorkspaceAccess(true)}
-
             title="Workspaces, convites e tokens de acesso"
-
           >
-
             {activeWorkspace?.name ?? 'Workspace'}
-
           </button>
-
           <button
-
             type="button"
-
             className={view === 'articles' ? 'active-view' : ''}
-
             onClick={() => setView('articles')}
-
           >
-
             Artigos
-
           </button>
-
           <button
-
             type="button"
-
             className={view === 'dashboard' ? 'active-view' : ''}
-
             onClick={() => setView('dashboard')}
-
           >
-
             Dashboard
-
           </button>
-
           <button
-
             type="button"
-
             className={view === 'factors' ? 'active-view' : ''}
-
             onClick={() => setView('factors')}
-
           >
-
             Fatores
-
           </button>
-
           {showGlobalSettings() && deviceSession?.isServerAdmin && (
             <button
               type="button"
@@ -513,449 +308,228 @@ export default function App() {
               Configuração
             </button>
           )}
-
           <button
-
             type="button"
-
             onClick={() => setShowUsadoExport(true)}
-
             title="Revisar e exportar em BibTeX os artigos com fator, de todos os grupos, para o Overleaf"
-
           >
-
             Exportar com fatores
-
           </button>
-
         </div>
-
       </header>
 
-
-
       <div className="app-body">
-
         {view === 'dashboard' ? (
-
           <main className="main-panel dashboard-panel">
-
             <Dashboard toolbarCollapsed={headerCollapsed} />
-
           </main>
-
         ) : view === 'factors' ? (
-
           <main className="main-panel factors-view-panel">
-
             <FactorsView
               onOpenArticle={handleNavigateToArticle}
               focusFactorId={focusFactorId}
               onFocusConsumed={() => setFocusFactorId(null)}
             />
-
           </main>
-
         ) : (
-
           <>
-
             <GroupSidebar
               selectedId={displayGroupId}
               onSelect={handleSelectGroup}
               headerCollapsed={headerCollapsed}
             />
 
-
-
             <main className="main-panel articles-view-panel">
-
               {displayGroupId === null ? (
-
                 <p className="empty-state">Selecione ou crie um grupo.</p>
-
               ) : (
-
                 <>
-
-                  <div className={`panel-header${headerCollapsed ? ' is-collapsed' : ''}`}>
-
+                  <div
+                    className={`panel-header${headerCollapsed ? ' is-collapsed' : ''}`}
+                  >
                     <div className="panel-header-text">
-
                       <h2>
-
                         {group?.title ?? '...'}
-
                         {group?.versao && (
-
                           <span className="panel-group-versao">{group.versao}</span>
-
                         )}
-
                       </h2>
-
                     </div>
-
                     <div className="panel-header-actions">
-
                       <button
-
                         type="button"
-
                         className="danger"
-
                         onClick={handleClearGroupArticles}
-
                         disabled={!group?.articleCount || clearGroupArticles.isPending}
-
                         title="Remove todos os artigos deste grupo"
-
                       >
-
                         {clearGroupArticles.isPending ? 'Apagando…' : 'Apagar todos'}
-
                       </button>
-
                       <button type="button" onClick={() => setShowImport(true)}>
-
                         Importar BibTeX
-
                       </button>
-
                       <button type="button" onClick={() => setShowGroupImport(true)}>
-
                         Importar grupo
-
                       </button>
-
                       <button
-
                         type="button"
-
                         onClick={handleExportGroup}
-
                         disabled={!group || exportingGroup || exportingAbstracts}
-
                         title="Exporta metadados e todos os artigos para transferir a outro servidor"
-
                       >
-
                         {exportingGroup ? 'Exportando…' : 'Exportar grupo'}
-
                       </button>
-
                       <button
-
                         type="button"
-
                         onClick={handleExportAbstracts}
-
                         disabled={!group || exportingGroup || exportingAbstracts}
-
                         title="Baixa os abstracts dos artigos que não estão marcados como usado, para revisar exclusões"
-
                       >
-
                         {exportingAbstracts ? 'Exportando…' : 'Abstracts não usados'}
-
                       </button>
-
                       <button
-
                         type="button"
-
                         onClick={() => setShowRevisaoUsados(true)}
-
                         disabled={!group}
-
                         title="Aplica a resposta da avaliação, marcando como usados os artigos descartados por engano"
-
                       >
-
                         Aplicar revisão
-
                       </button>
-
                       <button
-
                         type="button"
-
                         className="primary"
-
                         onClick={() => {
-
                           setOpenTarget(null);
-
                           setIsNewArticle(true);
-
                           setSelectedKey(null);
-
                           setShowForm(true);
-
                         }}
-
                       >
-
                         + Novo artigo
-
                       </button>
-
                     </div>
-
                   </div>
 
-
-
                   <FiltersBar
-
                     filters={filters}
-
                     availableTags={availableTags}
-
                     onChange={setFilters}
-
                     compact={headerCollapsed}
-
                   />
 
-
-
                   {isLoading && <p>Carregando artigos...</p>}
-
                   {error && <p className="error">Erro: {(error as Error).message}</p>}
 
-
-
                   {!isLoading && !error && articlesPage && (
-
                     <ArticleTable
-
                       groupId={displayGroupId}
-
                       articles={articlesPage.items}
-
                       total={articlesPage.total}
-
                       page={articlesPage.page}
-
                       pageSize={pageSize}
-
                       sortColumn={sortColumn}
-
                       sortDirection={sortDirection}
-
                       selectedKey={selectedKey}
-
                       onSelect={handleSelectArticle}
-
                       onNavigateToArticle={handleNavigateToArticle}
-
                       onNavigateToFactor={handleNavigateToFactor}
-
                       onPageChange={setPage}
-
                       onPageSizeChange={setPageSize}
-
                       toolbarCollapsed={headerCollapsed}
-
                       onSortChange={(column, direction) => {
-
                         setSortColumn(column);
-
                         setSortDirection(direction);
-
                       }}
-
                     />
-
                   )}
-
                 </>
-
               )}
-
             </main>
 
-
-
-            {showForm && displayGroupId !== null && (
-
-              isNewArticle ? (
-
+            {showForm &&
+              displayGroupId !== null &&
+              (isNewArticle ? (
                 <ArticleForm
-
                   key="new"
-
                   groupId={displayGroupId}
-
                   article={null}
-
                   isNew
-
                   onClose={() => {
-
                     setShowForm(false);
-
                     setIsNewArticle(false);
-
                   }}
-
                   onSaved={(key) => {
-
                     setOpenTarget(null);
-
                     setSelectedKey(key);
-
                     setIsNewArticle(false);
-
                     setFindKey(key);
-
                   }}
-
                 />
-
               ) : formTarget && (formPending || formFetching || !formArticleReady) ? (
-
                 <aside className="article-form">
-
                   <p style={{ padding: '1rem' }}>Carregando artigo...</p>
-
                 </aside>
-
               ) : formTarget && formArticle ? (
-
                 <ArticleForm
-
                   key={`${formTarget.groupId}-${formTarget.key}`}
-
                   groupId={formTarget.groupId}
-
                   article={formArticle}
-
                   isNew={false}
-
                   onClose={() => {
-
                     setShowForm(false);
-
                     setOpenTarget(null);
-
                   }}
-
                   onSaved={(key) => {
-
                     setOpenTarget(null);
-
                     setSelectedKey(key);
-
                     setFindKey(key);
-
                   }}
-
                 />
-
-              ) : null
-
-            )}
-
-
+              ) : null)}
 
             {showImport && displayGroupId !== null && group && (
-
               <BibtexImportModal
-
                 groupId={displayGroupId}
-
                 groupTitle={group.title}
-
                 onClose={() => setShowImport(false)}
-
               />
-
             )}
-
-
 
             {showGroupImport && (
-
               <GroupImportModal
-
                 defaultTargetGroupId={displayGroupId}
-
                 onClose={() => setShowGroupImport(false)}
-
                 onImported={(result) => {
-
                   setSelectedGroupId(result.groupId);
-
                   setShowGroupImport(false);
-
                 }}
-
               />
-
             )}
-
             {showRevisaoUsados && displayGroupId !== null && (
-
               <RevisaoUsadosModal
-
                 groupId={displayGroupId}
-
                 groupTitle={group?.title ?? ''}
-
                 onClose={() => setShowRevisaoUsados(false)}
-
               />
-
             )}
-
           </>
-
         )}
-
       </div>
 
-
-
       {showUsadoExport && (
-
         <UsadoBibtexExportModal onClose={() => setShowUsadoExport(false)} />
-
       )}
-
-
 
       {showGlobalSettings() && showSettings && (
-
-        <SettingsModal
-
-          onClose={() => setShowSettings(false)}
-
-          onSaved={resetViewState}
-
-        />
-
+        <SettingsModal onClose={() => setShowSettings(false)} onSaved={resetViewState} />
       )}
-
-
 
       {showWorkspaceAccess && (
-
         <WorkspaceAccessModal
-
           onClose={() => setShowWorkspaceAccess(false)}
-
           onChanged={resetViewState}
-
         />
-
       )}
-
     </div>
-
   );
-
 }
-
-

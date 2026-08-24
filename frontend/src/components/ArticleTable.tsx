@@ -8,21 +8,9 @@ import {
   copyBibtexBulkToClipboard,
   downloadBibtexBulk,
 } from '../utils/bibtexExport';
+import { PAGE_SIZE_OPTIONS, type PageSize } from '../utils/articleTableOptions';
 
-const PAGE_SIZE_OPTIONS = [20, 50] as const;
-type PageSize = (typeof PAGE_SIZE_OPTIONS)[number];
 
-/** Colunas realmente clicáveis — usado para descartar ordenação salva de uma
- *  coluna que não existe mais (ex.: "tags", removida da tabela). */
-export const SORTABLE_COLUMNS: readonly SortColumn[] = [
-  'title',
-  'author',
-  'year',
-  'status',
-  'usado',
-  'descartado',
-  'pdfNaoEncontrado',
-];
 
 const COLUMNS: { key: SortColumn; label: string }[] = [
   { key: 'title', label: 'Título' },
