@@ -5,7 +5,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 
 import type { AuthenticatedRequest } from '../middleware/deviceAuth.js';
-import { allowedPdfRootsForWorkspace } from '../pdfStorage.js';
+import { allowedPdfRootsForWorkspace, isPathInsideRoots } from '../pdfStorage.js';
 import {
   DEFAULT_SHARE_TTL_HOURS,
   ShareTokenError,
@@ -14,25 +14,13 @@ import {
 } from '../shareLinks.js';
 import { getWorkspaceById } from '../workspaceManager.js';
 
-function isPathInsideAllowedRoots(filePath: string, allowedRoots: string[]): boolean {
-  const normalized = resolve(normalize(filePath));
-  return allowedRoots.some((root) => {
-    const allowedRoot = resolve(normalize(root));
-    return (
-      normalized === allowedRoot ||
-      normalized.startsWith(`${allowedRoot}\\`) ||
-      normalized.startsWith(`${allowedRoot}/`)
-    );
-  });
-}
-
 /** Valida o caminho e envia o PDF; compartilhado entre a rota autenticada e a pública. */
 async function streamPdf(
   filePath: string,
   allowedRoots: string[],
   res: Parameters<Parameters<Router['get']>[1]>[1],
 ): Promise<void> {
-  if (!isPathInsideAllowedRoots(filePath, allowedRoots)) {
+  if (!isPathInsideRoots(filePath, allowedRoots)) {
     res.status(403).json({ error: 'Caminho fora das pastas permitidas' });
     return;
   }
@@ -123,7 +111,7 @@ export function createFilesRouter(): Router {
       authReq.activeWorkspace.allowedPdfRoots,
     );
 
-    if (!isPathInsideAllowedRoots(filePath, allowedRoots)) {
+    if (!isPathInsideRoots(filePath, allowedRoots)) {
       res.status(403).json({ error: 'Caminho fora das pastas permitidas' });
       return;
     }

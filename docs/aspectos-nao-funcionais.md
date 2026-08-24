@@ -169,6 +169,13 @@ Em produção, o frontend é servido como build estático; a API permanece em No
 - Servir PDFs **restrito** a caminhos dentro de `allowedPdfRoots`
 - Normalização e resolução de path impedem path traversal básico
 - Apenas arquivos `.pdf` são servidos
+- `allowedPdfRoots` e `sqliteDbPath` **só o administrador define** — por
+  workspace, não apenas globalmente. Quem escreve esses campos escolhe o que a
+  API lê: apontar `allowedPdfRoots` para a raiz do disco liberava qualquer PDF
+  da máquina, e apontar `sqliteDbPath` para o banco de outro workspace liberava
+  os dados de lá
+- Workspace criado por quem não é administrador começa **sem** pasta de PDF
+  herdada — só a sua própria pasta gerenciada (`data/pdfs/<id>`)
 
 ### 5.5 Validação de entrada
 

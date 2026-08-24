@@ -161,7 +161,21 @@ async function defaultDbPathForWorkspace(name: string): Promise<string> {
   return resolve(DEFAULT_WORKSPACES_DIR, slug, 'referencias.db');
 }
 
-export async function createWorkspace(input: WorkspaceInput): Promise<Workspace> {
+export interface CreateWorkspaceOptions {
+  /**
+   * Herdar as pastas de PDF globais quando a entrada não traz nenhuma. Só vale
+   * para quem administra a instalação: para um dispositivo qualquer isso
+   * entregaria a pasta de PDFs do administrador a um workspace novo. Sem
+   * herança o workspace começa apenas com sua própria pasta gerenciada, que
+   * `allowedPdfRootsForWorkspace` acrescenta em tempo de leitura.
+   */
+  inheritGlobalPdfRoots?: boolean;
+}
+
+export async function createWorkspace(
+  input: WorkspaceInput,
+  options: CreateWorkspaceOptions = {},
+): Promise<Workspace> {
   const config = getWorkspacesConfig();
   const existingIds = new Set(config.workspaces.map((ws) => ws.id));
   const id = uniqueId(slugify(input.name), existingIds);
@@ -169,11 +183,11 @@ export async function createWorkspace(input: WorkspaceInput): Promise<Workspace>
   const sqliteDbPath = input.sqliteDbPath?.trim() || (await defaultDbPathForWorkspace(input.name));
   await mkdir(dirname(sqliteDbPath), { recursive: true });
 
-  const globalSettings = getAppSettings();
-  const allowedPdfRoots =
-    input.allowedPdfRoots?.length
-      ? input.allowedPdfRoots
-      : globalSettings.allowedPdfRoots;
+  const allowedPdfRoots = input.allowedPdfRoots?.length
+    ? input.allowedPdfRoots
+    : options.inheritGlobalPdfRoots
+      ? getAppSettings().allowedPdfRoots
+      : [];
 
   const workspace: Workspace = {
     id,

@@ -21,6 +21,11 @@ import {
 } from '../middleware/deviceAuth.js';
 import { invalidateStore } from '../storeManager.js';
 import {
+  assertWorkspacePathsAllowed,
+  mayConfigureWorkspacePaths,
+  WorkspacePathsForbiddenError,
+} from '../workspacePolicy.js';
+import {
   createWorkspace,
   listWorkspaceSummariesForDevice,
   syncActiveWorkspaceToAppSettings,
@@ -51,6 +56,10 @@ function handleDeviceError(error: unknown, res: import('express').Response): boo
     return true;
   }
   if (error instanceof DeviceAccessDeniedError) {
+    res.status(403).json({ error: error.message });
+    return true;
+  }
+  if (error instanceof WorkspacePathsForbiddenError) {
     res.status(403).json({ error: error.message });
     return true;
   }
@@ -130,7 +139,10 @@ export function createWorkspacesRouter(): Router {
     try {
       const { deviceId } = resolveDeviceForWorkspaces(req);
       const body = workspaceInputSchema.parse(req.body ?? {});
-      const workspace = await createWorkspace(body);
+      assertWorkspacePathsAllowed(deviceId, body);
+      const workspace = await createWorkspace(body, {
+        inheritGlobalPdfRoots: mayConfigureWorkspacePaths(deviceId),
+      });
       addDeviceToNewWorkspace(deviceId, workspace.id);
       await syncActiveWorkspaceToAppSettings(workspace);
       res.status(201).json({ ...workspace, isActive: true });
@@ -155,6 +167,7 @@ export function createWorkspacesRouter(): Router {
         return;
       }
       const body = workspaceUpdateSchema.parse(req.body ?? {});
+      assertWorkspacePathsAllowed(deviceId, body);
       const workspace = await updateWorkspace(workspaceId, body);
       invalidateStore(workspace.sqliteDbPath);
       res.json({
