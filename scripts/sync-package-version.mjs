@@ -12,6 +12,7 @@ const { appVersion } = resolveBuildVersion(repoRoot);
 
 const packagePaths = [
   path.join(repoRoot, 'package.json'),
+  path.join(repoRoot, 'shared', 'package.json'),
   path.join(repoRoot, 'backend', 'package.json'),
   path.join(repoRoot, 'frontend', 'package.json'),
 ];

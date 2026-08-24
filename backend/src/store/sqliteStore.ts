@@ -640,19 +640,30 @@ export class SqliteStore {
     return rows.map((r) => r.tag);
   }
 
+  /** Maior id já emitido nesta instância — ver `nextGroupId`. */
+  private ultimoGroupId = 0;
+
   /**
    * `Date.now()` sozinho colidia: dois grupos criados no mesmo milissegundo
-   * (importação, script, dois cliques) batiam no PRIMARY KEY. Ficar só com
-   * `MAX(id) + 1` resolveria a colisão mas reusaria o id de um grupo apagado, e
-   * `duplicate_group_id` não tem FK — um artigo que apontava para o grupo antigo
-   * passaria a apontar para o novo. Tomar o maior dos dois nunca reusa nem
-   * colide.
+   * (importação, script, dois cliques) batiam no PRIMARY KEY.
+   *
+   * Só `MAX(id) + 1` resolveria a colisão mas reusaria o id de um grupo
+   * apagado, e `duplicate_group_id` não tem FK — um artigo que apontava para o
+   * grupo antigo passaria a apontar para o novo, inventando um vínculo de
+   * duplicata. Por isso entra também o maior id já emitido: apagar o grupo
+   * esvazia o `MAX(id)`, mas não esta marca.
+   *
+   * Os três termos juntos: `Date.now()` mantém os ids parecidos com data,
+   * `MAX(id) + 1` cobre o que já está no banco, e `ultimoGroupId + 1` cobre o
+   * que foi emitido e apagado.
    */
   private nextGroupId(): number {
     const row = this.db.prepare('SELECT MAX(id) AS max_id FROM groups').get() as {
       max_id: number | null;
     };
-    return Math.max(Date.now(), (row.max_id ?? 0) + 1);
+    const id = Math.max(Date.now(), (row.max_id ?? 0) + 1, this.ultimoGroupId + 1);
+    this.ultimoGroupId = id;
+    return id;
   }
 
   async createGroup(input: {

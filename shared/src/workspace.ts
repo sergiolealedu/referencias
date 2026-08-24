@@ -1,0 +1,34 @@
+/**
+ * Workspace visto pelas duas pontas. `WorkspacesConfig`, que é o formato do
+ * arquivo de configuração no disco do servidor, fica só no backend.
+ */
+
+export interface Workspace {
+  id: string;
+  name: string;
+  sqliteDbPath: string;
+  allowedPdfRoots: string[];
+  createdAt: string;
+}
+
+export interface WorkspaceSummary extends Workspace {
+  isActive: boolean;
+}
+
+export interface WorkspaceInput {
+  name: string;
+  sqliteDbPath?: string;
+  allowedPdfRoots?: string[];
+}
+
+export interface AccessSetup {
+  hasAnyMember: boolean;
+  hasExistingWorkspaces: boolean;
+  needsOnboarding: boolean;
+  canCreateWorkspace: boolean;
+  inviteOnly: boolean;
+  bootstrapToken?: string;
+  bootstrapWorkspaceId?: string;
+  bootstrapWorkspaceName?: string;
+  isServerAdmin: boolean;
+}

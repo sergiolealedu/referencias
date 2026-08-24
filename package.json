@@ -12,12 +12,13 @@
   },
   "homepage": "https://github.com/sergiolealedu/referencias#readme",
   "workspaces": [
+    "shared",
     "backend",
     "frontend"
   ],
   "scripts": {
     "dev": "concurrently -n backend,frontend -c blue,green \"npm run dev -w backend\" \"npm run dev -w frontend\"",
-    "build": "npm run build -w backend && npm run build -w frontend",
+    "build": "npm run build -w shared && npm run build -w backend && npm run build -w frontend",
     "test": "vitest run",
     "typecheck": "tsc -p backend/tsconfig.test.json && tsc -b frontend/tsconfig.json --force",
     "test:watch": "vitest",

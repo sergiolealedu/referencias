@@ -27,7 +27,8 @@ describe('createGroup', () => {
   /**
    * `duplicate_group_id` não tem FK: um artigo pode apontar para um grupo já
    * apagado. Se o id fosse reusado, esse artigo passaria a apontar para o grupo
-   * novo — vínculo de duplicata inventado.
+   * novo — vínculo de duplicata inventado. Apagar esvazia o `MAX(id)`, então é
+   * a marca do último id emitido que sustenta esta garantia.
    */
   it('não reusa o id de um grupo apagado', async () => {
     const store = new SqliteStore(':memory:');

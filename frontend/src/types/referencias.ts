@@ -1,13 +1,20 @@
-export interface DuplicateRef {
-  groupId: number;
-  key: string;
-}
+/**
+ * O contrato com a API vive em `@sergiolealedu/referencias-shared`.
+ * Aqui ficam só os tipos que a SPA usa por conta própria.
+ */
+export * from '@sergiolealedu/referencias-shared';
 
-export interface Entry {
-  type: string;
-  key: string;
-  fields: Record<string, string>;
-}
+// `export *` reexporta, mas não traz os nomes para o escopo deste arquivo — os
+// tipos abaixo referenciam estes, então precisam ser importados também.
+import type {
+  Article,
+  ArticleCategoria,
+  FactorDefinition,
+  FactorPolarity,
+  MotivoDescarte,
+  SortColumn,
+  SortDirection,
+} from '@sergiolealedu/referencias-shared';
 
 export const ARTICLE_STATUSES = [
   'exists',
@@ -22,6 +29,7 @@ export const ARTICLE_STATUSES = [
 export type ArticleStatus = typeof ARTICLE_STATUSES[number];
 
 /** Tipos BibTeX comuns; valores fora da lista continuam editáveis no formulário. */
+
 export const ENTRY_TYPES = [
   'article',
   'book',
@@ -40,54 +48,6 @@ export const ENTRY_TYPES = [
   'unpublished',
 ] as const;
 
-export type FactorPolarity = 'positive' | 'negative';
-
-/** Fator canônico do workspace, com múltiplas grafias (PT/EN). */
-export interface FactorDefinition {
-  id: string;
-  name: string;
-  aliases: string[];
-  /** Categoria temática (ex.: Individual, Técnico, Organizacional). */
-  category?: string | null;
-}
-
-/** Ocorrência de um fator em um artigo. */
-export interface ArticleFactor {
-  factorId: string;
-  polarity: FactorPolarity;
-  description: string;
-  /** Grafia usada neste artigo. */
-  label: string;
-}
-
-/** Uso de um fator em um artigo específico (visão consolidada). */
-export interface FactorOccurrence {
-  groupId: number;
-  groupTitle: string;
-  articleKey: string;
-  articleTitle: string;
-  articleAuthor: string;
-  articleYear: string;
-  polarity: FactorPolarity;
-  description: string;
-  label: string;
-  usado: boolean;
-  descartado: boolean;
-  pdfNaoEncontrado: boolean;
-}
-
-/** Fator do catálogo com todas as ocorrências nos artigos. */
-export interface FactorOverview {
-  id: string;
-  name: string;
-  aliases: string[];
-  category?: string | null;
-  articleCount: number;
-  positiveCount: number;
-  negativeCount: number;
-  occurrences: FactorOccurrence[];
-}
-
 export interface ArticleFactorInput {
   factorId?: string;
   label: string;
@@ -96,56 +56,11 @@ export interface ArticleFactorInput {
   aliases?: string[];
 }
 
-export const MOTIVOS_DESCARTE = ['nao_eng_sw', 'nao_dev', 'nao_qvt'] as const;
-export type MotivoDescarte = (typeof MOTIVOS_DESCARTE)[number];
-
 export const MOTIVO_DESCARTE_LABELS: Record<MotivoDescarte, string> = {
   nao_eng_sw: 'Não é eng. de software',
   nao_dev: 'Não é desenvolvimento',
   nao_qvt: 'Não é QVT',
 };
-
-export interface Article {
-  entry: Entry;
-  status: string;
-  source: string;
-  location: string;
-  caminho: string;
-  notes: string;
-  tags: string[];
-  factors: ArticleFactor[];
-  descartado: boolean;
-  usado: boolean;
-  revisaoLiteratura: boolean;
-  pdfNaoEncontrado: boolean;
-  motivoDescarte: MotivoDescarte | null;
-  duplicateOf?: DuplicateRef;
-}
-
-export interface GroupMeta {
-  id: number;
-  title: string;
-  versao: string;
-  mecanismo: string;
-  stringBusca: string;
-  createdAt: string;
-  articleCount: number;
-}
-
-/** @deprecated use GroupMeta */
-export interface Group extends GroupMeta {
-  articles?: Article[];
-}
-
-export interface GroupSummary {
-  id: number;
-  title: string;
-  versao: string;
-  mecanismo: string;
-  stringBusca: string;
-  createdAt: string;
-  articleCount: number;
-}
 
 export interface GroupInput {
   title: string;
@@ -153,19 +68,6 @@ export interface GroupInput {
   mecanismo?: string;
   stringBusca?: string;
 }
-
-export const ARTICLE_CATEGORIAS = [
-  'comFatores',
-  'usados',
-  'comPdf',
-  'naoEngSw',
-  'naoDev',
-  'naoQvt',
-  'descartados',
-  'outros',
-  'repetidos',
-] as const;
-export type ArticleCategoria = (typeof ARTICLE_CATEGORIAS)[number];
 
 export const ARTICLE_CATEGORIA_LABELS: Record<ArticleCategoria, string> = {
   comFatores: 'Com fator',
@@ -180,6 +82,7 @@ export const ARTICLE_CATEGORIA_LABELS: Record<ArticleCategoria, string> = {
 };
 
 /** Abstracts dos artigos NÃO usados de um grupo, para revisar exclusões. */
+
 export interface AbstractsExport {
   group: { id: number; title: string; versao: string };
   articles: {
@@ -196,6 +99,7 @@ export interface AbstractsExport {
 }
 
 /** Catálogo de fatores exportado, para backup ou transferir entre workspaces. */
+
 export interface FactorsExport {
   formatVersion: 1;
   exportedAt: string;
@@ -210,6 +114,7 @@ export interface FactorsImportResult {
 }
 
 /** Delta que liga fatores a artigos já existentes. */
+
 export interface FactorsDeltaItem {
   key: string;
   groupId?: number;
@@ -232,6 +137,7 @@ export interface FactorsDeltaItem {
  * (`match`) e renomeia (`name`), soma grafias (`aliases`) ou substitui o
  * conjunto inteiro (`spellings`).
  */
+
 export interface FactorsDeltaCatalogOp {
   match: string;
   name?: string;
@@ -260,6 +166,7 @@ export interface FactorsDeltaResult {
 }
 
 /** Pacote para a IA analisar artigos e devolver um delta de fatores. */
+
 export interface FactorsAnalysisExport {
   prompt: string;
   formatoResposta: unknown;
@@ -298,19 +205,6 @@ export interface ArticleFilters {
   pdfNaoEncontrado?: string;
 }
 
-export type SortColumn =
-  | 'title'
-  | 'author'
-  | 'year'
-  | 'status'
-  | 'tags'
-  | 'usado'
-  | 'descartado'
-  | 'revisaoLiteratura'
-  | 'pdfNaoEncontrado';
-
-export type SortDirection = 'asc' | 'desc';
-
 export interface ArticleListParams extends ArticleFilters {
   page?: number;
   pageSize?: number;
@@ -319,52 +213,10 @@ export interface ArticleListParams extends ArticleFilters {
   findKey?: string;
 }
 
-export interface PaginatedArticles {
-  items: Article[];
-  total: number;
-  page: number;
-  pageSize: number;
-  foundPage?: number;
-}
-
-export interface PaginatedSearchResults {
-  items: SearchResult[];
-  total: number;
-  page: number;
-  pageSize: number;
-}
-
-export interface SearchResult {
-  groupId: number;
-  groupTitle: string;
-  article: Article;
-}
-
 export interface BibtexImportInput {
   bibtex: string;
   source: string;
   originArticle?: { groupId: number; key: string };
-}
-
-export interface BibtexParseError {
-  key: string;
-  type: string;
-  reason: string;
-}
-
-export interface BibtexImportItemResult {
-  key: string;
-  outcome: 'imported' | 'skipped' | 'duplicate';
-  message?: string;
-}
-
-export interface BibtexImportResult {
-  parsed: number;
-  imported: number;
-  skipped: number;
-  duplicates: number;
-  items: BibtexImportItemResult[];
-  parseErrors?: BibtexParseError[];
 }
 
 export interface AppSettings {
@@ -372,64 +224,6 @@ export interface AppSettings {
   allowedPdfRoots: string[];
   activeWorkspaceId?: string;
   activeWorkspaceName?: string;
-}
-
-export interface YearArticleStats {
-  year: number;
-  comFatores: number;
-  usados: number;
-  comPdf: number;
-  naoEngSw: number;
-  naoDev: number;
-  naoQvt: number;
-  descartados: number;
-  outros: number;
-  repetidos: number;
-  unicos: number;
-}
-
-export interface DuplicateDetectionResult {
-  scanned: number;
-  marked: number;
-  cleared: number;
-  unchanged: number;
-}
-
-export interface GroupArticleStats {
-  groupId: number;
-  groupTitle: string;
-  versao: string;
-  series: YearArticleStats[];
-}
-
-export interface GroupExportMeta {
-  title: string;
-  versao: string;
-  mecanismo: string;
-  stringBusca: string;
-  createdAt: string;
-  sourceId: number;
-}
-
-export interface GroupExport {
-  formatVersion: 1;
-  exportedAt: string;
-  group: GroupExportMeta;
-  articles: Article[];
-}
-
-export interface GroupImportOptions {
-  targetGroupId?: number;
-  title?: string;
-  onConflict?: 'skip' | 'replace';
-}
-
-export interface GroupImportResult {
-  groupId: number;
-  groupTitle: string;
-  imported: number;
-  skipped: number;
-  replaced: number;
 }
 
 export const emptyArticle = (): Article => ({

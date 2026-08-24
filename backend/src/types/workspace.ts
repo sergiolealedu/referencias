@@ -1,34 +1,9 @@
-export interface Workspace {
-  id: string;
-  name: string;
-  sqliteDbPath: string;
-  allowedPdfRoots: string[];
-  createdAt: string;
-}
+export * from '@sergiolealedu/referencias-shared';
 
+import type { Workspace } from '@sergiolealedu/referencias-shared';
+
+/** Formato do `data/workspaces.json` — só o servidor lê e escreve este arquivo. */
 export interface WorkspacesConfig {
   activeWorkspaceId: string;
   workspaces: Workspace[];
-}
-
-export interface WorkspaceInput {
-  name: string;
-  sqliteDbPath?: string;
-  allowedPdfRoots?: string[];
-}
-
-export interface WorkspaceSummary extends Workspace {
-  isActive: boolean;
-}
-
-export interface AccessSetup {
-  hasAnyMember: boolean;
-  hasExistingWorkspaces: boolean;
-  needsOnboarding: boolean;
-  canCreateWorkspace: boolean;
-  inviteOnly: boolean;
-  bootstrapToken?: string;
-  bootstrapWorkspaceId?: string;
-  bootstrapWorkspaceName?: string;
-  isServerAdmin: boolean;
 }

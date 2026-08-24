@@ -9,7 +9,12 @@ Este documento descreve **como o sistema se comporta** em termos de qualidade, a
 ### 1.1 Estilo
 
 - **Aplicação web full-stack** com separação clara entre frontend e backend
-- **Monorepo npm workspaces** (`backend` + `frontend`)
+- **Monorepo npm workspaces** (`shared` + `backend` + `frontend`)
+- `shared` guarda o contrato de dados e a resolução de grafias de fator. Existe
+  porque as duas pontas mantinham 29 tipos idênticos e quatro funções iguais
+  palavra por palavra em arquivos separados: divergir não dava erro de
+  compilação em lugar nenhum, aparecia como campo `undefined` em runtime ou como
+  API e tela discordando sobre a identidade de um fator
 - Comunicação via **API REST JSON**
 - Persistência **local-first** (SQLite no disco do usuário)
 
@@ -17,7 +22,7 @@ Este documento descreve **como o sistema se comporta** em termos de qualidade, a
 
 | Camada | Tecnologia |
 |--------|------------|
-| Frontend | React 18, TypeScript, Vite |
+| Frontend | React 19, TypeScript, Vite |
 | Estado remoto | TanStack React Query |
 | Gráficos | Recharts |
 | Backend | Node.js, Express, TypeScript |

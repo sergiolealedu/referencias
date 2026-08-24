@@ -61,6 +61,12 @@ jobs:
       # Sem --provenance: o npm não assina proveniência de repositório privado e
       # o passo abortava, derrubando o deploy antes de chegar ao droplet. O
       # --access acompanha a visibilidade do repo.
+      # Antes do backend: ele declara dependência do shared.
+      - name: Publish shared to GitHub Packages
+        run: npm publish -w shared --access restricted
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Publish backend to GitHub Packages
         run: npm publish -w backend --access restricted
         env:

@@ -42,6 +42,9 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Verify shared artifact
+        run: test -f shared/dist/index.js && test -f shared/dist/index.d.ts
+
       - name: Verify backend artifact
         run: test -f backend/dist/server.js
 

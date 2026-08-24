@@ -7,6 +7,19 @@ Aplicação web full-stack com persistência SQLite para gerenciar grupos e arti
 - Node.js 20+
 - Banco SQLite local (caminho configurável em `app.config.json`)
 
+## Estrutura
+
+Monorepo npm workspaces, três pacotes:
+
+| Pacote | O que é |
+|--------|---------|
+| `shared` | Contrato de dados entre as duas pontas e a resolução de grafias de fator. Compila primeiro: os outros dois dependem do `dist` dele |
+| `backend` | API Express + SQLite |
+| `frontend` | SPA React/Vite (e o app Android, via Capacitor) |
+
+`npm run build` respeita essa ordem. `npm test` e `npm run typecheck` rodam sobre
+os três.
+
 ## Configuração
 
 1. Copie o arquivo de exemplo:

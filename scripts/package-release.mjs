@@ -16,6 +16,7 @@ const bundleDir = join(root, 'release', `referencias-${version}`);
 mkdirSync(bundleDir, { recursive: true });
 
 const copyItems = [
+  ['shared/dist', 'shared/dist'],
   ['backend/dist', 'backend/dist'],
   ['frontend/dist', 'frontend/dist'],
   ['docs', 'docs'],
@@ -24,6 +25,7 @@ const copyItems = [
   ['README.md', 'README.md'],
   ['app.config.example.json', 'app.config.example.json'],
   ['.env.example', '.env.example'],
+  ['shared/package.json', 'shared/package.json'],
   ['backend/package.json', 'backend/package.json'],
   ['frontend/package.json', 'frontend/package.json'],
 ];
@@ -38,6 +40,7 @@ writeFileSync(
     `Referências v${version}`,
     '',
     'Conteúdo:',
+    '- shared/dist — contrato compartilhado (a API depende dele)',
     '- backend/dist — API compilada',
     '- frontend/dist — SPA estática',
     '- referencias-*.aab / referencias-*.apk — app Android (quando gerado na release)',
