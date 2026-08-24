@@ -83,6 +83,34 @@ const CATEGORIA_SQL: Record<string, (alias: string) => string> = {
     `${NAO_REPETIDO(a)} AND ${a}.usado = 0 AND ${a}.motivo_descarte IS NULL AND ${a}.descartado = 0 AND TRIM(${a}.caminho) = ''`,
 };
 
+/** Nome da coluna SQL de cada categoria nas estatísticas por ano. */
+const CATEGORIA_COLUNA: Record<keyof typeof CATEGORIA_SQL, string> = {
+  comFatores: 'com_fatores',
+  repetidos: 'repetidos',
+  usados: 'usados',
+  naoEngSw: 'nao_eng_sw',
+  naoDev: 'nao_dev',
+  naoQvt: 'nao_qvt',
+  descartados: 'descartados',
+  comPdf: 'com_pdf',
+  outros: 'outros',
+};
+
+/**
+ * As contagens do dashboard derivadas dos MESMOS predicados que filtram a
+ * tabela. Antes a classificação estava escrita duas vezes — aqui expandida à
+ * mão, lá em `CATEGORIA_SQL` — e nada garantia que continuassem iguais: bastava
+ * ajustar a precedência num lado para o gráfico e a tabela discordarem.
+ */
+const CONTAGENS_POR_CATEGORIA = Object.entries(CATEGORIA_COLUNA)
+  .map(
+    ([categoria, coluna]) =>
+      `SUM(CASE WHEN ${CATEGORIA_SQL[categoria](
+        'a',
+      )} THEN 1 ELSE 0 END) AS ${coluna},`,
+  )
+  .join(`\n          `);
+
 function buildArticleFilters(
   filters: ArticleListParams,
   alias = 'a',
@@ -612,6 +640,21 @@ export class SqliteStore {
     return rows.map((r) => r.tag);
   }
 
+  /**
+   * `Date.now()` sozinho colidia: dois grupos criados no mesmo milissegundo
+   * (importação, script, dois cliques) batiam no PRIMARY KEY. Ficar só com
+   * `MAX(id) + 1` resolveria a colisão mas reusaria o id de um grupo apagado, e
+   * `duplicate_group_id` não tem FK — um artigo que apontava para o grupo antigo
+   * passaria a apontar para o novo. Tomar o maior dos dois nunca reusa nem
+   * colide.
+   */
+  private nextGroupId(): number {
+    const row = this.db.prepare('SELECT MAX(id) AS max_id FROM groups').get() as {
+      max_id: number | null;
+    };
+    return Math.max(Date.now(), (row.max_id ?? 0) + 1);
+  }
+
   async createGroup(input: {
     title: string;
     versao?: string;
@@ -619,7 +662,7 @@ export class SqliteStore {
     stringBusca?: string;
   }): Promise<GroupMeta> {
     const group = {
-      id: Date.now(),
+      id: this.nextGroupId(),
       title: input.title,
       versao: input.versao ?? 'v2',
       mecanismo: input.mecanismo ?? 'Scopus',
@@ -1367,15 +1410,7 @@ export class SqliteStore {
           g.title AS group_title,
           g.versao AS versao,
           CAST(COALESCE(NULLIF(json_extract(a.fields_json, '$.year'), ''), '0') AS INTEGER) AS year,
-          SUM(CASE WHEN COALESCE(json_array_length(a.factors_json), 0) > 0 THEN 1 ELSE 0 END) AS com_fatores,
-          SUM(CASE WHEN NOT (COALESCE(json_array_length(a.factors_json), 0) > 0) AND a.status != 'duplicate' AND a.usado = 1 THEN 1 ELSE 0 END) AS usados,
-          SUM(CASE WHEN NOT (COALESCE(json_array_length(a.factors_json), 0) > 0) AND a.status != 'duplicate' AND a.usado = 0 AND a.motivo_descarte = 'nao_eng_sw' THEN 1 ELSE 0 END) AS nao_eng_sw,
-          SUM(CASE WHEN NOT (COALESCE(json_array_length(a.factors_json), 0) > 0) AND a.status != 'duplicate' AND a.usado = 0 AND a.motivo_descarte = 'nao_dev' THEN 1 ELSE 0 END) AS nao_dev,
-          SUM(CASE WHEN NOT (COALESCE(json_array_length(a.factors_json), 0) > 0) AND a.status != 'duplicate' AND a.usado = 0 AND a.motivo_descarte = 'nao_qvt' THEN 1 ELSE 0 END) AS nao_qvt,
-          SUM(CASE WHEN NOT (COALESCE(json_array_length(a.factors_json), 0) > 0) AND a.status != 'duplicate' AND a.usado = 0 AND a.motivo_descarte IS NULL AND a.descartado = 1 THEN 1 ELSE 0 END) AS descartados,
-          SUM(CASE WHEN NOT (COALESCE(json_array_length(a.factors_json), 0) > 0) AND a.status != 'duplicate' AND a.usado = 0 AND a.motivo_descarte IS NULL AND a.descartado = 0 AND TRIM(a.caminho) != '' THEN 1 ELSE 0 END) AS com_pdf,
-          SUM(CASE WHEN NOT (COALESCE(json_array_length(a.factors_json), 0) > 0) AND a.status != 'duplicate' AND a.usado = 0 AND a.motivo_descarte IS NULL AND a.descartado = 0 AND TRIM(a.caminho) = '' THEN 1 ELSE 0 END) AS outros,
-          SUM(CASE WHEN NOT (COALESCE(json_array_length(a.factors_json), 0) > 0) AND a.status = 'duplicate' THEN 1 ELSE 0 END) AS repetidos,
+          ${CONTAGENS_POR_CATEGORIA}
           SUM(CASE WHEN a.status != 'duplicate' THEN 1 ELSE 0 END) AS unicos
         FROM groups g
         JOIN articles a ON a.group_id = g.id
