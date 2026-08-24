@@ -71,7 +71,7 @@ export default tseslint.config(
   },
 
   {
-    files: ['scripts/**/*.mjs', '*.config.js', '*.config.ts'],
+    files: ['scripts/**/*.mjs', '*.config.js', '*.config.mjs', '*.config.ts'],
     languageOptions: {
       globals: {
         Buffer: 'readonly',

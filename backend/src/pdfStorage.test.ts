@@ -1,4 +1,4 @@
-import { basename, resolve, sep } from 'node:path';
+import { basename, join, resolve, sep } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -40,13 +40,27 @@ describe('isPathInsideRoots', () => {
   });
 
   it('recusa travessia com .. que sai da raiz', () => {
-    expect(isPathInsideRoots(`${RAIZ}\\..\\outro\\x.pdf`, [RAIZ])).toBe(false);
+    expect(isPathInsideRoots(`${RAIZ}/../outro/x.pdf`, [RAIZ])).toBe(false);
     expect(isPathInsideRoots(`${RAIZ}/../../x.pdf`, [RAIZ])).toBe(false);
-    expect(isPathInsideRoots(`${RAIZ}\\sub\\..\\..\\fora.pdf`, [RAIZ])).toBe(false);
+    expect(isPathInsideRoots(`${RAIZ}/sub/../../fora.pdf`, [RAIZ])).toBe(false);
+    expect(isPathInsideRoots(join(RAIZ, '..', 'outro', 'x.pdf'), [RAIZ])).toBe(false);
   });
 
   it('aceita .. que volta para dentro da raiz', () => {
-    expect(isPathInsideRoots(`${RAIZ}\\sub\\..\\artigo.pdf`, [RAIZ])).toBe(true);
+    expect(isPathInsideRoots(`${RAIZ}/sub/../artigo.pdf`, [RAIZ])).toBe(true);
+    expect(isPathInsideRoots(join(RAIZ, 'sub', '..', 'artigo.pdf'), [RAIZ])).toBe(true);
+  });
+
+  /**
+   * A barra invertida é separador no Windows e caractere de nome de arquivo no
+   * Linux — e a produção roda Linux enquanto o desenvolvimento é Windows.
+   * Enquanto a checagem aceitava as duas barras, este caminho passava por
+   * "dentro da raiz" no servidor e era recusado na máquina local: o guarda
+   * ficava mais largo justamente onde está exposto.
+   */
+  it('recusa a barra invertida como separador em qualquer sistema', () => {
+    expect(isPathInsideRoots(`${RAIZ}\\..\\outro\\x.pdf`, [RAIZ])).toBe(false);
+    expect(isPathInsideRoots(`${RAIZ}\\sub\\..\\..\\fora.pdf`, [RAIZ])).toBe(false);
   });
 
   /**

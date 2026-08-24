@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { mkdir, unlink, writeFile } from 'node:fs/promises';
-import { dirname, normalize, resolve } from 'node:path';
+import { dirname, normalize, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const MAX_PDF_BYTES = 50 * 1024 * 1024;
@@ -15,11 +15,13 @@ export function isPathInsideRoots(filePath: string, roots: string[]): boolean {
   const normalized = resolve(normalize(filePath));
   return roots.some((root) => {
     const allowedRoot = resolve(normalize(root));
-    return (
-      normalized === allowedRoot ||
-      normalized.startsWith(`${allowedRoot}\\`) ||
-      normalized.startsWith(`${allowedRoot}/`)
-    );
+    // `resolve` já devolve o separador do sistema, então basta comparar com
+    // `sep` — e é mais estreito que aceitar as duas barras. No Linux a barra
+    // invertida é caractere válido de nome de arquivo, não separador, e
+    // tratá-la como separador fazia `<raiz>\..\x.pdf` passar por "dentro
+    // da raiz". O servidor de produção é Linux e a máquina de desenvolvimento
+    // é Windows: o guarda ficava mais largo justamente onde está exposto.
+    return normalized === allowedRoot || normalized.startsWith(`${allowedRoot}${sep}`);
   });
 }
 
