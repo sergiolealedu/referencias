@@ -69,13 +69,17 @@ function persistSession(session: DeviceSession): DeviceSession {
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  // `...options` vem ANTES de `headers`: na ordem inversa, um chamador que
+  // passasse `headers` nas options substituiria o objeto inteiro e a requisição
+  // sairia sem Content-Type e sem autenticação. Nenhum chamador faz isso hoje —
+  // é armadilha para o próximo.
   const response = await fetch(`${getApiBase()}${path}`, {
+    ...options,
     headers: {
       'Content-Type': 'application/json',
       ...authHeaders(),
       ...options?.headers,
     },
-    ...options,
   });
 
   if (!response.ok) {
