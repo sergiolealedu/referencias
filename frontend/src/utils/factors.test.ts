@@ -2,11 +2,14 @@ import { describe, expect, it } from 'vitest';
 
 import {
   agruparPorCategoria,
+  agruparPorPolaridade,
   categoriaDe,
   compararFatores,
   parseAliasesText,
   parseFactorsDeltaFile,
   parseFactorsExportFile,
+  POLARIDADE_LABELS,
+  polaridadeDe,
   SEM_CATEGORIA,
   suggestFactors,
 } from './factors';
@@ -276,5 +279,123 @@ describe('suggestFactors', () => {
 
   it('não sugere nada para termo que não casa', () => {
     expect(suggestFactors(catálogo, 'zzzzz')).toEqual([]);
+  });
+});
+
+/**
+ * Agrupamento por polaridade: separa o fator que só aparece favorecendo a QVT
+ * do que só aparece prejudicando, e destaca os que aparecem dos dois jeitos —
+ * que são justamente os interessantes, porque contradizem entre artigos.
+ *
+ * `positiveCount + negativeCount` é sempre `articleCount`: cada ocorrência tem
+ * um sinal só. As quatro classes cobrem todo fator sem sobreposição.
+ */
+
+const comSinais = (name: string, positiveCount: number, negativeCount: number) => ({
+  name,
+  articleCount: positiveCount + negativeCount,
+  positiveCount,
+  negativeCount,
+});
+
+describe('polaridadeDe', () => {
+  it('classifica pelos dois contadores', () => {
+    expect(polaridadeDe({ positiveCount: 3, negativeCount: 0 })).toBe('positivos');
+    expect(polaridadeDe({ positiveCount: 0, negativeCount: 2 })).toBe('negativos');
+    expect(polaridadeDe({ positiveCount: 1, negativeCount: 1 })).toBe('mistos');
+  });
+
+  it('fator sem ocorrência tem classe própria, não vira positivo nem negativo', () => {
+    expect(polaridadeDe({ positiveCount: 0, negativeCount: 0 })).toBe('sem');
+  });
+
+  it('uma única ocorrência do outro sinal já torna o fator misto', () => {
+    expect(polaridadeDe({ positiveCount: 40, negativeCount: 1 })).toBe('mistos');
+    expect(polaridadeDe({ positiveCount: 1, negativeCount: 40 })).toBe('mistos');
+  });
+});
+
+describe('agruparPorPolaridade', () => {
+  it('separa nas quatro classes', () => {
+    const grupos = agruparPorPolaridade([
+      comSinais('Autonomia', 5, 0),
+      comSinais('Carga de trabalho', 0, 4),
+      comSinais('Home office', 3, 2),
+      comSinais('Nunca citado', 0, 0),
+    ]);
+
+    expect(grupos.map(([rotulo]) => rotulo)).toEqual([
+      POLARIDADE_LABELS.positivos,
+      POLARIDADE_LABELS.mistos,
+      POLARIDADE_LABELS.negativos,
+      POLARIDADE_LABELS.sem,
+    ]);
+    expect(grupos.map(([, itens]) => itens.map((f) => f.name))).toEqual([
+      ['Autonomia'],
+      ['Home office'],
+      ['Carga de trabalho'],
+      ['Nunca citado'],
+    ]);
+  });
+
+  /**
+   * A ordem é escala, não ranking: "só positivos → mistos → só negativos" se lê
+   * como um eixo. Reordenar por contagem embaralharia esse eixo a cada mudança
+   * do corpus.
+   */
+  it('mantém a ordem da escala mesmo quando o grupo maior é outro', () => {
+    const grupos = agruparPorPolaridade([
+      comSinais('Um negativo popular', 0, 99),
+      comSinais('Um positivo raro', 1, 0),
+    ]);
+    expect(grupos.map(([rotulo]) => rotulo)).toEqual([
+      POLARIDADE_LABELS.positivos,
+      POLARIDADE_LABELS.negativos,
+    ]);
+  });
+
+  it('não cria seção vazia', () => {
+    const grupos = agruparPorPolaridade([comSinais('Só este', 2, 0)]);
+    expect(grupos).toHaveLength(1);
+    expect(grupos[0][0]).toBe(POLARIDADE_LABELS.positivos);
+  });
+
+  it('lista vazia devolve nenhuma seção', () => {
+    expect(agruparPorPolaridade([])).toEqual([]);
+  });
+
+  it('preserva a ordem de entrada dentro da seção', () => {
+    const grupos = agruparPorPolaridade([
+      comSinais('Zebra', 3, 0),
+      comSinais('Abacate', 1, 0),
+    ]);
+    expect(grupos[0][1].map((f) => f.name)).toEqual(['Zebra', 'Abacate']);
+  });
+
+  it('não perde nem duplica fator nenhum', () => {
+    const fatores = [
+      comSinais('a', 1, 0),
+      comSinais('b', 0, 1),
+      comSinais('c', 1, 1),
+      comSinais('d', 0, 0),
+      comSinais('e', 2, 0),
+    ];
+    const agrupados = agruparPorPolaridade(fatores).flatMap(([, itens]) => itens);
+    expect(agrupados).toHaveLength(fatores.length);
+    expect(new Set(agrupados.map((f) => f.name)).size).toBe(fatores.length);
+  });
+
+  it('não altera a lista recebida', () => {
+    const fatores = [comSinais('a', 1, 1), comSinais('b', 0, 2)];
+    const cópia = structuredClone(fatores);
+    agruparPorPolaridade(fatores);
+    expect(fatores).toEqual(cópia);
+  });
+
+  /** Os rótulos são o que aparece na tela; o pedido foi nestes termos. */
+  it('rotula em português', () => {
+    expect(POLARIDADE_LABELS.positivos).toBe('Só positivos');
+    expect(POLARIDADE_LABELS.mistos).toBe('Mistos');
+    expect(POLARIDADE_LABELS.negativos).toBe('Só negativos');
   });
 });

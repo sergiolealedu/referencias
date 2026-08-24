@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { api } from '../api/client';
@@ -7,13 +7,17 @@ import type { FactorOccurrence, FactorOverview } from '../types/referencias';
 import { usePersistedState } from '../utils/persistedState';
 import {
   agruparPorCategoria,
+  agruparPorPolaridade,
   categoriaDe,
   compararFatores,
   downloadFactorsExport,
   formatAllSpellings,
   parseFactorsDeltaFile,
   parseFactorsExportFile,
+  POLARIDADE_LABELS,
+  polaridadeDe,
   SEM_CATEGORIA,
+  type AgrupamentoFatores,
   type OrdemFatores,
 } from '../utils/factors';
 
@@ -71,7 +75,14 @@ export function FactorsView({
   const [nomeDraft, setNomeDraft] = useState('');
   const [grafiasDraft, setGrafiasDraft] = useState('');
   const [categoriaDraft, setCategoriaDraft] = useState('');
-  const [agrupar, setAgrupar] = usePersistedState('fatores.agrupar', true);
+  const [agrupamento, setAgrupamento] = usePersistedState<AgrupamentoFatores>(
+    'fatores.agrupamento',
+    // Chave nova: a antiga guardava um booleano ("agrupa por categoria ou não")
+    // e agora são três modos. Quem tinha "Lista" escolhido continua em lista.
+    () => (localStorage.getItem('referencias.ui.fatores.agrupar') === 'false'
+      ? 'nenhum'
+      : 'categoria'),
+  );
   const [ordem, setOrdem] = usePersistedState<OrdemFatores>('fatores.ordem', 'nome');
   /** Esconde fator raro: 0 mostra tudo, inclusive os que não estão em artigo nenhum. */
   const [minOcorrencias, setMinOcorrencias] = usePersistedState('fatores.minOcorrencias', 0);
@@ -359,8 +370,11 @@ export function FactorsView({
   }, [factors, query, minOcorrencias, ordem]);
 
   const agrupados = useMemo(
-    () => agruparPorCategoria(filtered, ordem),
-    [filtered, ordem],
+    () =>
+      agrupamento === 'polaridade'
+        ? agruparPorPolaridade(filtered)
+        : agruparPorCategoria(filtered, ordem),
+    [agrupamento, filtered, ordem],
   );
 
   /** Categorias em uso no catálogo inteiro, para o datalist do formulário. */
@@ -373,14 +387,32 @@ export function FactorsView({
     return [...nomes].sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
   }, [factors]);
 
-  // Com busca ativa, tudo fica visível: recolher categoria esconderia resultado.
+  // Com busca ativa, tudo fica visível: recolher seção esconderia resultado.
   const buscaAtiva = query.trim().length > 0;
 
-  const alternarCategoria = (categoria: string) => {
+  /**
+   * Em que seção o fator cai no agrupamento atual. Prefixado pelo modo porque o
+   * conjunto de seções recolhidas é um só: sem o prefixo, uma categoria chamada
+   * "Mistos" e a seção de polaridade "Mistos" recolheriam juntas, e recolher
+   * algo num modo mexeria no outro.
+   */
+  const secaoDe = useCallback(
+    (factor: FactorOverview) =>
+      agrupamento === 'polaridade'
+        ? `polaridade:${POLARIDADE_LABELS[polaridadeDe(factor)]}`
+        : `categoria:${categoriaDe(factor)}`,
+    [agrupamento],
+  );
+
+  const chaveDaSecao = (rotulo: string) =>
+    `${agrupamento === 'polaridade' ? 'polaridade' : 'categoria'}:${rotulo}`;
+
+  const alternarSecao = (rotulo: string) => {
+    const chave = chaveDaSecao(rotulo);
     setCategoriasRecolhidas((prev) => {
       const next = new Set(prev);
-      if (next.has(categoria)) next.delete(categoria);
-      else next.add(categoria);
+      if (next.has(chave)) next.delete(chave);
+      else next.add(chave);
       return next;
     });
   };
@@ -403,17 +435,18 @@ export function FactorsView({
     if (!alvo) return;
     setQuery('');
     setSelectedId(focusFactorId);
-    // A categoria do fator focado precisa estar aberta para ele aparecer.
+    // A seção do fator focado precisa estar aberta para ele aparecer.
     setCategoriasRecolhidas((prev) => {
-      if (!prev.has(categoriaDe(alvo))) return prev;
+      const chave = secaoDe(alvo);
+      if (!prev.has(chave)) return prev;
       const next = new Set(prev);
-      next.delete(categoriaDe(alvo));
+      next.delete(chave);
       return next;
     });
     // Vindo de um chip na lista de artigos, o alvo é o detalhe daquele fator.
     setDetailOpen(true);
     onFocusConsumed?.();
-  }, [focusFactorId, factors, onFocusConsumed]);
+  }, [focusFactorId, factors, onFocusConsumed, secaoDe]);
 
   const activeItemRef = useRef<HTMLLIElement | null>(null);
   useEffect(() => {
@@ -451,8 +484,9 @@ export function FactorsView({
                 <span className="polarity-negative-text">−{factor.negativeCount}</span>
               </>
             )}
-            {/* Na lista única a categoria não tem cabeçalho, então vem no item. */}
-            {!agrupar && (
+            {/* Sem cabeçalho de categoria (lista corrida ou seções por
+                polaridade), a categoria vem no próprio item. */}
+            {agrupamento !== 'categoria' && (
               <>
                 {' · '}
                 <span className="factors-view-list-categoria">{categoriaDe(factor)}</span>
@@ -544,19 +578,28 @@ export function FactorsView({
           >
             <button
               type="button"
-              className={agrupar ? 'is-active' : ''}
-              aria-pressed={agrupar}
-              onClick={() => setAgrupar(true)}
-              title="Uma seção por categoria, recolhível"
+              className={agrupamento === 'categoria' ? 'is-active' : ''}
+              aria-pressed={agrupamento === 'categoria'}
+              onClick={() => setAgrupamento('categoria')}
+              title="Uma seção por categoria temática, recolhível"
             >
               Categorias
             </button>
             <button
               type="button"
-              className={!agrupar ? 'is-active' : ''}
-              aria-pressed={!agrupar}
-              onClick={() => setAgrupar(false)}
-              title="Lista corrida, sem separar por categoria"
+              className={agrupamento === 'polaridade' ? 'is-active' : ''}
+              aria-pressed={agrupamento === 'polaridade'}
+              onClick={() => setAgrupamento('polaridade')}
+              title="Seções por sinal: só positivos, mistos, só negativos"
+            >
+              Polaridade
+            </button>
+            <button
+              type="button"
+              className={agrupamento === 'nenhum' ? 'is-active' : ''}
+              aria-pressed={agrupamento === 'nenhum'}
+              onClick={() => setAgrupamento('nenhum')}
+              title="Lista corrida, sem seções"
             >
               Lista
             </button>
@@ -638,22 +681,23 @@ export function FactorsView({
               className={`factors-view-layout${detailOpen ? ' is-detail-open' : ''}`}
             >
               <aside className="factors-view-list" aria-label="Lista de fatores">
-                {agrupar ? (
-                  agrupados.map(([categoria, itens]) => {
-                    const recolhida = !buscaAtiva && categoriasRecolhidas.has(categoria);
+                {agrupamento !== 'nenhum' ? (
+                  agrupados.map(([rotulo, itens]) => {
+                    const recolhida =
+                      !buscaAtiva && categoriasRecolhidas.has(chaveDaSecao(rotulo));
                     return (
-                      <section key={categoria} className="factors-view-category">
+                      <section key={rotulo} className="factors-view-category">
                         <button
                           type="button"
                           className="factors-view-category-toggle"
-                          onClick={() => alternarCategoria(categoria)}
+                          onClick={() => alternarSecao(rotulo)}
                           aria-expanded={!recolhida}
-                          title={recolhida ? 'Expandir categoria' : 'Recolher categoria'}
+                          title={recolhida ? 'Expandir seção' : 'Recolher seção'}
                         >
                           <span className="factors-view-category-caret" aria-hidden="true">
                             {recolhida ? '▸' : '▾'}
                           </span>
-                          <span className="factors-view-category-name">{categoria}</span>
+                          <span className="factors-view-category-name">{rotulo}</span>
                           <span className="factors-view-category-count">{itens.length}</span>
                         </button>
                         {!recolhida && <ul>{itens.map(renderFactorItem)}</ul>}

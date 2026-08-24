@@ -127,6 +127,9 @@ Recomenda-se manter o `.db` em disco local (não sincronizar via Google Drive em
 - Link para artigo original em entradas duplicadas
 - Importação BibTeX por grupo
 - Exportar / importar grupo completo entre servidores (JSON)
+- **Fatores** — agrupamento por categoria temática ou por **polaridade** (só
+  positivos, mistos, só negativos), ordenação A–Z ou por ocorrências, e filtro
+  de mínimo de artigos
 - **Acesso ao workspace** — convites por token, troca de workspace (botão com nome do workspace)
 - **Configuração** — caminhos globais de banco SQLite e PDF (`app.config.json`), válidos para todos os workspaces
 

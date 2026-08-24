@@ -273,6 +273,59 @@ export function compararFatores<T extends Ordenavel>(a: T, b: T, ordem: OrdemFat
   return a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' });
 }
 
+/** Como a lista de fatores é dividida em seções. */
+export type AgrupamentoFatores = 'categoria' | 'polaridade' | 'nenhum';
+
+/**
+ * Sinal com que o fator aparece nos artigos. `positiveCount + negativeCount`
+ * é sempre igual a `articleCount` — cada ocorrência tem um sinal só — então as
+ * quatro classes cobrem todo fator sem sobreposição.
+ */
+export type PolaridadeFator = 'positivos' | 'mistos' | 'negativos' | 'sem';
+
+export const POLARIDADE_LABELS: Record<PolaridadeFator, string> = {
+  positivos: 'Só positivos',
+  mistos: 'Mistos',
+  negativos: 'Só negativos',
+  sem: 'Sem ocorrência',
+};
+
+/**
+ * Ordem das seções por polaridade: é escala, não ranking. "Só positivos →
+ * mistos → só negativos" se lê como um eixo, e reordenar por contagem
+ * embaralharia esse eixo a cada mudança do corpus. "Sem ocorrência" fecha,
+ * porque é pendência de análise e não um ponto da escala.
+ */
+export const POLARIDADES_EM_ORDEM: PolaridadeFator[] = [
+  'positivos',
+  'mistos',
+  'negativos',
+  'sem',
+];
+
+type ContagemPolaridade = { positiveCount: number; negativeCount: number };
+
+export function polaridadeDe(factor: ContagemPolaridade): PolaridadeFator {
+  const positivas = factor.positiveCount;
+  const negativas = factor.negativeCount;
+  if (positivas > 0 && negativas > 0) return 'mistos';
+  if (positivas > 0) return 'positivos';
+  if (negativas > 0) return 'negativos';
+  return 'sem';
+}
+
+/** Distribui em baldes preservando a ordem de entrada dentro de cada um. */
+function emBaldes<T>(itens: T[], chaveDe: (item: T) => string): Map<string, T[]> {
+  const baldes = new Map<string, T[]>();
+  for (const item of itens) {
+    const chave = chaveDe(item);
+    const lista = baldes.get(chave);
+    if (lista) lista.push(item);
+    else baldes.set(chave, [item]);
+  }
+  return baldes;
+}
+
 /**
  * Agrupa por categoria. "Sem categoria" fica por último em qualquer ordem — é
  * uma pendência de classificação, não um grupo que disputa posição. Entre os
@@ -283,13 +336,7 @@ export function agruparPorCategoria<T extends Ordenavel & { category?: string | 
   fatores: T[],
   ordem: OrdemFatores,
 ): [string, T[]][] {
-  const porCategoria = new Map<string, T[]>();
-  for (const factor of fatores) {
-    const categoria = categoriaDe(factor);
-    const lista = porCategoria.get(categoria);
-    if (lista) lista.push(factor);
-    else porCategoria.set(categoria, [factor]);
-  }
+  const porCategoria = emBaldes(fatores, categoriaDe);
   const totalDe = (itens: T[]) => itens.reduce((soma, f) => soma + f.articleCount, 0);
   return [...porCategoria.entries()].sort(([a, itensA], [b, itensB]) => {
     if (a === SEM_CATEGORIA) return 1;
@@ -300,4 +347,22 @@ export function agruparPorCategoria<T extends Ordenavel & { category?: string | 
     }
     return a.localeCompare(b, 'pt-BR', { sensitivity: 'base' });
   });
+}
+
+/**
+ * Agrupa por polaridade, na ordem fixa da escala (ver `POLARIDADES_EM_ORDEM`) —
+ * inclusive quando a ordenação escolhida é por ocorrências, que reordena os
+ * fatores DENTRO de cada seção mas não as seções entre si.
+ *
+ * Seção sem nenhum fator não aparece: com filtro de busca ou de mínimo de
+ * artigos, três cabeçalhos vazios só ocupariam a lista.
+ */
+export function agruparPorPolaridade<T extends Ordenavel & ContagemPolaridade>(
+  fatores: T[],
+): [string, T[]][] {
+  const porPolaridade = emBaldes(fatores, (factor) => polaridadeDe(factor));
+  return POLARIDADES_EM_ORDEM.filter((chave) => porPolaridade.has(chave)).map((chave) => [
+    POLARIDADE_LABELS[chave],
+    porPolaridade.get(chave)!,
+  ]);
 }

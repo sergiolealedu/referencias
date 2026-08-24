@@ -26,6 +26,7 @@
     "migrate:json": "tsx scripts/migrate-json-to-sqlite.ts",
     "detect:duplicates": "tsx scripts/detect-duplicates.ts",
     "devices": "tsx scripts/devices.ts",
+    "seed:demo": "tsx scripts/seed-demo.ts",
     "clean:descricoes": "tsx scripts/clean-factor-descriptions.ts"
   },
   "dependencies": {
