@@ -180,6 +180,10 @@ jobs:
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          # Chave tem precedência sobre senha no _ssh.py. Assim que o
+          # DEPLOY_SSH_KEY estiver configurado, apague o DEPLOY_PASSWORD.
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KEY_PASSPHRASE: ${{ secrets.DEPLOY_SSH_KEY_PASSPHRASE }}
           DEPLOY_PASS: ${{ secrets.DEPLOY_PASSWORD }}
           DEPLOY_VERSION: ${{ steps.version.outputs.version }}
           DEPLOY_APP_DIR: ${{ vars.DEPLOY_APP_DIR }}

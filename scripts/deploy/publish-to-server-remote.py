@@ -1,21 +1,23 @@
 #!/usr/bin/env python3
-"""Executa pull/build/restart no servidor Referências via SSH (senha em env)."""
+"""Executa pull/build/restart no servidor Referências via SSH (credencial em env)."""
 
 from __future__ import annotations
 
 import os
 import sys
 
-import paramiko
+from _ssh import conectar
 
 
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
-    host = os.environ["DEPLOY_HOST"]
+    host = os.environ.get("DEPLOY_HOST", "")
+    if not host:
+        print("Variável obrigatória ausente: DEPLOY_HOST", file=sys.stderr)
+        return 2
     user = os.environ.get("DEPLOY_USER", "root")
-    password = os.environ["DEPLOY_PASS"]
     branch = os.environ.get("DEPLOY_BRANCH", "main")
     app_dir = os.environ.get("DEPLOY_APP_DIR", "/opt/referencias")
     pm2_app = os.environ.get("DEPLOY_PM2_APP", "referencias-api")
@@ -58,9 +60,7 @@ echo 'health check failed'
 exit 1
 """
 
-    client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(host, username=user, password=password, timeout=30)
+    client = conectar(host, user)
     try:
         _stdin, stdout, stderr = client.exec_command(cmd, get_pty=True, timeout=600)
         for line in stdout:

@@ -1,6 +1,16 @@
 # Copie para deploy.txt e preencha (deploy.txt não vai para o Git).
 # Para deploy automático via GitHub Actions, use os secrets DEPLOY_* (ver README).
-senha: SUA_SENHA
+
+# Credencial SSH - prefira 'chave' a 'senha'. A senha de root fica em texto
+# claro neste arquivo e vale para tudo na máquina; a chave só vale para o que
+# o authorized_keys permitir. Gerar e instalar:
+#   ssh-keygen -t ed25519 -f ~/.ssh/referencias-deploy -C referencias-deploy
+#   ssh-copy-id -i ~/.ssh/referencias-deploy.pub root@SEU_IP
+# Teste com ssh -i ~/.ssh/referencias-deploy root@SEU_IP, apague a senha
+# daqui e desative senha no servidor (PasswordAuthentication no).
+chave: C:\Users\SEU_USUARIO\.ssh\referencias-deploy
+# key_passphrase: SE_A_CHAVE_TIVER_SENHA
+# senha: SUA_SENHA
 ip do servidor: 159.223.130.39
 usuario: root
 branch: main

@@ -278,8 +278,35 @@ Configure em *Settings → Secrets and variables → Actions*:
 | Secret | Descrição |
 |--------|-----------|
 | `DEPLOY_HOST` | IP ou hostname do servidor (obrigatório) |
-| `DEPLOY_PASSWORD` | Senha SSH — mesmo valor de `senha` em `deploy.txt` (obrigatório) |
+| `DEPLOY_SSH_KEY` | **Preferido** — conteúdo da chave privada SSH |
+| `DEPLOY_SSH_KEY_PASSPHRASE` | Passphrase da chave (opcional) |
+| `DEPLOY_PASSWORD` | Senha SSH (legado; usada só se `DEPLOY_SSH_KEY` estiver ausente) |
 | `DEPLOY_USER` | Usuário SSH (opcional; padrão: `root`) |
+
+##### Chave em vez de senha
+
+A chave tem precedência sobre a senha. Prefira-a: a senha de root vive em texto
+claro no `deploy.txt`, num secret do GitHub e no ambiente de cada run, e vale
+para tudo na máquina. Ela também é a causa provável de uma falha intermitente
+antiga — a mesma senha aceita numa tag e recusada na seguinte, sintoma de
+throttling de senha no sshd, contornada até aqui com retry.
+
+Na máquina local:
+
+```powershell
+ssh-keygen -t ed25519 -f $HOME\.ssh\referencias-deploy -C referencias-deploy
+type $HOME\.ssh\referencias-deploy.pub | ssh root@SEU_IP "cat >> ~/.ssh/authorized_keys"
+ssh -i $HOME\.ssh\referencias-deploy root@SEU_IP "echo ok"
+```
+
+Depois:
+
+1. `deploy.txt` — troque `senha:` por `chave: C:\Users\SEU_USUARIO\.ssh\referencias-deploy`
+2. GitHub — crie o secret `DEPLOY_SSH_KEY` com o conteúdo do arquivo
+   `referencias-deploy` (a chave **privada**, incluindo as linhas `BEGIN`/`END`)
+   e apague `DEPLOY_PASSWORD`
+3. No servidor — `PasswordAuthentication no` em `/etc/ssh/sshd_config` e
+   `systemctl restart ssh`, só depois de confirmar que a chave funciona
 
 **Variables** (repositório):
 

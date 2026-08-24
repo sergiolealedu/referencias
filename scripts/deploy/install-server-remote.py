@@ -7,7 +7,7 @@ import os
 import sys
 from pathlib import Path
 
-import paramiko
+from _ssh import conectar
 
 
 def env(name: str, default: str | None = None) -> str:
@@ -32,7 +32,6 @@ def main() -> int:
 
     host = env("DEPLOY_HOST")
     user = env("DEPLOY_USER", "root")
-    password = env("DEPLOY_PASS")
     app_dir = env("DEPLOY_APP_DIR", "/opt/referencias")
     app_user = env("DEPLOY_APP_USER", "referencias")
     git_branch = env("DEPLOY_BRANCH", "main")
@@ -65,9 +64,7 @@ def main() -> int:
         print("INSTALL_CERTBOT exige INSTALL_CERTBOT_EMAIL.", file=sys.stderr)
         return 2
 
-    client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(host, username=user, password=password, timeout=30)
+    client = conectar(host, user)
 
     remote_script = "/tmp/referencias-install.sh"
     timeout_seconds = int(env("INSTALL_TIMEOUT_SECONDS", "1800"))

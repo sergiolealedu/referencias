@@ -5,9 +5,8 @@ from __future__ import annotations
 
 import os
 import sys
-import time
 
-import paramiko
+from _ssh import conectar
 
 
 def env(name: str, default: str | None = None) -> str:
@@ -26,43 +25,11 @@ def validate_shell_value(name: str, value: str) -> None:
         sys.exit(2)
 
 
-def conectar(host: str, user: str, password: str, tentativas: int = 3):
-    """Conecta por SSH tentando de novo em caso de recusa.
-
-    A autenticação por senha neste servidor falha de forma intermitente — a
-    mesma senha é aceita numa tag e recusada na seguinte, e o sshd responde
-    AuthenticationException (recusa real, não conexão caída). Enquanto a causa
-    não for eliminada (migrar para chave é o conserto de fundo), uma segunda
-    tentativa evita perder o deploy inteiro por isso.
-    """
-    ultima: Exception | None = None
-    for tentativa in range(1, tentativas + 1):
-        client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        try:
-            client.connect(host, username=user, password=password, timeout=30)
-            if tentativa > 1:
-                print(f"SSH conectou na tentativa {tentativa}.", flush=True)
-            return client
-        except paramiko.ssh_exception.AuthenticationException as erro:
-            client.close()
-            ultima = erro
-            print(
-                f"SSH recusou a autenticação (tentativa {tentativa}/{tentativas}).",
-                file=sys.stderr,
-                flush=True,
-            )
-            if tentativa < tentativas:
-                time.sleep(5 * tentativa)
-    raise ultima  # type: ignore[misc]
-
-
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
     host = env("DEPLOY_HOST")
-    password = env("DEPLOY_PASS")
     user = env("DEPLOY_USER", "root")
     tag = env("DEPLOY_TAG")
     app_dir = env("DEPLOY_APP_DIR", "/opt/referencias")
@@ -116,7 +83,7 @@ echo 'health check failed'
 exit 1
 """
 
-    client = conectar(host, user, password)
+    client = conectar(host, user)
 
     try:
         _stdin, stdout, stderr = client.exec_command(deploy_cmd, get_pty=True, timeout=900)

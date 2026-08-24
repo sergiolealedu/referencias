@@ -101,6 +101,11 @@ function Normalize-DeployKey([string] $Key) {
     'senha'            = 'password'
     'password'         = 'password'
     'pass'             = 'password'
+    'chave'            = 'key_file'
+    'chave_ssh'        = 'key_file'
+    'key'              = 'key_file'
+    'key_file'         = 'key_file'
+    'identity'         = 'key_file'
     'ip'               = 'host'
     'ip do servidor'   = 'host'
     'host'             = 'host'
@@ -132,6 +137,7 @@ function Read-DeployConfig([string] $Path) {
 
   $config = @{
     password = ''
+    key_file = ''
     host     = ''
     user     = 'root'
     branch   = 'main'
@@ -163,8 +169,8 @@ function Read-DeployConfig([string] $Path) {
   if (-not $config.host) {
     throw "deploy.txt sem 'ip do servidor' (ou host)."
   }
-  if (-not $config.password) {
-    throw "deploy.txt sem 'senha'."
+  if (-not $config.key_file -and -not $config.password) {
+    throw "deploy.txt sem credencial: informe 'chave' (caminho da chave SSH privada) ou 'senha'."
   }
 
   return $config
@@ -248,7 +254,15 @@ function Invoke-ServerDataRemote {
 
   $env:DEPLOY_HOST = [string] $Config.host
   $env:DEPLOY_USER = [string] $Config.user
-  $env:DEPLOY_PASS = [string] $Config.password
+  if ($Config.key_file) {
+    $env:DEPLOY_KEY_FILE = [string] $Config.key_file
+    if ($Config.key_passphrase) {
+      $env:DEPLOY_KEY_PASSPHRASE = [string] $Config.key_passphrase
+    }
+  }
+  else {
+    $env:DEPLOY_PASS = [string] $Config.password
+  }
   $env:DEPLOY_APP_DIR = [string] $Config.app_dir
   $env:DEPLOY_PM2_APP = [string] $Config.pm2_app
   $env:DEPLOY_APP_USER = [string] $Config.app_user
@@ -272,6 +286,8 @@ function Invoke-ServerDataRemote {
   }
   finally {
     Remove-Item Env:DEPLOY_PASS -ErrorAction SilentlyContinue
+    Remove-Item Env:DEPLOY_KEY_FILE -ErrorAction SilentlyContinue
+    Remove-Item Env:DEPLOY_KEY_PASSPHRASE -ErrorAction SilentlyContinue
     Remove-Item Env:DEPLOY_HOST -ErrorAction SilentlyContinue
     Remove-Item Env:DEPLOY_USER -ErrorAction SilentlyContinue
     Remove-Item Env:DEPLOY_APP_DIR -ErrorAction SilentlyContinue

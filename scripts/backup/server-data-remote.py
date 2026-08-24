@@ -15,6 +15,9 @@ from pathlib import Path
 
 import paramiko
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "deploy"))
+from _ssh import conectar  # noqa: E402  (precisa do sys.path acima)
+
 
 REMOTE_STAGING = "/tmp/referencias-backup"
 REMOTE_ARCHIVE = f"{REMOTE_STAGING}/bundle.tar.gz"
@@ -33,18 +36,9 @@ def reject_shell_meta(name: str, value: str) -> None:
 
 
 def connect() -> paramiko.SSHClient:
-    host = env("DEPLOY_HOST")
-    user = os.environ.get("DEPLOY_USER", "root")
-    password = env("DEPLOY_PASS")
-    client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(host, username=user, password=password, timeout=30)
     # Backups grandes passam minutos copiando em disco local; sem keepalive o host
     # remoto derruba a sessão ociosa (WinError 10054 no Windows).
-    transport = client.get_transport()
-    if transport is not None:
-        transport.set_keepalive(30)
-    return client
+    return conectar(keepalive=30)
 
 
 def cleanup_remote(client: paramiko.SSHClient) -> None:
