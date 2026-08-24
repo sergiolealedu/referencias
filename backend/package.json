@@ -21,7 +21,7 @@
   },
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc && node -e \"const fs=require('node:fs');fs.copyFileSync('src/store/schema.sql','dist/store/schema.sql');fs.mkdirSync('dist/registry',{recursive:true});fs.copyFileSync('src/registry/schema.sql','dist/registry/schema.sql');\"",
+    "build": "tsc -b && node -e \"const fs=require('node:fs');fs.copyFileSync('src/store/schema.sql','dist/store/schema.sql');fs.mkdirSync('dist/registry',{recursive:true});fs.copyFileSync('src/registry/schema.sql','dist/registry/schema.sql');\"",
     "start": "node dist/server.js",
     "migrate:json": "tsx scripts/migrate-json-to-sqlite.ts",
     "detect:duplicates": "tsx scripts/detect-duplicates.ts",

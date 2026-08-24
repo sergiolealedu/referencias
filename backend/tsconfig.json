@@ -14,6 +14,7 @@
     "noUnusedParameters": true
   },
   "include": ["src/**/*"],
+  "references": [{ "path": "../shared" }],
   // Teste é colocado ao lado do código, mas não vai para o dist publicado.
   // A verificação de tipos dos testes fica em tsconfig.test.json.
   "exclude": ["**/*.test.ts"]

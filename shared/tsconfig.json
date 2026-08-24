@@ -1,5 +1,10 @@
 {
   "compilerOptions": {
+    // `composite` é o que permite os outros projetos referenciarem este: com a
+    // referência declarada, `tsc -b` constrói o shared antes de quem depende
+    // dele. Sem isso, `npm run build -w frontend` falhava com dezenas de erros
+    // de "módulo não encontrado" só porque `shared/dist` ainda não existia.
+    "composite": true,
     "target": "ES2022",
     "lib": ["ES2022"],
     "module": "NodeNext",

@@ -76,8 +76,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build frontend
-        run: npm run build -w frontend
+      # Build da raiz: ordena shared -> backend -> frontend. O `-w frontend`
+      # sozinho falhava, porque o frontend depende do dist do shared.
+      - name: Build
+        run: npm run build
 
       - name: Set Android version
         run: node scripts/android-set-version.mjs "${{ steps.version.outputs.version }}"

@@ -16,5 +16,9 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  // `tsc -b` (no script de build) constrói o shared primeiro por causa desta
+  // referência, então `npm run build -w frontend` funciona sozinho — inclusive
+  // no build do Android, que é o que roda `build -w frontend` direto.
+  "references": [{ "path": "../shared" }]
 }
