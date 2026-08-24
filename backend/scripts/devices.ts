@@ -38,6 +38,14 @@ function parseArgs(argv: string[]) {
   return { comando, ids, match, apply };
 }
 
+const DE_TESTE = /^(dbg|qa-)/;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * O que interessa saber é uma coisa só: além dos seus aparelhos e dos IDs de
+ * teste, entrou alguém? Antes isso exigia ler a lista inteira à mão, então o
+ * resumo responde direto — e a lista completa fica abaixo, para conferir.
+ */
 function listar(): void {
   const registry = getRegistry();
   const adminId = getServerAdminDeviceId();
@@ -46,23 +54,53 @@ function listar(): void {
   const comAcesso = devices.filter((d) => d.workspaceIds.length > 0);
   const semAcesso = devices.filter((d) => d.workspaceIds.length === 0);
 
-  console.log(`${devices.length} dispositivos — ${comAcesso.length} com acesso\n`);
+  const teste = comAcesso.filter((d) => DE_TESTE.test(d.id));
+  const aparelhos = comAcesso.filter(
+    (d) => !DE_TESTE.test(d.id) && d.id !== BOOTSTRAP_DEVICE_ID && UUID.test(d.id),
+  );
+  const estranhos = comAcesso.filter(
+    (d) =>
+      !DE_TESTE.test(d.id) &&
+      d.id !== BOOTSTRAP_DEVICE_ID &&
+      !UUID.test(d.id),
+  );
+
+  console.log(`\n${comAcesso.length} dispositivos com acesso, de ${devices.length}:\n`);
+  console.log(`  ${aparelhos.length} com ID de navegador (UUID) — devem ser os seus aparelhos`);
+  console.log(`  ${teste.length} de teste (dbg*, qa-*) — revogáveis`);
+  if (estranhos.length > 0) {
+    console.log(`  ${estranhos.length} com ID que não é UUID nem de teste — ATENÇÃO, ver abaixo`);
+  }
+  console.log('');
+
+  if (aparelhos.length > 1) {
+    console.log(
+      `  Confira: você tem ${aparelhos.length} navegadores/aparelhos com acesso? Se for`,
+    );
+    console.log('  menos que isso, algum entrou sem convite.\n');
+  }
+
+  if (teste.length > 0) {
+    console.log('  Para remover os de teste:');
+    console.log("    npm run devices -w backend -- revoke --match '^(dbg|qa-)' --apply\n");
+  }
+
   for (const device of comAcesso) {
     const marcas = [
       device.id === adminId ? 'ADMIN' : null,
       device.id === BOOTSTRAP_DEVICE_ID ? 'BOOTSTRAP' : null,
+      DE_TESTE.test(device.id) ? 'TESTE' : null,
+      !DE_TESTE.test(device.id) && device.id !== BOOTSTRAP_DEVICE_ID && !UUID.test(device.id)
+        ? 'ID SUSPEITO'
+        : null,
     ].filter(Boolean);
     const sufixo = marcas.length > 0 ? `  [${marcas.join(' ')}]` : '';
     console.log(`  ${device.id}${sufixo}`);
-    console.log(`      workspaces: ${device.workspaceIds.join(', ')}`);
-    console.log(`      criado em:  ${device.createdAt}`);
+    console.log(`      workspaces: ${device.workspaceIds.join(', ')}  ·  criado ${device.createdAt}`);
   }
 
   if (semAcesso.length > 0) {
-    console.log(`\n${semAcesso.length} sem acesso (aguardando convite):`);
-    for (const device of semAcesso) {
-      console.log(`  ${device.id}`);
-    }
+    console.log(`\n${semAcesso.length} sem acesso (aguardando convite) — inofensivos.`);
   }
 }
 
