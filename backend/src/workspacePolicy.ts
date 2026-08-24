@@ -27,7 +27,10 @@ export class WorkspacePathsForbiddenError extends Error {
  * autorizado é o que mantém a instalação inicial funcionando.
  */
 export function mayConfigureWorkspacePaths(deviceId: string): boolean {
-  return getServerAdminDeviceId() === null || isServerAdmin(deviceId);
+  // Vazio conta como ausente, igual ao que `assignServerAdminIfUnset` entende
+  // por "ainda não há administrador" — as duas leituras precisam bater, senão
+  // um registry com a chave vazia trancaria a configuração para todos.
+  return !getServerAdminDeviceId() || isServerAdmin(deviceId);
 }
 
 /**

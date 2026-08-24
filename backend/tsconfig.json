@@ -9,7 +9,12 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "declaration": true
+    "declaration": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  // Teste é colocado ao lado do código, mas não vai para o dist publicado.
+  // A verificação de tipos dos testes fica em tsconfig.test.json.
+  "exclude": ["**/*.test.ts"]
 }

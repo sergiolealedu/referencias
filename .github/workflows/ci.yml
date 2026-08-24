@@ -32,11 +32,26 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Antes do build: erro de tipo em teste ou script aparece aqui, não some.
+      - name: Typecheck (inclui testes e scripts)
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
       - name: Build
         run: npm run build
 
       - name: Verify backend artifact
         run: test -f backend/dist/server.js
+
+      # O dist é publicado como pacote npm: teste não entra nele.
+      - name: Verify dist has no test files
+        run: |
+          if find backend/dist -name '*.test.js' -print -quit | grep -q .; then
+            echo "::error::arquivos de teste vazaram para backend/dist"
+            exit 1
+          fi
 
       - name: Verify frontend artifact
         run: test -f frontend/dist/index.html

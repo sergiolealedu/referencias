@@ -30,7 +30,6 @@ import type {
   PaginatedSearchResults,
   SearchResult,
   SortColumn,
-  YearArticleStats,
 } from '../types/referencias.js';
 import {
   ensureFactorInCatalog,

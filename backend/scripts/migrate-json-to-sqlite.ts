@@ -4,6 +4,8 @@ import { resolve } from 'node:path';
 import { referenciasDataSchema } from '../src/schemas/referencias.js';
 import { articleToRowValues } from '../src/store/articleMapper.js';
 import { openDatabase, rebuildFts } from '../src/store/sqliteDb.js';
+import { resolveArticleFactors } from '../src/utils/factors.js';
+import type { FactorDefinition } from '../src/types/referencias.js';
 
 function parseArgs(): { source: string; target: string } {
   const args = process.argv.slice(2);
@@ -79,6 +81,15 @@ const insertArticle = db.prepare(
 
 let articleCount = 0;
 let duplicateRefs = 0;
+let catalogo: FactorDefinition[] = [];
+
+const insertFactor = db.prepare(
+  `INSERT INTO factors (id, name, aliases_json, category) VALUES (?, ?, ?, ?)
+   ON CONFLICT(id) DO UPDATE SET
+     name = excluded.name,
+     aliases_json = excluded.aliases_json,
+     category = excluded.category`,
+);
 
 const tx = db.transaction(() => {
   db.exec('DELETE FROM articles');
@@ -95,7 +106,17 @@ const tx = db.transaction(() => {
     );
 
     for (const article of group.articles) {
-      const values = articleToRowValues(group.id, article);
+      // O JSON legado guarda o fator como o usuário digitou: `factorId` é
+      // opcional. Gravar isso direto escreveria ocorrência sem id no
+      // `factors_json`, e um fator sem id não consolida com nenhum outro.
+      // Resolver contra o catálogo é o que dá id a cada grafia.
+      const resolvido = resolveArticleFactors(article.factors, catalogo);
+      catalogo = resolvido.catalog;
+
+      const values = articleToRowValues(group.id, {
+        ...article,
+        factors: resolvido.factors,
+      });
       insertArticle.run(
         values.group_id,
         values.entry_key,
@@ -118,6 +139,17 @@ const tx = db.transaction(() => {
       articleCount += 1;
       if (article.duplicateOf) duplicateRefs += 1;
     }
+  }
+
+  // O catálogo só está completo depois de percorrer todos os artigos: gravá-lo
+  // aqui evita reescrever a mesma linha a cada ocorrência.
+  for (const factor of catalogo) {
+    insertFactor.run(
+      factor.id,
+      factor.name,
+      JSON.stringify(factor.aliases),
+      factor.category?.trim() || null,
+    );
   }
 });
 

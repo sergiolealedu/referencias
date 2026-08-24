@@ -87,11 +87,9 @@ export function createWorkspacesRouter(): Router {
 
   router.get('/', (req, res) => {
     try {
-      const { deviceId, session } = resolveDeviceForWorkspaces(req);
-      const activeId = session.device.activeWorkspaceId;
+      const { session } = resolveDeviceForWorkspaces(req);
       const workspaces = listWorkspaceSummariesForDevice(
-        deviceId,
-        activeId,
+        session.device.activeWorkspaceId,
         session.workspaceIds,
       );
       res.json(workspaces);

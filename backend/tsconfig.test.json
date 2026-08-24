@@ -1,0 +1,13 @@
+{
+  // Os testes ficam ao lado do código, mas fora do tsconfig de build para não
+  // entrarem no dist publicado. Este config existe só para verificar os tipos
+  // deles: o vitest transpila sem checar, então sem isto um teste com erro de
+  // tipo passaria calado.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": "."
+  },
+  "include": ["src/**/*", "scripts/**/*"],
+  "exclude": []
+}

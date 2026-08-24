@@ -266,9 +266,17 @@ export class RegistryStore {
 
 let registryInstance: RegistryStore | null = null;
 
+/**
+ * O caminho do registry era o único não configurável, o que também o tornava
+ * intestável: qualquer teste de acesso mexeria no registry de verdade.
+ */
+function defaultRegistryPath(): string {
+  return process.env.REGISTRY_DB_PATH?.trim() || REGISTRY_DB_PATH;
+}
+
 export function getRegistry(): RegistryStore {
   if (!registryInstance) {
-    registryInstance = new RegistryStore();
+    registryInstance = new RegistryStore(defaultRegistryPath());
   }
   return registryInstance;
 }

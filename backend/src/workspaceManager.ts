@@ -18,7 +18,17 @@ import type {
 export type { Workspace, WorkspaceInput, WorkspaceSummary, WorkspacesConfig };
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-export const WORKSPACES_CONFIG_PATH = resolve(__dirname, '../../data/workspaces.json');
+const DEFAULT_WORKSPACES_CONFIG_PATH = resolve(__dirname, '../../data/workspaces.json');
+
+/**
+ * Configurável junto com REGISTRY_DB_PATH: os dois guardam quem tem acesso a
+ * quê, e sem poder redirecioná-los nenhum teste de acesso roda sem mexer nos
+ * dados de verdade.
+ */
+export function workspacesConfigPath(): string {
+  return process.env.WORKSPACES_CONFIG_PATH?.trim() || DEFAULT_WORKSPACES_CONFIG_PATH;
+}
+
 const DEFAULT_WORKSPACES_DIR = resolve(__dirname, '../../data/workspaces');
 
 let currentConfig: WorkspacesConfig | null = null;
@@ -44,12 +54,12 @@ function uniqueId(base: string, existing: Set<string>): string {
 }
 
 async function ensureDataDir(): Promise<void> {
-  await mkdir(dirname(WORKSPACES_CONFIG_PATH), { recursive: true });
+  await mkdir(dirname(workspacesConfigPath()), { recursive: true });
 }
 
 async function readConfigFile(): Promise<WorkspacesConfig | null> {
   try {
-    const raw = await readFile(WORKSPACES_CONFIG_PATH, 'utf-8');
+    const raw = await readFile(workspacesConfigPath(), 'utf-8');
     const parsed = JSON.parse(raw) as WorkspacesConfig;
     if (!parsed.activeWorkspaceId || !Array.isArray(parsed.workspaces)) {
       return null;
@@ -65,7 +75,7 @@ async function readConfigFile(): Promise<WorkspacesConfig | null> {
 
 async function writeConfigFile(config: WorkspacesConfig): Promise<void> {
   await ensureDataDir();
-  await writeFile(WORKSPACES_CONFIG_PATH, `${JSON.stringify(config, null, 2)}\n`, 'utf-8');
+  await writeFile(workspacesConfigPath(), `${JSON.stringify(config, null, 2)}\n`, 'utf-8');
   currentConfig = structuredClone(config);
 }
 
@@ -132,7 +142,6 @@ export function listAllWorkspaces(): Workspace[] {
 }
 
 export function listWorkspaceSummariesForDevice(
-  deviceId: string,
   activeWorkspaceId: string | null,
   allowedWorkspaceIds: string[],
 ): WorkspaceSummary[] {
