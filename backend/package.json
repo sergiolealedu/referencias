@@ -25,6 +25,7 @@
     "start": "node dist/server.js",
     "migrate:json": "tsx scripts/migrate-json-to-sqlite.ts",
     "detect:duplicates": "tsx scripts/detect-duplicates.ts",
+    "devices": "tsx scripts/devices.ts",
     "clean:descricoes": "tsx scripts/clean-factor-descriptions.ts"
   },
   "dependencies": {

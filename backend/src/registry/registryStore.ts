@@ -156,11 +156,43 @@ export class RegistryStore {
       .run(deviceId, workspaceId);
   }
 
-  countDeviceWorkspaces(deviceId: string): number {
-    const row = this.db
-      .prepare('SELECT COUNT(*) AS count FROM device_workspaces WHERE device_id = ?')
-      .get(deviceId) as { count: number };
-    return row.count;
+  /** Todo dispositivo do registry com os workspaces a que tem acesso. */
+  listDevicesWithAccess(): Array<{
+    id: string;
+    label: string | null;
+    createdAt: string;
+    activeWorkspaceId: string | null;
+    workspaceIds: string[];
+  }> {
+    const devices = this.db
+      .prepare('SELECT id, label, created_at, active_workspace_id FROM devices ORDER BY created_at')
+      .all() as Array<{
+      id: string;
+      label: string | null;
+      created_at: string;
+      active_workspace_id: string | null;
+    }>;
+    return devices.map((row) => ({
+      id: row.id,
+      label: row.label,
+      createdAt: row.created_at,
+      activeWorkspaceId: row.active_workspace_id,
+      workspaceIds: this.listDeviceWorkspaceIds(row.id),
+    }));
+  }
+
+  /**
+   * Remove o dispositivo e, por cascata, suas memberships. Os join_tokens
+   * referenciam devices sem ON DELETE CASCADE, então saem antes — senão a FK
+   * derruba o DELETE.
+   */
+  deleteDevice(deviceId: string): void {
+    const remover = this.db.transaction((id: string) => {
+      this.db.prepare('DELETE FROM join_tokens WHERE created_by_device_id = ?').run(id);
+      this.db.prepare('DELETE FROM device_workspaces WHERE device_id = ?').run(id);
+      this.db.prepare('DELETE FROM devices WHERE id = ?').run(id);
+    });
+    remover(deviceId);
   }
 
   countAllMemberships(): number {

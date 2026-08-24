@@ -5,12 +5,9 @@ import { assignServerAdminIfUnset, isServerAdmin } from './serverAdmin.js';
 import type { Device, DeviceSession, JoinTokenInfo } from './types/device.js';
 import {
   getWorkspacesConfig,
-  listAllWorkspaces,
   type Workspace,
   WorkspaceNotFoundError,
 } from './workspaceManager.js';
-
-const LEGACY_WORKSPACE_IDS_KEY = 'legacy_workspace_ids';
 
 function rowToDevice(row: {
   id: string;
@@ -24,27 +21,6 @@ function rowToDevice(row: {
     createdAt: row.created_at,
     activeWorkspaceId: row.active_workspace_id,
   };
-}
-
-function ensureLegacyWorkspaceIds(): string[] {
-  const registry = getRegistry();
-  const existing = registry.getMeta(LEGACY_WORKSPACE_IDS_KEY);
-  if (existing) {
-    return JSON.parse(existing) as string[];
-  }
-
-  const workspaceIds = getWorkspacesConfig().workspaces.map((ws) => ws.id);
-  registry.setMeta(LEGACY_WORKSPACE_IDS_KEY, JSON.stringify(workspaceIds));
-  return workspaceIds;
-}
-
-function grantLegacyWorkspaces(deviceId: string): string[] {
-  const registry = getRegistry();
-  const legacyIds = ensureLegacyWorkspaceIds();
-  for (const workspaceId of legacyIds) {
-    registry.addDeviceToWorkspace(deviceId, workspaceId);
-  }
-  return legacyIds;
 }
 
 function buildSession(deviceId: string, authToken: string): DeviceSession {
@@ -71,22 +47,13 @@ export function registerDevice(
   const registry = getRegistry();
   const id = deviceId ?? randomUUID();
 
-  let row = registry.getDevice(id);
-
-  if (!row) {
-    row = registry.createDevice(id, label);
-  }
-
-  // Migração: só navegadores que já tinham ID local (localStorage) recebem
-  // acesso automático aos workspaces legados. Dispositivos novos — janela anônima,
-  // outro computador — precisam criar workspace ou entrar com token de convite.
-  if (deviceId && registry.countDeviceWorkspaces(id) === 0) {
-    const granted = grantLegacyWorkspaces(id);
-    if (granted.length > 0 && !row.active_workspace_id) {
-      registry.setDeviceActiveWorkspace(id, granted[0]);
-      row = registry.getDevice(id)!;
-      assignServerAdminIfUnset(id);
-    }
+  // Registrar NUNCA concede acesso. O ID vem de um header controlado pelo
+  // cliente, então qualquer valor inventado passaria por "dispositivo que já
+  // tinha ID no localStorage" — era assim que se entrava sem convite. O
+  // dispositivo nasce sem workspace (needsOnboarding) e só ganha acesso
+  // criando um workspace ou apresentando um token de convite.
+  if (!registry.getDevice(id)) {
+    registry.createDevice(id, label);
   }
 
   const authToken = registry.ensureAuthToken(id);

@@ -136,15 +136,27 @@ Em produção, o frontend é servido como build estático; a API permanece em No
 
 ### 5.1 Modelo de confiança
 
-- Aplicação pensada para **uso local/pessoal**
-- API escuta em `localhost` por padrão
-- Não há autenticação de usuário (login/senha)
+- Não há autenticação de usuário (login/senha): o dispositivo é a identidade
+- A instância de produção fica **exposta na internet** (nginx + Cloudflare), não
+  em `localhost` — todo endpoint precisa se defender sozinho
+- O acesso é **por convite**: um dispositivo sem workspace não vê nada
 
 ### 5.2 Identificação de dispositivo
 
-- Header `X-Device-Id` identifica o browser/dispositivo
-- Registro automático na primeira requisição
-- Controle de acesso a workspaces por dispositivo
+- `X-Auth-Token` autentica; o `X-Device-Id` legado só serve para migrar sessões
+  antigas que já eram membros
+- Registrar um dispositivo **não concede acesso nenhum**. O ID vem de um header
+  controlado pelo cliente, então tratá-lo como prova de identidade permitia
+  entrar inventando um valor qualquer
+- Só se ganha acesso criando um workspace ou apresentando um token de convite
+- `npm run devices -w backend -- list` audita quem tem acesso; `revoke` remove
+
+### 5.2.1 Superfície ainda aberta
+
+- Um dispositivo desconhecido cria uma linha em `devices` sem autenticação
+  (necessário para o fluxo de convite). São linhas sem acesso, mas sem limite
+  de taxa
+- CORS global (ver 5.6)
 
 ### 5.3 Tokens de convite
 
