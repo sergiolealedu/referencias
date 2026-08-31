@@ -132,14 +132,32 @@ export function parseBibtex(content: string): BibtexParseResult {
   const cleaned = stripComments(content);
   const entries: ParsedBibEntry[] = [];
   const errors: BibtexParseError[] = [];
-  const entryRegex = /@([^\s{]+)\s*\{\s*([^,\s]+)\s*,/g;
+  // A chave aceita espaço no meio. O Scopus a monta com sobrenome do primeiro
+  // autor + ano, e sobrenome composto sai literal: `@ARTICLE{Pardo Calvache2025,`,
+  // `{Ur Rehman2021,`, `{Abu Seman2020352,`. Exigindo chave sem espaço, o `@`
+  // não casava, a entrada era pulada sem nada em `errors`, e o registro
+  // desaparecia — atingindo justamente nomes hispânicos, árabes e do sul da
+  // Ásia. Num levantamento sistemático isso é viés de exclusão.
+  //
+  // `[^,{}\n]` em vez de `[^,\s]`: sem chave e sem nova linha, para a captura
+  // não atravessar o início do primeiro campo quando falta a vírgula. Preguiçoso
+  // para parar na primeira vírgula, e ainda exige ao menos um caractere — então
+  // `@ARTICLE{,` continua sendo entrada sem chave, reportada como antes.
+  const entryRegex = /@([^\s{]+)\s*\{\s*([^,{}\n]+?)\s*,/g;
   let match: RegExpExecArray | null;
+
+  // Trechos já consumidos, para a varredura final saber o que sobrou.
+  const consumidas: Array<[number, number]> = [];
 
   while ((match = entryRegex.exec(cleaned)) !== null) {
     const type = match[1].toLowerCase();
-    const key = match[2].trim();
+    // Espaço no meio da chave é inutilizável: `\cite{Pardo Calvache2025}` não
+    // compila, e a chave é a identidade usada na deduplicação. Colar as partes
+    // dá `PardoCalvache2025`, no mesmo estilo do resto do corpus (`Wong2023`).
+    const key = match[2].trim().replace(/\s+/g, '');
     const bodyStart = match.index + match[0].length;
     const bodyEnd = findEntryClose(cleaned, bodyStart);
+    consumidas.push([match.index, bodyEnd === -1 ? bodyStart : bodyEnd]);
     if (bodyEnd === -1) {
       errors.push({
         key,
@@ -161,6 +179,33 @@ export function parseBibtex(content: string): BibtexParseResult {
     }
     entries.push({ type, key, fields });
     entryRegex.lastIndex = bodyEnd + 1;
+  }
+
+  /**
+   * Cabeçalho `@tipo{` que o laço não consumiu não pode sumir calado. Era assim
+   * que entrada com chave fora do formato esperado desaparecia: o `@` não casava,
+   * o laço seguia adiante, e o registro não aparecia nem em `entries` nem em
+   * `errors` — some sem deixar rastro no total. Num levantamento sistemático o
+   * número de registros recuperados tem de fechar, então o que não entra precisa
+   * ser dito.
+   */
+  const cabecalhoRegex = /@([A-Za-z]+)\s*\{/g;
+  // `@string`, `@comment` e `@preamble` são construções válidas do BibTeX que
+  // não são entradas — não há nada a reportar nelas.
+  const NAO_ENTRADA = new Set(['string', 'comment', 'preamble']);
+  let cabecalho: RegExpExecArray | null;
+  while ((cabecalho = cabecalhoRegex.exec(cleaned)) !== null) {
+    const inicio = cabecalho.index;
+    const tipo = cabecalho[1].toLowerCase();
+    if (NAO_ENTRADA.has(tipo)) continue;
+    if (consumidas.some(([ini, fim]) => inicio >= ini && inicio <= fim)) continue;
+    errors.push({
+      key: '?',
+      type: tipo,
+      reason:
+        'Cabeçalho não reconhecido — esperado `@tipo{chave,`. ' +
+        'Verifique a chave de citação e a vírgula que a fecha.',
+    });
   }
 
   if (entries.length === 0 && errors.length === 0) {

@@ -174,6 +174,42 @@ describe('parseBibtex', () => {
     expect(fields.url).toContain('%2f');
   });
 
+  /**
+   * O Scopus monta a chave com sobrenome do primeiro autor + ano, e sobrenome
+   * composto sai com espaço. Exigindo chave sem espaço, o `@` não casava e a
+   * entrada era pulada sem nada em `errors` — perda silenciosa, concentrada em
+   * nomes hispânicos, árabes e do sul da Ásia.
+   */
+  it('lê chave com espaço, colando as partes', () => {
+    const { entries, errors } = parseBibtex(`
+      @ARTICLE{Pardo Calvache2025, title = {Chimera of (Un)Happiness}, year = {2025} }
+      @ARTICLE{Ur Rehman2021, title = {Mobile apps for autism}, year = {2021} }
+      @ARTICLE{Abu Seman2020352, title = {Acceptance of technology}, year = {2020} }
+      @ARTICLE{Salido O.2023, title = {Affective states}, year = {2023} }
+    `);
+
+    expect(errors).toEqual([]);
+    expect(entries.map((e) => e.key)).toEqual([
+      'PardoCalvache2025',
+      'UrRehman2021',
+      'AbuSeman2020352',
+      'SalidoO.2023',
+    ]);
+    expect(entries[0].fields.title).toBe('Chimera of (Un)Happiness');
+    expect(entries[3].fields.year).toBe('2023');
+  });
+
+  it('não deixa a chave atravessar a linha quando falta a vírgula', () => {
+    const { entries, errors } = parseBibtex(`
+      @article{semVirgula
+        year = 2024
+      }
+      @article{boa, title = {Segue lida}, year = {2025} }
+    `);
+    expect(entries.map((e) => e.key)).toEqual(['boa']);
+    expect(errors.length).toBeGreaterThan(0);
+  });
+
   it('ainda corta comentário entre os campos de uma entrada', () => {
     const { entries, errors } = parseBibtex(`
       @article{k1,
