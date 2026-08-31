@@ -973,6 +973,85 @@ button {
   color: var(--text);
 }
 
+.export-field-picker {
+  margin-bottom: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.55rem 0.65rem;
+}
+
+.export-field-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.45rem;
+}
+
+.export-field-picker-header h4 {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.export-field-actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.export-field-actions button {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+}
+
+.export-field-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  max-height: 8.5rem;
+  overflow-y: auto;
+}
+
+/*
+ * `.modal-body label` empilha em coluna — serve para os campos de formulário,
+ * mas as duas listas do export são caixa de seleção ao lado do texto. Aquele
+ * seletor tem uma classe e um tipo, então uma classe só perde para ele: daí o
+ * prefixo `.modal-body`. Sem isso a linha quebra em três, e era por isso que
+ * só caíam dois artigos na altura da lista.
+ */
+.modal-body .export-selection-item {
+  flex-direction: row;
+  font-size: 0.875rem;
+}
+
+.modal-body .export-field-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.export-field-item input {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.export-field-name {
+  color: var(--text);
+}
+
+.export-field-count {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.export-field-item-off .export-field-name {
+  color: var(--muted);
+}
+
 .export-preview {
   margin-top: 0;
 }
