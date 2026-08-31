@@ -15,22 +15,47 @@ export interface BibtexParseResult {
   errors: BibtexParseError[];
 }
 
-/** Remove comentários de linha (`%`), respeitando `\%` literal. */
+/**
+ * Remove comentários de linha (`%`), respeitando `\%` literal — e, sobretudo,
+ * respeitando `%` que não é comentário nenhum.
+ *
+ * O Scopus exporta a URL do registro com percent-encoding cru:
+ * `url = {...&doi=10.1186%2fs13643-025-03028-2&...}`. Cortando a linha naquele
+ * `%`, a chave aberta do valor nunca fecha, e a entrada inteira era recusada
+ * como "chaves desbalanceadas". Ou seja: todo BibTeX do Scopus com `%` na URL
+ * — que é a regra, não a exceção — entrava como erro.
+ *
+ * A profundidade de chaves separa os casos. Fora de entrada (0) e entre campos
+ * de uma entrada (1), `%` é comentário de verdade e some. A partir de 2 estamos
+ * dentro de um valor, e ali `%` é dado. Valor entre aspas segue a mesma regra.
+ *
+ * As chaves são contadas sem olhar escape, igual a `readBracedValue` e
+ * `findEntryClose`: as três precisam concordar sobre onde um valor começa e
+ * termina, senão o corte de comentário cai num ponto que o leitor não espera.
+ */
 function stripComments(text: string): string {
-  return text
-    .split('\n')
-    .map((line) => {
-      let out = '';
-      for (let i = 0; i < line.length; i++) {
-        const ch = line[i];
-        if (ch === '%' && (i === 0 || line[i - 1] !== '\\')) {
-          break;
-        }
-        out += ch;
-      }
-      return out;
-    })
-    .join('\n');
+  let out = '';
+  let depth = 0;
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    const anterior = i > 0 ? text[i - 1] : '';
+
+    if (ch === '%' && anterior !== '\\' && !inQuotes && depth < 2) {
+      // Pula até o fim da linha; o `\n` fica, para não juntar duas linhas.
+      while (i + 1 < text.length && text[i + 1] !== '\n') i++;
+      continue;
+    }
+
+    if (ch === '"' && anterior !== '\\' && depth === 1) inQuotes = !inQuotes;
+    else if (ch === '{') depth += 1;
+    else if (ch === '}') depth = Math.max(0, depth - 1);
+
+    out += ch;
+  }
+
+  return out;
 }
 
 function readBracedValue(text: string, start: number): { value: string; end: number } | null {

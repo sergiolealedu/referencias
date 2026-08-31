@@ -125,4 +125,66 @@ describe('parseBibtex', () => {
     );
     expect(entries[0].fields.doi).toBe('10.1109/TSE.2024.1234567');
   });
+
+  /**
+   * O `%` de percent-encoding na URL do Scopus não é comentário. Tratá-lo como
+   * comentário cortava a linha no meio do valor, a chave nunca fechava e a
+   * entrada inteira caía em `errors` — o que inutilizava qualquer .bib exportado
+   * do Scopus, já que a URL do registro vem sempre com `%2f` no DOI.
+   */
+  it('aceita percent-encoding dentro do valor', () => {
+    const { entries, errors } = parseBibtex(
+      '@article{k1, url = {https://x.com/r?doi=10.1186%2fs13643-025-03028-2&id=40}, year = {2026} }',
+    );
+    expect(errors).toEqual([]);
+    expect(entries).toHaveLength(1);
+    expect(entries[0].fields.url).toBe('https://x.com/r?doi=10.1186%2fs13643-025-03028-2&id=40');
+    expect(entries[0].fields.year).toBe('2026');
+  });
+
+  it('lê a entrada do Scopus como ela sai do export', () => {
+    const { entries, errors } = parseBibtex(`@ARTICLE{Hagen2026,
+\tauthor = {Hagen, Marte Hoff and Jaccheri, Letizia and Papavlasopoulou, Sofia},
+\ttitle = {Digital psychosocial follow-up for survivors of childhood critical illness},
+\tyear = {2026},
+\tjournal = {Systematic Reviews},
+\tvolume = {15},
+\tnumber = {1},
+\tdoi = {10.1186/s13643-025-03028-2},
+\turl = {https://www.scopus.com/inward/record.uri?eid=2-s2.0-105028873474&doi=10.1186%2fs13643-025-03028-2&partnerID=40&md5=e0e820f789df815e2f3f1fb26ef084c7},
+\tabstract = {Thematic analysis seguindo Braun and Clarke's framework. © The Author(s) 2025.},
+\tauthor_keywords = {Childhood critical illness; Digitalization},
+\ttype = {Article},
+\tpublication_stage = {Final},
+\tsource = {Scopus},
+\tnote = {Cited by: 0; All Open Access, Gold Open Access}
+}`);
+
+    expect(errors).toEqual([]);
+    expect(entries).toHaveLength(1);
+    const { key, type, fields } = entries[0];
+    expect(key).toBe('Hagen2026');
+    expect(type).toBe('article');
+    expect(fields.doi).toBe('10.1186/s13643-025-03028-2');
+    expect(fields.journal).toBe('Systematic Reviews');
+    expect(fields.volume).toBe('15');
+    // Último campo sem vírgula final, e campo de nome com underscore.
+    expect(fields.note).toContain('Cited by: 0');
+    expect(fields.author_keywords).toContain('Digitalization');
+    expect(fields.url).toContain('%2f');
+  });
+
+  it('ainda corta comentário entre os campos de uma entrada', () => {
+    const { entries, errors } = parseBibtex(`
+      @article{k1,
+        % este campo ficou de fora de propósito
+        title = {Um},
+        year = {2024}
+      }
+    `);
+    expect(errors).toEqual([]);
+    expect(entries[0].fields.title).toBe('Um');
+    expect(entries[0].fields.year).toBe('2024');
+    expect(entries[0].fields.este).toBeUndefined();
+  });
 });
