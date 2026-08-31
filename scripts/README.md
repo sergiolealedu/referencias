@@ -31,6 +31,7 @@ próprio caminho (`$PSScriptRoot` / `import.meta.url`), não do diretório atual
 | Conferir se algum PDF foi trocado | `python scripts/qa/check-pdf-content.py` |
 | Preparar a releitura dos rejeitados | `python scripts/qa/extract-triage-digest.py` |
 | Gravar notas e correções revisadas | `python scripts/qa/apply-patches.py --apply` ⚠️ |
+| Virar uma lista de títulos em BibTeX | `node scripts/crossref-bibtex.mjs titulos.txt` |
 
 ---
 
@@ -508,6 +509,41 @@ e deixa o Gradle falhar depois.
 
 ---
 
+## `crossref-bibtex.mjs` — títulos colados → BibTeX
+
+Fallback para quando a base não entrega arquivo — nem BibTeX, nem RIS, nem CSV — mas
+a tela pode ser copiada. Copiar texto não passa por download nem por sessão de proxy.
+
+```powershell
+node scripts/crossref-bibtex.mjs titulos.txt
+node scripts/crossref-bibtex.mjs titulos.txt --out corpus.bib --report casamento.md
+Get-Content titulos.txt | node scripts/crossref-bibtex.mjs -
+```
+
+Entrada: **uma linha por registro**. Linha com DOI casa pelo DOI (exato); o resto casa
+por título. Numeração de lista (`1. `), `| Cited by N` e rótulos de link são removidos.
+
+| Opção | Padrão | Efeito |
+|---|---|---|
+| `--out <arquivo>` | `<entrada>.bib` | Arquivo BibTeX de saída |
+| `--report <arquivo>` | `<entrada>.casamento.md` | Relatório de casamento |
+| `--min-score <0..1>` | `0.80` | Corte de similaridade para entrar no `.bib` |
+| `--all` | — | Inclui também score baixo (marcado no relatório) |
+| `--mailto <email>` | — | Entra no *polite pool* do Crossref |
+| `--delay <ms>` | `120` | Espera entre consultas |
+
+Sem dependências: usa `fetch` do próprio Node. Faz backoff em `429`/`5xx`.
+
+Veredito por linha no relatório: `DOI` (casou por DOI), `alta` (≥ 0.95), `media`
+(≥ 0.80), `baixa`, `sem-resultado`, `erro`.
+
+> ⚠️ 🟢 Só lê (rede) e escreve os dois arquivos de saída — não toca no banco. Mas o
+> casamento por título **pode errar**: títulos parecidos existem, e o Crossref não cobre
+> tudo que o Scopus indexa, sobretudo anais antigos. Leia o relatório antes de importar;
+> `media` e `baixa` pedem conferência humana.
+
+---
+
 ## Resumo dos riscos
 
 | Script | Risco |
@@ -523,3 +559,4 @@ e deixa o Gradle falhar depois.
 | `migrate/create-join-token.sh`, `gen-token-local.mjs` | 🟢 Só inserem registros (token em texto claro no terminal) |
 | `qa/apply-patches.py --apply` | 🟠 Escreve em produção; sem `--apply` é dry-run, guarda otimista contra o snapshot, e recusa campo fora da lista permitida |
 | `qa/audit-snapshot.py`, `qa/check-pdf-content.py`, `qa/extract-triage-digest.py` | 🟢 Somente leitura, sobre a cópia do snapshot |
+| `crossref-bibtex.mjs` | 🟢 Não toca no banco; casamento por título pode errar — confira o relatório |

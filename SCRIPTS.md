@@ -248,6 +248,19 @@ python scripts/qa/apply-patches.py --input data/qa/<stamp>/notas-propostas.json
 
 Detalhes e parâmetros: [`scripts/README.md`](scripts/README.md).
 
+### Títulos colados → BibTeX (fallback)
+
+Para quando não sai arquivo nenhum da base: cola-se uma lista de títulos (um por
+linha) e o Crossref completa os metadados.
+
+```powershell
+node scripts/crossref-bibtex.mjs titulos.txt
+```
+
+Gera `titulos.bib` e `titulos.casamento.md`. **Leia o relatório antes de
+importar**: o casamento é por similaridade de título, e as linhas `media`/`baixa`
+precisam de olho humano.
+
 ### Servidor Linux (bash)
 
 Instalação inicial no Droplet (alternativa manual, já logado no servidor):

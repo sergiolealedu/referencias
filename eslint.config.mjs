@@ -78,6 +78,11 @@ export default tseslint.config(
         __dirname: 'readonly',
         console: 'readonly',
         process: 'readonly',
+        // Globais de plataforma que o Node já traz — `crossref-bibtex.mjs`
+        // consulta a API do Crossref sem nenhuma dependência por causa deles.
+        URL: 'readonly',
+        fetch: 'readonly',
+        setTimeout: 'readonly',
       },
     },
   },
