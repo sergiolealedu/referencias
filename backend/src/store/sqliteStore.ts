@@ -1275,12 +1275,38 @@ export class SqliteStore {
       ) VALUES (?, ?, ?, ?, ?, ?, '', '', '', '[]', 0, 0, ?, ?)`,
     );
 
+    const existeNoGrupo = this.db.prepare(
+      'SELECT 1 FROM articles WHERE group_id = ? AND entry_key = ?',
+    );
+
+    /** Chaves gravadas por ESTA importação — separa colisão interna de reimportação. */
+    const inseridasAgora = new Set<string>();
+
+    /**
+     * Sufixo de letra na colisão, como se cita na literatura (Smith2020a).
+     * Determinístico: reimportar o mesmo arquivo no mesmo grupo produz as mesmas
+     * chaves, então a segunda passada reconhece tudo e não duplica nada.
+     */
+    const proximaChaveLivre = (base: string): string => {
+      const livre = (c: string) =>
+        !inseridasAgora.has(c) && !existeNoGrupo.get(targetGroupId, c);
+      for (let i = 0; i < 26; i += 1) {
+        const candidata = `${base}${String.fromCharCode(97 + i)}`;
+        if (livre(candidata)) return candidata;
+      }
+      for (let i = 2; ; i += 1) {
+        const candidata = `${base}-${i}`;
+        if (livre(candidata)) return candidata;
+      }
+    };
+
     const importTx = this.db.transaction(() => {
       for (const entry of entries) {
-        const exists = this.db
-          .prepare('SELECT 1 FROM articles WHERE group_id = ? AND entry_key = ?')
-          .get(targetGroupId, entry.key);
-        if (exists) {
+        // Chave que já estava no grupo ANTES desta importação: pular de verdade.
+        // É o que mantém a reimportação do mesmo arquivo idempotente.
+        const jaExistia =
+          !inseridasAgora.has(entry.key) && existeNoGrupo.get(targetGroupId, entry.key);
+        if (jaExistia) {
           result.skipped += 1;
           result.items.push({
             key: entry.key,
@@ -1290,12 +1316,28 @@ export class SqliteStore {
           continue;
         }
 
+        // Colisão dentro do próprio arquivo. O Scopus repete a chave quando não
+        // consegue o sobrenome do primeiro autor — volume de anais não tem autor,
+        // e a chave sai só com o ano, igual para todos do mesmo ano. São
+        // registros DIFERENTES: descartá-los como "já existe" apagava artigo de
+        // verdade e fazia o total de registros recuperados deixar de fechar, o
+        // que um levantamento sistemático precisa poder demonstrar.
+        const chave = inseridasAgora.has(entry.key)
+          ? proximaChaveLivre(entry.key)
+          : entry.key;
+        const mensagem =
+          chave === entry.key
+            ? undefined
+            : `chave "${entry.key}" repetida no arquivo — renomeada`;
+
+        // A comparação com o grupo de origem usa a chave ORIGINAL: é ela que
+        // identifica o registro lá, não o nome que ganhou aqui.
         const matchesOrigin =
           referenceGroupId !== null && referenceKeys.has(entry.key);
 
         insert.run(
           targetGroupId,
-          entry.key,
+          chave,
           entry.type,
           JSON.stringify(normalizeEntryFields(entry.fields)),
           matchesOrigin ? 'duplicate' : 'exists',
@@ -1304,12 +1346,13 @@ export class SqliteStore {
           matchesOrigin ? entry.key : null,
         );
 
+        inseridasAgora.add(chave);
         result.imported += 1;
         if (matchesOrigin) {
           result.duplicates += 1;
-          result.items.push({ key: entry.key, outcome: 'duplicate' });
+          result.items.push({ key: chave, outcome: 'duplicate', message: mensagem });
         } else {
-          result.items.push({ key: entry.key, outcome: 'imported' });
+          result.items.push({ key: chave, outcome: 'imported', message: mensagem });
         }
       }
     });
