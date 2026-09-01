@@ -1,6 +1,6 @@
 {
   "name": "@sergiolealedu/referencias-backend",
-  "version": "1.2.10",
+  "version": "1.2.14",
   "description": "API Express + SQLite do sistema Referências",
   "type": "module",
   "main": "dist/server.js",
