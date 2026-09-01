@@ -835,11 +835,6 @@ export function FactorsView({
                             {formatAllSpellings(selected)}
                           </p>
                         )}
-                        {!editandoFator && selected.description && (
-                          <p className="factors-view-detail-description">
-                            {selected.description}
-                          </p>
-                        )}
                         <div className="factors-view-detail-stats">
                           <span className="factor-chip factors-view-category-chip">
                             {categoriaDe(selected)}
@@ -853,6 +848,23 @@ export function FactorsView({
                           </span>
                         </div>
                       </div>
+                      {/*
+                        Fora do bloco recolhível de propósito: grafias e
+                        contadores são referência, a descrição é o que se lê para
+                        saber o que o fator É. No mobile aquele bloco nasce
+                        fechado, e a definição não pode depender de um toque.
+                      */}
+                      {!editandoFator && selected.description && (
+                        <p className="factors-view-detail-description">
+                          {selected.description}
+                        </p>
+                      )}
+                      {!editandoFator && !selected.description && (
+                        <p className="factors-view-detail-description is-empty">
+                          Sem descrição. Use <strong>Editar</strong> para explicar o que
+                          este fator significa na indústria.
+                        </p>
+                      )}
                     </header>
 
                     {selected.occurrences.length === 0 ? (

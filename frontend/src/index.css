@@ -2534,15 +2534,28 @@ pre.error {
 }
 
 /*
- * A descrição do fator é texto para ler, não metadado: cor de corpo e uma
- * medida de linha que não obrigue a varrer a tela toda.
+ * A descrição do fator é texto para ler, não metadado: cor de corpo, medida de
+ * linha que não obrigue a varrer a tela toda, e uma barra à esquerda que a
+ * separa dos contadores acima sem precisar de caixa nem título.
  */
 .factors-view-detail-description {
-  margin: 0.5rem 0 0;
-  font-size: 0.875rem;
-  line-height: 1.5;
+  margin: 0.75rem 0 0;
+  padding-left: 0.7rem;
+  border-left: 3px solid var(--border);
+  font-size: 0.9375rem;
+  line-height: 1.55;
   color: var(--text);
-  max-width: 62ch;
+  max-width: 68ch;
+}
+
+.factors-view-detail-description.is-empty {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-style: italic;
+}
+
+.factors-view-detail-description.is-empty strong {
+  font-style: normal;
 }
 
 .factors-view-edit-form textarea {
