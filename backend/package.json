@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@sergiolealedu/referencias-shared": "*",
-    "better-sqlite3": "12.9.0",
+    "better-sqlite3": "13.0.3",
     "cors": "^2.8.5",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
