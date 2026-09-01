@@ -2534,9 +2534,13 @@ pre.error {
 }
 
 /*
- * A descrição do fator é texto para ler, não metadado: cor de corpo, medida de
- * linha que não obrigue a varrer a tela toda, e uma barra à esquerda que a
- * separa dos contadores acima sem precisar de caixa nem título.
+ * A descrição do fator é texto para ler, não metadado: cor de corpo e uma barra
+ * à esquerda que a separa dos contadores acima sem precisar de caixa nem título.
+ *
+ * Sem `max-width`: limitar a medida de linha é bom para leitura, mas aqui as
+ * grafias e o texto das ocorrências vão até a borda do painel, e um parágrafo
+ * parando no meio da largura lia como defeito de layout em vez de cuidado.
+ * Consistência com o painel venceu a medida ideal.
  */
 .factors-view-detail-description {
   margin: 0.75rem 0 0;
@@ -2545,7 +2549,6 @@ pre.error {
   font-size: 0.9375rem;
   line-height: 1.55;
   color: var(--text);
-  max-width: 68ch;
 }
 
 .factors-view-detail-description.is-empty {
