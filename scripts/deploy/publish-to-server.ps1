@@ -247,8 +247,13 @@ try {
 
   Write-Step 'Sincronizando versão semver (git tags + commits)...'
   & node (Join-Path $RepoRoot 'scripts/sync-package-version.mjs')
+  # Os quatro que o sync-package-version.mjs escreve, mais o build.gradle. O
+  # shared/package.json faltava aqui: era escrito e nunca versionado, então
+  # reaparecia sujo a cada build — e árvore suja bloqueia esta própria
+  # publicação, algumas linhas acima.
   $versionFiles = @(
     'package.json',
+    'shared/package.json',
     'backend/package.json',
     'frontend/package.json',
     'frontend/android/app/build.gradle'
