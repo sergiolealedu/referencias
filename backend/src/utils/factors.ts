@@ -66,7 +66,13 @@ export function replaceSpellings(
 
 export function ensureFactorInCatalog(
   catalog: FactorDefinition[],
-  input: { id?: string; name: string; aliases?: string[]; category?: string | null },
+  input: {
+    id?: string;
+    name: string;
+    aliases?: string[];
+    category?: string | null;
+    description?: string | null;
+  },
 ): { factor: FactorDefinition; catalog: FactorDefinition[] } {
   const nextCatalog = catalog.map((f) => ({
     ...f,
@@ -116,6 +122,15 @@ export function ensureFactorInCatalog(
   const category = input.category?.trim();
   if (category) {
     factor = { ...factor, category };
+  }
+
+  // Mesma regra da categoria: descrição informada sobrescreve, ausente preserva.
+  // Preservar importa porque este caminho roda a cada gravação de fator de
+  // artigo, e ali ninguém informa a descrição do catálogo — sobrescrever com
+  // vazio apagaria o parágrafo de todos os fatores tocados.
+  const description = input.description?.trim();
+  if (description) {
+    factor = { ...factor, description };
   }
 
   factor = upsert(mergeAliases(factor, aliasTokens));

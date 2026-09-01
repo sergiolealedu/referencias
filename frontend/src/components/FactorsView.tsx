@@ -75,6 +75,7 @@ export function FactorsView({
   const [nomeDraft, setNomeDraft] = useState('');
   const [grafiasDraft, setGrafiasDraft] = useState('');
   const [categoriaDraft, setCategoriaDraft] = useState('');
+  const [descricaoDraft, setDescricaoDraft] = useState('');
   const [agrupamento, setAgrupamento] = usePersistedState<AgrupamentoFatores>(
     'fatores.agrupamento',
     // Chave nova: a antiga guardava um booleano ("agrupa por categoria ou não")
@@ -175,6 +176,7 @@ export function FactorsView({
     setNomeDraft(factor.name);
     setGrafiasDraft(formatAllSpellings(factor));
     setCategoriaDraft(factor.category ?? '');
+    setDescricaoDraft(factor.description ?? '');
     setEditandoFator(true);
   };
 
@@ -206,6 +208,8 @@ export function FactorsView({
         name: nome,
         spellings: grafias,
         category: categoriaDraft.trim(),
+        // Vazia limpa no backend, igual à categoria.
+        description: descricaoDraft.trim(),
       });
       await queryClient.invalidateQueries({ queryKey: ['factors'] });
       await queryClient.invalidateQueries({ queryKey: ['articles'] });
@@ -801,6 +805,16 @@ export function FactorsView({
                               ))}
                             </datalist>
                           </label>
+                          <label>
+                            <span>Descrição</span>
+                            <textarea
+                              value={descricaoDraft}
+                              onChange={(e) => setDescricaoDraft(e.target.value)}
+                              rows={4}
+                              maxLength={2000}
+                              placeholder="Um parágrafo: o que este fator significa para quem trabalha na indústria."
+                            />
+                          </label>
                           <p className="factors-view-edit-hint">
                             Estas grafias são como o app reconhece o fator ao aplicar
                             um delta. Tirar uma daqui não altera os artigos. Categoria
@@ -819,6 +833,11 @@ export function FactorsView({
                         {!editandoFator && (
                           <p className="factors-view-detail-spellings">
                             {formatAllSpellings(selected)}
+                          </p>
+                        )}
+                        {!editandoFator && selected.description && (
+                          <p className="factors-view-detail-description">
+                            {selected.description}
                           </p>
                         )}
                         <div className="factors-view-detail-stats">

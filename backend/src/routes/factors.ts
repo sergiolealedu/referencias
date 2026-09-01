@@ -12,6 +12,8 @@ const ensureFactorSchema = z.object({
   name: z.string().min(1, 'Nome do fator é obrigatório'),
   aliases: z.array(z.string()).optional(),
   category: z.string().trim().max(120).nullable().optional(),
+  /** Um parágrafo: o que o fator significa na indústria. */
+  description: z.string().trim().max(2000).nullable().optional(),
 });
 
 const updateFactorSchema = z.object({
@@ -21,6 +23,8 @@ const updateFactorSchema = z.object({
   spellings: z.array(z.string()).optional(),
   /** Categoria temática; string vazia ou null limpa, undefined mantém. */
   category: z.string().trim().max(120).nullable().optional(),
+  /** Descrição para a indústria; string vazia ou null limpa, undefined mantém. */
+  description: z.string().trim().max(2000).nullable().optional(),
 });
 
 const updateOccurrenceSchema = z.object({
@@ -38,6 +42,8 @@ const importFactorsSchema = z.object({
         name: z.string().trim().min(1),
         aliases: z.array(z.string()).optional(),
         category: z.string().trim().max(120).nullable().optional(),
+        /** Um parágrafo: o que o fator significa na indústria. */
+        description: z.string().trim().max(2000).nullable().optional(),
       }),
     )
     .min(1, 'Arquivo sem fatores')
@@ -91,6 +97,8 @@ const deltaFactorOpSchema = z.object({
   spellings: z.array(z.string()).optional(),
   /** Categoria temática do fator; string vazia limpa. */
   category: z.string().trim().max(120).optional(),
+  /** Um parágrafo sobre o que o fator significa na indústria; vazia limpa. */
+  description: z.string().trim().max(2000).optional(),
 });
 
 const deltaSchema = z
@@ -181,6 +189,7 @@ export function createFactorsRouter(): Router {
             name: entrada.name,
             aliases: entrada.aliases ?? [],
             category: entrada.category,
+            description: entrada.description,
           });
           if (idsAntes.has(factor.id)) atualizados += 1;
           else {
@@ -287,6 +296,9 @@ export function createFactorsRouter(): Router {
           '  suas grafias equivalentes em "grafias" (português, inglês, sinônimos) e a',
           '  "categoria" temática (Individual, Tarefa e carga de trabalho, Técnico e',
           '  ferramentas, Equipe e relações, Processo de desenvolvimento, Organizacional).',
+          '  Traz também "descricao": o que o fator significa na indústria, quando já foi',
+          '  escrita. Use-a para não cadastrar como fator novo algo que a descrição mostra',
+          '  ser o mesmo conceito com outro nome.',
           '- "artigos": os artigos a analisar. Cada um traz "chave", "titulo", "ano",',
           '  "abstract", "fatoresAtuais" e "pdfUrl".',
           '',
@@ -485,8 +497,11 @@ export function createFactorsRouter(): Router {
           '"match" acha o fator por qualquer grafia atual; "name" renomeia (o nome antigo',
           'vira grafia); "aliases" soma grafias; "spellings" substitui o conjunto inteiro',
           'de grafias — o que ficar de fora se perde; "category" troca a categoria',
-          'temática. Use só quando for corrigir algo errado no catálogo; do contrário,',
-          'omita a lista.',
+          'temática; "description" grava um parágrafo dizendo o que o fator significa',
+          'para quem trabalha na indústria (é a definição do fator, uma só, diferente do',
+          '"description" da ocorrência, que é a evidência daquele artigo). Em todos,',
+          'string vazia limpa o campo. Use só quando for corrigir algo errado no',
+          'catálogo; do contrário, omita a lista.',
         ].join('\n'),
         formatoResposta: {
           items: [
@@ -523,6 +538,7 @@ export function createFactorsRouter(): Router {
           label: f.name,
           grafias: f.aliases,
           categoria: f.category ?? null,
+          descricao: f.description ?? null,
         })),
         artigos,
       });
@@ -574,6 +590,7 @@ export function createFactorsRouter(): Router {
             ...(nome ? { name: nome } : {}),
             spellings,
             ...(op.category !== undefined ? { category: op.category } : {}),
+            ...(op.description !== undefined ? { description: op.description } : {}),
           });
           fatoresCatalogo += 1;
         } catch (error) {

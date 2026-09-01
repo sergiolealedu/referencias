@@ -51,6 +51,19 @@ function ensureFactorCategoryMigration(db: Database.Database): void {
   }
 }
 
+/**
+ * Descrição do fator no catálogo — o que ele significa para quem trabalha na
+ * indústria. Não confundir com o `description` da ocorrência, que é a evidência
+ * de um artigo: aquele vive dentro de `articles.factors_json`, este é único por
+ * fator.
+ */
+function ensureFactorDescriptionMigration(db: Database.Database): void {
+  const columns = db.prepare('PRAGMA table_info(factors)').all() as Array<{ name: string }>;
+  if (!columns.some((column) => column.name === 'description')) {
+    db.exec(`ALTER TABLE factors ADD COLUMN description TEXT`);
+  }
+}
+
 function ensureRevisaoLiteraturaMigration(db: Database.Database): void {
   const columns = db.prepare('PRAGMA table_info(articles)').all() as Array<{ name: string }>;
   if (!columns.some((column) => column.name === 'revisao_literatura')) {
@@ -82,6 +95,7 @@ export function openDatabase(dbPath: string): Database.Database {
   db.exec(FTS_TRIGGER_MIGRATION);
   ensureFactorsMigration(db);
   ensureFactorCategoryMigration(db);
+  ensureFactorDescriptionMigration(db);
   ensureRevisaoLiteraturaMigration(db);
   ensurePdfNaoEncontradoMigration(db);
   ensureMotivoDescarteMigration(db);

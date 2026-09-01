@@ -223,29 +223,33 @@ export class SqliteStore {
   private readFactorCatalog(): FactorDefinition[] {
     const rows = this.db
       .prepare(
-        'SELECT id, name, aliases_json, category FROM factors ORDER BY name COLLATE NOCASE',
+        'SELECT id, name, aliases_json, category, description FROM factors ORDER BY name COLLATE NOCASE',
       )
       .all() as Array<{
       id: string;
       name: string;
       aliases_json: string;
       category: string | null;
+      description: string | null;
     }>;
     return rows.map((row) => ({
       id: row.id,
       name: row.name,
       aliases: JSON.parse(row.aliases_json) as string[],
       category: row.category ?? null,
+      description: row.description ?? null,
     }));
   }
 
   private writeFactorCatalog(catalog: FactorDefinition[]): void {
     const upsert = this.db.prepare(
-      `INSERT INTO factors (id, name, aliases_json, category) VALUES (?, ?, ?, ?)
+      `INSERT INTO factors (id, name, aliases_json, category, description)
+       VALUES (?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET
          name = excluded.name,
          aliases_json = excluded.aliases_json,
-         category = excluded.category`,
+         category = excluded.category,
+         description = excluded.description`,
     );
     for (const factor of catalog) {
       upsert.run(
@@ -253,6 +257,7 @@ export class SqliteStore {
         factor.name,
         JSON.stringify(factor.aliases),
         factor.category?.trim() || null,
+        factor.description?.trim() || null,
       );
     }
   }
@@ -439,6 +444,7 @@ export class SqliteStore {
           name: factor.name,
           aliases: [...factor.aliases],
           category: factor.category ?? null,
+          description: factor.description ?? null,
           articleCount: 0,
           positiveCount: 0,
           negativeCount: 0,
@@ -471,6 +477,7 @@ export class SqliteStore {
             name: factor.label,
             aliases: [],
             category: null,
+            description: null,
             articleCount: 0,
             positiveCount: 0,
             negativeCount: 0,
@@ -517,6 +524,7 @@ export class SqliteStore {
     name: string;
     aliases?: string[];
     category?: string | null;
+    description?: string | null;
   }): Promise<FactorDefinition> {
     if (!input.name.trim()) {
       throw new StoreError('Nome do fator é obrigatório', 'VALIDATION');
@@ -536,6 +544,8 @@ export class SqliteStore {
       spellings?: string[];
       /** String vazia ou null limpa a categoria; undefined mantém. */
       category?: string | null;
+      /** String vazia ou null limpa a descrição; undefined mantém. */
+      description?: string | null;
     },
   ): Promise<FactorDefinition> {
     const catalog = this.readFactorCatalog();
@@ -550,6 +560,9 @@ export class SqliteStore {
     }
     if (patch.category !== undefined) {
       next = { ...next, category: patch.category?.trim() || null };
+    }
+    if (patch.description !== undefined) {
+      next = { ...next, description: patch.description?.trim() || null };
     }
     if (patch.spellings) {
       next = replaceSpellings(next, patch.spellings);

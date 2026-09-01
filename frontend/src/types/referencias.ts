@@ -145,6 +145,8 @@ export interface FactorsDeltaCatalogOp {
   spellings?: string[];
   /** Categoria temática; string vazia limpa. */
   category?: string;
+  /** Um parágrafo sobre o que o fator significa na indústria; vazia limpa. */
+  description?: string;
 }
 
 export interface FactorsDelta {

@@ -34,6 +34,12 @@ export interface FactorDefinition {
   aliases: string[];
   /** Categoria temática (ex.: Individual, Técnico, Organizacional). */
   category?: string | null;
+  /**
+   * O que o fator significa, em linguagem de quem trabalha na indústria — não a
+   * evidência de um artigo. É `ArticleFactor.description` que guarda o achado de
+   * cada artigo; esta é a definição do fator, uma só, válida para todos eles.
+   */
+  description?: string | null;
 }
 
 /** Ocorrência de um fator em um artigo. */
@@ -70,6 +76,7 @@ export interface FactorOverview {
   name: string;
   aliases: string[];
   category?: string | null;
+  description?: string | null;
   articleCount: number;
   positiveCount: number;
   negativeCount: number;

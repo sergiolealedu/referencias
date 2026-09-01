@@ -171,6 +171,12 @@ relações, Processo de desenvolvimento, Organizacional). Ao propor um fator
 **novo**, inclua `category` com uma das categorias já usadas no catálogo —
 fator existente já tem categoria, e aí o campo deve ser omitido.
 
+A entrada pode trazer ainda `descricao`: um parágrafo dizendo o que o fator
+significa na indústria. Leia antes de cadastrar fator novo — ela é o que revela
+que dois rótulos diferentes são o mesmo conceito, o que a comparação de grafias
+não pega. Não confunda com o `description` da ocorrência, que é a evidência de
+um artigo: a `descricao` é a definição do fator, uma só para todos os artigos.
+
 Além do rótulo do catálogo, `aliases` pode trazer outros sinônimos do fator
 encontrados no artigo, em inglês ou português (ex.: `Upskilling`, `Layoffs`):
 todos viram grafias do fator e ajudam os próximos artigos a convergir. O nome
@@ -297,8 +303,9 @@ arquivo, aplicada **antes** dos artigos:
 `match` localiza o fator por qualquer grafia atual; `name` renomeia (o nome
 antigo vira grafia); `aliases` soma grafias; `spellings` substitui o conjunto
 inteiro de grafias — o que ficar de fora se perde; `category` troca a categoria
-temática do fator. Use para corrigir catálogo sem mexer nos artigos, p. ex.
-renomear um fator que entrou com o nome errado.
+temática do fator; `description` grava o parágrafo que define o fator para a
+indústria. Em todos, string vazia limpa o campo. Use para corrigir catálogo sem
+mexer nos artigos, p. ex. renomear um fator que entrou com o nome errado.
 
 **Entregue o delta como arquivo para download**, não como bloco de texto no chat.
 O app recebe arquivo em **Fatores → Aplicar delta em artigos**, e copiar do chat

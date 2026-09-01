@@ -221,6 +221,8 @@ export const api = {
       spellings?: string[];
       /** String vazia ou null limpa a categoria; undefined mantém. */
       category?: string | null;
+      /** String vazia ou null limpa a descrição; undefined mantém. */
+      description?: string | null;
     },
   ) =>
     request<FactorDefinition>(`/factors/${encodeURIComponent(id)}`, {

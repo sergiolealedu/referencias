@@ -2533,6 +2533,26 @@ pre.error {
   color: var(--muted);
 }
 
+/*
+ * A descrição do fator é texto para ler, não metadado: cor de corpo e uma
+ * medida de linha que não obrigue a varrer a tela toda.
+ */
+.factors-view-detail-description {
+  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text);
+  max-width: 62ch;
+}
+
+.factors-view-edit-form textarea {
+  resize: vertical;
+  min-height: 5rem;
+  font-family: inherit;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
 .factors-view-detail-stats {
   display: flex;
   flex-wrap: wrap;
