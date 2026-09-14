@@ -60,6 +60,26 @@ const CASOS: Array<{ key: string; patch: Partial<Article>; esperado: ArticleCate
     patch: { status: 'duplicate', descartado: true },
     esperado: 'repetidos',
   },
+  { key: 'com-pdf', patch: { caminho: 'C:/pdfs/z.pdf' }, esperado: 'comPdf' },
+  // Precedência: ter PDF vence uso e descarte — "Com PDF" reúne todo artigo
+  // com PDF que ainda não tem fator e não é repetido.
+  { key: 'com-pdf-usado', patch: { caminho: 'C:/pdfs/w.pdf', usado: true }, esperado: 'comPdf' },
+  {
+    key: 'motivo-com-pdf',
+    patch: { motivoDescarte: 'nao_dev', caminho: 'C:/pdfs/x.pdf' },
+    esperado: 'comPdf',
+  },
+  {
+    key: 'descartado-com-pdf',
+    patch: { descartado: true, caminho: 'C:/pdfs/y.pdf' },
+    esperado: 'comPdf',
+  },
+  // Repetido ainda vence o PDF.
+  {
+    key: 'repetido-com-pdf',
+    patch: { status: 'duplicate', caminho: 'C:/pdfs/v.pdf' },
+    esperado: 'repetidos',
+  },
   { key: 'usado', patch: { usado: true }, esperado: 'usados' },
   // Precedência: usado vence motivo de descarte.
   {
@@ -70,25 +90,13 @@ const CASOS: Array<{ key: string; patch: Partial<Article>; esperado: ArticleCate
   { key: 'nao-eng-sw', patch: { motivoDescarte: 'nao_eng_sw' }, esperado: 'naoEngSw' },
   { key: 'nao-dev', patch: { motivoDescarte: 'nao_dev' }, esperado: 'naoDev' },
   { key: 'nao-qvt', patch: { motivoDescarte: 'nao_qvt' }, esperado: 'naoQvt' },
-  // Precedência: o motivo vence o descarte genérico e o PDF já baixado.
+  // Precedência: o motivo vence o descarte genérico.
   {
     key: 'motivo-e-descartado',
     patch: { motivoDescarte: 'nao_dev', descartado: true },
     esperado: 'naoDev',
   },
-  {
-    key: 'motivo-com-pdf',
-    patch: { motivoDescarte: 'nao_dev', caminho: 'C:/pdfs/x.pdf' },
-    esperado: 'naoDev',
-  },
   { key: 'descartado', patch: { descartado: true }, esperado: 'descartados' },
-  // Precedência: descartado vence "com PDF" — baixar o PDF não desfaz o descarte.
-  {
-    key: 'descartado-com-pdf',
-    patch: { descartado: true, caminho: 'C:/pdfs/y.pdf' },
-    esperado: 'descartados',
-  },
-  { key: 'com-pdf', patch: { caminho: 'C:/pdfs/z.pdf' }, esperado: 'comPdf' },
   // Caminho só com espaços não conta como PDF (o SQL usa TRIM).
   { key: 'caminho-em-branco', patch: { caminho: '   ' }, esperado: 'outros' },
   { key: 'outros', patch: {}, esperado: 'outros' },

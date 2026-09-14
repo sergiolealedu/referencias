@@ -128,8 +128,8 @@ export interface GroupSummary {
 
 export const ARTICLE_CATEGORIAS = [
   'comFatores',
-  'usados',
   'comPdf',
+  'usados',
   'naoEngSw',
   'naoDev',
   'naoQvt',

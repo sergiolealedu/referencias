@@ -30,8 +30,8 @@ export const USAGE_SEGMENTS: { key: UsageSegment; label: string }[] = [
   // Ter fator é a maior prioridade na classificação e o estado mais avançado
   // da análise, então abre o empilhamento.
   { key: 'comFatores', label: 'Com fator' },
-  { key: 'usados', label: 'Em uso' },
   { key: 'comPdf', label: 'Com PDF' },
+  { key: 'usados', label: 'Em uso' },
   { key: 'naoEngSw', label: 'Não é eng. SW' },
   { key: 'naoDev', label: 'Não é dev' },
   { key: 'naoQvt', label: 'Não é QVT' },

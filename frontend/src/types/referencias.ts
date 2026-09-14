@@ -71,8 +71,8 @@ export interface GroupInput {
 
 export const ARTICLE_CATEGORIA_LABELS: Record<ArticleCategoria, string> = {
   comFatores: 'Com fator',
-  usados: 'Em uso',
   comPdf: 'Com PDF',
+  usados: 'Em uso',
   naoEngSw: 'Não é eng. SW',
   naoDev: 'Não é dev',
   naoQvt: 'Não é QVT',

@@ -274,18 +274,6 @@ export function GroupChartContent({
                 <LabelList dataKey="comFatores" content={renderSegmentLabel} />
               </Bar>
             )}
-            {visibleSegments.usados && (
-              <Bar
-                dataKey="usados"
-                name="Em uso"
-                stackId={stackId}
-                fill={STACK_COLORS.usados}
-                minPointSize={4}
-                radius={barRadius('usados')}
-              >
-                <LabelList dataKey="usados" content={renderSegmentLabel} />
-              </Bar>
-            )}
             {visibleSegments.comPdf && (
               <Bar
                 dataKey="comPdf"
@@ -296,6 +284,18 @@ export function GroupChartContent({
                 radius={barRadius('comPdf')}
               >
                 <LabelList dataKey="comPdf" content={renderSegmentLabel} />
+              </Bar>
+            )}
+            {visibleSegments.usados && (
+              <Bar
+                dataKey="usados"
+                name="Em uso"
+                stackId={stackId}
+                fill={STACK_COLORS.usados}
+                minPointSize={4}
+                radius={barRadius('usados')}
+              >
+                <LabelList dataKey="usados" content={renderSegmentLabel} />
               </Bar>
             )}
             {visibleSegments.naoEngSw && (
@@ -522,7 +522,7 @@ export function GroupChart({
             {' · '}
             {chartMode === 'duplicates'
               ? `${totals.unicos} únicos · ${totals.repetidos} repetidos`
-              : `${totalGeral} artigos no gráfico · ${totals.comFatores} com fator · ${totals.usados} em uso · ${totals.comPdf} com PDF · ${totals.naoEngSw} não é eng. SW · ${totals.naoDev} não é dev · ${totals.naoQvt} não é QVT · ${totals.descartados} descartados · ${totals.outros} outros · ${totals.repetidos} repetidos`}
+              : `${totalGeral} artigos no gráfico · ${totals.comFatores} com fator · ${totals.comPdf} com PDF · ${totals.usados} em uso · ${totals.naoEngSw} não é eng. SW · ${totals.naoDev} não é dev · ${totals.naoQvt} não é QVT · ${totals.descartados} descartados · ${totals.outros} outros · ${totals.repetidos} repetidos`}
           </p>
         </div>
         <div className="dashboard-chart-actions">

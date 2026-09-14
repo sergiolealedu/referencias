@@ -52,11 +52,12 @@ interface FilterClause {
 const STATUS_PRESERVADOS = new Set(['not_eligible', 'manual_review']);
 
 // Prioridade (cada artigo cai em exatamente uma categoria):
-// com fator → repetido → usado → motivo de descarte → descartado → com PDF →
+// com fator → repetido → com PDF → usado → motivo de descarte → descartado →
 // outros.
 // Ter fator vence tudo: é o estado mais avançado da análise. Depois vem
-// repetido; e o descarte vem antes de "com PDF", ou seja, um artigo descartado
-// continua descartado mesmo que já tenha o PDF baixado.
+// repetido; e "com PDF" vem antes de uso e descarte, ou seja, "Com PDF" reúne
+// todo artigo com PDF que ainda não tem fator e não é repetido, independente
+// de estar em uso ou descartado.
 /** Artigo já analisado: tem ao menos um fator associado. Vence todas as outras. */
 const COM_FATORES = (a: string) =>
   `COALESCE(json_array_length(${a}.factors_json), 0) > 0`;
@@ -65,34 +66,38 @@ const SEM_FATORES = (a: string) => `NOT (${COM_FATORES(a)})`;
 const NAO_REPETIDO = (a: string) =>
   `${SEM_FATORES(a)} AND ${a}.status != 'duplicate'`;
 
+const COM_PDF = (a: string) => `TRIM(COALESCE(${a}.caminho, '')) != ''`;
+
+/** Sem fator, não repetido e sem PDF: base das categorias de triagem. */
+const EM_TRIAGEM = (a: string) => `${NAO_REPETIDO(a)} AND NOT (${COM_PDF(a)})`;
+
 const CATEGORIA_SQL: Record<string, (alias: string) => string> = {
   comFatores: (a) => COM_FATORES(a),
   repetidos: (a) => `${SEM_FATORES(a)} AND ${a}.status = 'duplicate'`,
-  usados: (a) => `${NAO_REPETIDO(a)} AND ${a}.usado = 1`,
+  comPdf: (a) => `${NAO_REPETIDO(a)} AND ${COM_PDF(a)}`,
+  usados: (a) => `${EM_TRIAGEM(a)} AND ${a}.usado = 1`,
   naoEngSw: (a) =>
-    `${NAO_REPETIDO(a)} AND ${a}.usado = 0 AND ${a}.motivo_descarte = 'nao_eng_sw'`,
+    `${EM_TRIAGEM(a)} AND ${a}.usado = 0 AND ${a}.motivo_descarte = 'nao_eng_sw'`,
   naoDev: (a) =>
-    `${NAO_REPETIDO(a)} AND ${a}.usado = 0 AND ${a}.motivo_descarte = 'nao_dev'`,
+    `${EM_TRIAGEM(a)} AND ${a}.usado = 0 AND ${a}.motivo_descarte = 'nao_dev'`,
   naoQvt: (a) =>
-    `${NAO_REPETIDO(a)} AND ${a}.usado = 0 AND ${a}.motivo_descarte = 'nao_qvt'`,
+    `${EM_TRIAGEM(a)} AND ${a}.usado = 0 AND ${a}.motivo_descarte = 'nao_qvt'`,
   descartados: (a) =>
-    `${NAO_REPETIDO(a)} AND ${a}.usado = 0 AND ${a}.motivo_descarte IS NULL AND ${a}.descartado = 1`,
-  comPdf: (a) =>
-    `${NAO_REPETIDO(a)} AND ${a}.usado = 0 AND ${a}.motivo_descarte IS NULL AND ${a}.descartado = 0 AND TRIM(${a}.caminho) != ''`,
+    `${EM_TRIAGEM(a)} AND ${a}.usado = 0 AND ${a}.motivo_descarte IS NULL AND ${a}.descartado = 1`,
   outros: (a) =>
-    `${NAO_REPETIDO(a)} AND ${a}.usado = 0 AND ${a}.motivo_descarte IS NULL AND ${a}.descartado = 0 AND TRIM(${a}.caminho) = ''`,
+    `${EM_TRIAGEM(a)} AND ${a}.usado = 0 AND ${a}.motivo_descarte IS NULL AND ${a}.descartado = 0`,
 };
 
 /** Nome da coluna SQL de cada categoria nas estatísticas por ano. */
 const CATEGORIA_COLUNA: Record<keyof typeof CATEGORIA_SQL, string> = {
   comFatores: 'com_fatores',
   repetidos: 'repetidos',
+  comPdf: 'com_pdf',
   usados: 'usados',
   naoEngSw: 'nao_eng_sw',
   naoDev: 'nao_dev',
   naoQvt: 'nao_qvt',
   descartados: 'descartados',
-  comPdf: 'com_pdf',
   outros: 'outros',
 };
 
