@@ -248,6 +248,20 @@ python scripts/qa/apply-patches.py --input data/qa/<stamp>/notas-propostas.json
 
 Detalhes e parâmetros: [`scripts/README.md`](scripts/README.md).
 
+### PDF dos achados (catálogo de fatores)
+
+Gera `docs/achados-fatores-qvt.pdf`: cada fator com a descrição e, por artigo
+ligado, a polaridade, o termo do artigo e a citação; no fim, as referências com
+os fatores que cada uma sustenta. Por padrão lê o backup congelado
+`server-20260924-162133` (somente leitura, o arquivo não é alterado):
+
+```powershell
+python scripts/docs/achados-fatores-pdf.py
+```
+
+Outro banco ou outra saída: `--db <caminho>\referencias.db --out <arquivo>.pdf`.
+Requer `reportlab` e as fontes Calibri do Windows.
+
 ### Títulos colados → BibTeX (fallback)
 
 Para quando não sai arquivo nenhum da base: cola-se uma lista de títulos (um por
