@@ -197,18 +197,25 @@ ferramentas*, o que já antecipa a hipótese da tarefa 5.4.
 
 ## 2. Levantar a evidência sobre ESC × bem-estar
 
-- [ ] **2.1 Reaproveitar o corpus atual.** Filtrar os artigos que já citam
+- [x] **2.1 Reaproveitar o corpus atual.** Filtrar os artigos que já citam
   práticas de ESC (busca por *continuous integration*, *DevOps*, *deployment*,
   *on-call*, *pipeline*, *release*…) e reler só as seções de resultados à
-  procura do elo prática → fator.
+  procura do elo prática → fator. Só 6 dos 65 tocam no elo, e de passagem; ver
+  [busca-esc-qvt.md](busca-esc-qvt.md).
 - [ ] **2.2 Montar a string de busca nova.** Combinar (ESC) AND (bem-estar/QVT)
-  AND (desenvolvedores):
-  - [ ] Termos de ESC: `"continuous integration" OR "continuous delivery" OR
+  AND (desenvolvedores). Strings e calibração em
+  [busca-esc-qvt.md](busca-esc-qvt.md):
+  - [x] Termos de ESC: `"continuous integration" OR "continuous delivery" OR
     "continuous deployment" OR DevOps OR "continuous software engineering" OR
     "on-call" OR SRE OR "trunk-based" OR "feature toggle*"`
-  - [ ] Termos de QVT: reutilizar os da etapa 1 (`well-being`, `stress`,
-    `burnout`, `satisfaction`, `workload`, `developer experience`…)
-  - [ ] Rodar no Scopus pelo CAPES e exportar em BibTeX com abstract
+  - [x] Termos de QVT: reutilizar os da etapa 1 (`well-being`, `stress`,
+    `burnout`, `satisfaction`, `workload`, `developer experience`…), somados
+    aos termos dos fatores
+  - [x] Calibrar no Scopus pelo CAPES: busca 1 (ESC × QVT) com 187
+    resultados; busca 2 (estudos empíricos de ESC com pessoas) chega a 977 na
+    união; 8 de 12 sementes
+  - [x] Exportar em BibTeX com abstract: 187 + 790 registros (o primeiro
+    export da busca 2 veio incompleto e foi completado por EID)
 - [ ] **2.3 Importar em um grupo próprio no app** (p. ex. "ESC × QVT") e
   rodar a detecção de duplicatas contra o corpus da etapa 1.
 - [ ] **2.4 Triagem.** Mesmas três perguntas e mesmos critérios de veículo e de
@@ -221,7 +228,11 @@ ferramentas*, o que já antecipa a hipótese da tarefa 5.4.
 
 ## 3. Extrair os efeitos prática → fator
 
-- [ ] **3.1 Definir o formato de extração.** Um registro por par encontrado:
+- [x] **3.1 Definir o formato de extração.** Um registro por par encontrado,
+  extraído do **texto completo** (o abstract só serve para a triagem). O
+  formato final, em português e com `termoPratica`, `desfecho` (elo direto
+  prática → bem-estar, sem fator intermediário) e o modo de adoção em
+  `condicoes`, está na skill `analise-esc-fatores`. O rascunho original:
   ```jsonc
   {
     "key": "Chave2024",
@@ -234,16 +245,24 @@ ferramentas*, o que já antecipa a hipótese da tarefa 5.4.
     "description": "Seção 5 (P3): “…citação verbatim…”"
   }
   ```
-- [ ] **3.2 Adaptar a skill.** Criar a skill `analise-esc-fatores` a partir de
+- [x] **3.2 Adaptar a skill.** Criar a skill `analise-esc-fatores` a partir de
   `analise-fatores-qvt`, com as regras novas: nada de prática com nome de
   produto (Jenkins → "Pipeline de CI"), não confundir desfecho com fator, e
-  exigir citação verbatim.
+  exigir citação verbatim. Feita em `.claude/skills/analise-esc-fatores/`. Ela
+  adota, provisoriamente, as recomendações de 0.1 a 0.3 (catálogo de 21
+  práticas mais a linha agregada; aumenta/reduz/ambivalente; três níveis de
+  evidência) e troca a pergunta 3 da triagem ("é de QVT?") pela 4.
 - [ ] **3.3 Tratar fator novo.** Quando o artigo evidenciar um fator que não
   está no catálogo (p. ex. "Fadiga de alertas" em *on-call*), decidir se ele
   volta para a etapa 1 como fator novo ou fica marcado como "fator emergente
-  de ESC".
+  de ESC". Até a decisão, a skill marca `fatorEmergente: true`.
 - [ ] **3.4 Piloto com 3–5 artigos** para calibrar formato, escala e regras
   antes do lote.
+  - [x] Corpus atual (2026-11-05): Benlian 2025 rendeu 1 efeito; Cerqueira
+    2024 e Trinkenreich 2023, 0. As práticas aparecem só em recomendações
+    além dos dados ou com o elo vindo de trabalho citado. As regras que saíram
+    disso estão na seção "Calibração" da skill.
+  - [ ] Artigos da busca nova: 3 a 5 aprovados na triagem, com PDF
 - [ ] **3.5 Extração em lote** dos artigos aprovados.
 - [ ] **3.6 Dupla checagem** de uma amostra (p. ex. 20%) e registro das
   divergências de `effect`.
