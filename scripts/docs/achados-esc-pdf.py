@@ -26,7 +26,7 @@ from reportlab.lib.units import cm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import (
-    BaseDocTemplate, Frame, KeepTogether, PageBreak, PageTemplate, Paragraph,
+    BaseDocTemplate, Frame, HRFlowable, KeepTogether, PageBreak, PageTemplate, Paragraph,
     Spacer, Table, TableStyle,
 )
 
@@ -71,6 +71,10 @@ S = {
     "bib": ParagraphStyle("bib", fontName="Cal", fontSize=9.3, leading=12, textColor=INK, leftIndent=12,
                           firstLineIndent=-12, spaceAfter=4),
     "big": ParagraphStyle("big", fontName="Cal-B", fontSize=18, leading=22, textColor=ACCENT),
+    "quote": ParagraphStyle("quote", fontName="Cal", fontSize=9.5, leading=12.5, textColor=colors.HexColor("#3e4c59"),
+                            leftIndent=12, spaceBefore=5),
+    "expl": ParagraphStyle("expl", fontName="Cal", fontSize=9.5, leading=12.5, textColor=INK, leftIndent=12,
+                           spaceBefore=1),
 }
 
 LATEX = {r"\AA": "Å", r"\aa": "å", r"\o": "ø", r"\O": "Ø", r"\ss": "ß"}
@@ -399,15 +403,29 @@ for pr in sorted(por_pratica, key=lambda k: (-len(por_pratica[k]), k)):
               S["meta"])]
     blocks = []
     for a, e in sorted(lst, key=lambda ae: (ae[1].get("fator") or "~", ae[0]["year"])):
-        blocks.append(linha([
-            P(f'{EFEITO.get(e["efeito"], x(e["efeito"]))} {fator_txt(e)}', S["ev"]),
-            P(f'{cite_link(a)} — {x(a["title"])}', S["refsub"]),
-            P(f'<b>Mecanismo:</b> {x(fim(e.get("mecanismo")))}'
-              + (f' <b>Condições:</b> {x(fim(e["condicoes"]))}' if e.get("condicoes") else "")
-              + f' <b>Evidência:</b> {x(e.get("evidencia"))}.', S["ev"]),
-            P(f'<font color="#616e7c">{x(e.get("trecho"))}</font>', S["ev"])]))
-    story.append(KeepTogether(head + blocks[:1]))
-    story += blocks[1:]
+        fl = [P(f'{EFEITO.get(e["efeito"], x(e["efeito"]))} {fator_txt(e)}', S["ev"]),
+              P(f'{cite_link(a)} — {x(a["title"])}', S["refsub"])]
+        if e.get("contexto"):
+            fl.append(P(f'<b>Contexto:</b> {x(fim(e["contexto"]))}', S["ev"]))
+        fl.append(P(f'<b>Mecanismo:</b> {x(fim(e.get("mecanismo")))}'
+                    + (f' <b>Condições:</b> {x(fim(e["condicoes"]))}' if e.get("condicoes") else "")
+                    + f' <b>Evidência:</b> {x(e.get("evidencia"))}.', S["ev"]))
+        if e.get("revisao"):
+            fl.append(P(f'<font color="#8a6d00"><b>Em revisão:</b> {x(fim(e["revisao"]))}</font>', S["ev"]))
+        if e.get("citacoes"):
+            for c in e["citacoes"]:
+                fl.append(P(f'<font color="#616e7c">{x(c.get("local"))}:</font> <i>“{x(c["texto"])}”</i>', S["quote"]))
+                fl.append(P(x(fim(c.get("explicacao"))), S["expl"]))
+        else:
+            fl.append(P(f'<font color="#616e7c">{x(e.get("trecho"))}</font>', S["ev"]))
+        # cabeçalho do elo (efeito, artigo, contexto) não se separa; o resto quebra entre páginas
+        blocks.append(([Spacer(1, 4)] + fl[:3],
+                       fl[3:] + [Spacer(1, 5), HRFlowable(width="100%", thickness=0.4, color=RULE)]))
+    story.append(KeepTogether(head + blocks[0][0]))
+    story += blocks[0][1]
+    for lead, rest in blocks[1:]:
+        story.append(KeepTogether(lead))
+        story += rest
 
 # 5. fichas
 story.append(PageBreak())
