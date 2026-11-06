@@ -2,12 +2,14 @@
 (ESC) × fatores de QVT.
 
 Uso:
-    python scripts/docs/achados-esc-pdf.py [--dados docs/esc/triagem-busca1.json] [--out SAIDA.pdf]
+    python scripts/docs/achados-esc-pdf.py [--dados docs/esc/triagem-busca1.json]
+        [--efeitos docs/esc/efeitos-texto-busca1.json] [--out SAIDA.pdf]
 
-Os dados vêm da triagem dos abstracts da busca 1 (ver docs/busca-esc-qvt.md).
-O que cada artigo "diz" é o que o ABSTRACT afirma: a extração pelo texto
-completo (skill analise-esc-fatores) vem depois. Requer reportlab e as fontes
-Calibri do Windows.
+Dois insumos: a triagem dos abstracts da busca 1 (metadados, vereditos, polaridade
+dos fatores) e os efeitos prática → fator extraídos do TEXTO COMPLETO com a skill
+analise-esc-fatores (citações conferidas por script contra o texto do PDF). A
+matriz, os achados e as fichas vêm do texto completo. Requer reportlab e as
+fontes Calibri do Windows.
 """
 import argparse
 import json
@@ -31,9 +33,11 @@ from reportlab.platypus import (
 REPO = Path(__file__).resolve().parents[2]
 ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
 ap.add_argument("--dados", default=str(REPO / "docs" / "esc" / "triagem-busca1.json"))
+ap.add_argument("--efeitos", default=str(REPO / "docs" / "esc" / "efeitos-texto-busca1.json"))
 ap.add_argument("--out", default=str(REPO / "docs" / "achados-esc-etapa2.pdf"))
 args = ap.parse_args()
 D = json.loads(Path(args.dados).read_text(encoding="utf-8"))
+E = json.loads(Path(args.efeitos).read_text(encoding="utf-8"))
 
 F = "C:/Windows/Fonts/"
 pdfmetrics.registerFont(TTFont("Cal", F + "calibri.ttf"))
@@ -135,18 +139,46 @@ def fator_txt(e):
     pol = ""
     if f:
         pol = " (fator +)" if f["pos"] > f["neg"] else " (fator −)" if f["neg"] > f["pos"] else " (fator ±)"
+    if nome in NOME_NEUTRO:
+        pol = pol[:-1] + ", nome neutro*)"
     return f'{x(nome)}<font color="#616e7c">{pol}</font>'
 
 
+# Fatores cujo nome descreve uma dimensão (não o caso ruim) mas que só têm
+# polaridade negativa na etapa 1. Pendência da tarefa 1.3 (nomes dos fatores).
+NOME_NEUTRO = {
+    "Desenho do trabalho": "a descrição é neutra (variedade, autonomia, retorno), mas na etapa 1 só aparece o caso "
+                           "ruim (4 artigos, todos negativos). Nos elos desta etapa, “aumenta” quer dizer trabalho "
+                           "<b>mais bem desenhado</b> — o que atenua o fator negativo, ao contrário do que a "
+                           "polaridade sugere.",
+    "Interação com clientes": "o nome é neutro, mas a descrição e a polaridade da etapa 1 (8 negativos) tratam do "
+                              "desgaste com o cliente. Nos elos desta etapa o efeito se refere a esse desgaste: "
+                              "“reduz” quer dizer menos retrabalho e espera pelo cliente.",
+}
+
+
+META = {a["key"]: a for a in D["artigos"]}  # metadados e veredito da triagem dos abstracts
 arts = D["artigos"]
 aprov = [a for a in arts if a["veredito"] == "aprovado"]
 talvez = [a for a in arts if a["veredito"] == "talvez"]
 reprov = [a for a in arts if a["veredito"] == "reprovado"]
-elos = [(a, e) for a in aprov + talvez for e in a.get("elos", [])]
+elos_abs = sum(len(a.get("elos", [])) for a in aprov + talvez)
+
+# texto completo
+LIDOS = {a["key"]: a for a in E["artigos"]}
+SEM_PDF = {s["key"]: s["motivo"] for s in E.get("semPdf", [])}
+efeitos = [(META[i["key"]], e) for i in E["items"] for e in i["efeitos"]]
+com_efeito = [META[k] for k in dict.fromkeys(i["key"] for i in E["items"])]
+sem_efeito = [META[k] for k, a in LIDOS.items() if a["veredito"] == "aprovado" and not a["efeitos"]]
+reprov_texto = [META[k] for k, a in LIDOS.items() if a["veredito"] != "aprovado"]
 por_pratica = defaultdict(list)
-for a, e in elos:
+for a, e in efeitos:
     por_pratica[e["pratica"]].append((a, e))
-citados = {a["key"] for a in aprov + talvez}
+EVID = {"empírica direta": "D", "empírica indireta": "I", "inferida": "F"}
+
+
+def alvo(e):
+    return e["fator"] if e.get("fator") is not None else "desfecho: " + (e.get("desfecho") or "")
 
 
 # ---------------------------------------------------------------- documento
@@ -155,7 +187,7 @@ def on_page(canv, doc):
     canv.setFont("Cal", 8.5)
     canv.setFillColor(MUTED)
     if doc.page > 1:
-        canv.drawString(2 * cm, 1.3 * cm, "ESC × fatores de QVT — achados da etapa 2 (preliminares)")
+        canv.drawString(2 * cm, 1.3 * cm, "ESC × fatores de QVT — achados da etapa 2 (texto completo, busca 1)")
         canv.drawRightString(A4[0] - 2 * cm, 1.3 * cm, str(doc.page))
     canv.restoreState()
 
@@ -193,26 +225,37 @@ def C(s, b=False):
     return P(s, S["cellb" if b else "cell"])
 
 
+def cite_link(a):
+    return f'<link href="#{anc("a-", a["key"])}" color="#1f2933"><b>{x(short_cite(a))}</b></link>'
+
+
+def linha(flows):
+    bt = Table([[flows]], colWidths=[W])
+    bt.setStyle(TableStyle([("LEFTPADDING", (0, 0), (-1, -1), 0), ("TOPPADDING", (0, 0), (-1, -1), 4),
+                            ("BOTTOMPADDING", (0, 0), (-1, -1), 6), ("LINEBELOW", (0, 0), (-1, -1), 0.4, RULE)]))
+    return bt
+
+
 # capa
 story += [Spacer(1, 2.5 * cm),
           P("Práticas de Engenharia de Software Contínua × fatores de QVT", S["title"]), Spacer(1, 8),
-          P("Achados da etapa 2: o que a literatura diz sobre como CI, CD, DevOps, <i>on-call</i> e práticas "
-            "afins aumentam ou reduzem os fatores de qualidade de vida no trabalho de quem produz software",
+          P("Achados da etapa 2: como CI, CD, DevOps, <i>on-call</i> e práticas afins aumentam ou reduzem os "
+            "fatores de qualidade de vida no trabalho de quem produz software, segundo o texto completo dos artigos",
             S["subtitle"]), Spacer(1, 1 * cm)]
-n_elos = len(elos)
-stats = [[P(f"{D['meta']['busca1']} + {D['meta']['busca2']}", S["big"]), P(str(len(aprov)), S["big"]),
-          P(str(len(talvez)), S["big"]), P(str(n_elos), S["big"])],
-         [P("registros nas buscas 1 e 2", S["meta"]), P("aprovados na busca 1", S["meta"]),
-          P("“talvez” na busca 1", S["meta"]), P("elos prática → fator nos abstracts", S["meta"])]]
+stats = [[P(str(len(aprov) + len(talvez)), S["big"]), P(str(len(LIDOS)), S["big"]),
+          P(str(len(com_efeito)), S["big"]), P(str(len(efeitos)), S["big"])],
+         [P("candidatos da busca 1 (aprovados e “talvez” no abstract)", S["meta"]),
+          P("lidos no texto completo", S["meta"]), P("com elo prática → fator", S["meta"]),
+          P("elos prática → fator, todos com citação conferida", S["meta"])]]
 t = Table(stats, colWidths=[W / 4] * 4)
 t.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"), ("LEFTPADDING", (0, 0), (-1, -1), 0)]))
 story += [t, Spacer(1, 0.8 * cm)]
 story.append(box(P(
-    "<b>Atenção: achados preliminares.</b> O que cada artigo “diz” neste documento é o que o <b>abstract</b> "
-    "afirma. A ligação prática → fator vai ser extraída do <b>texto completo</b>, com a skill "
-    "<i>analise-esc-fatores</i>, depois que os aprovados tiverem PDF no app. Só um elo deste documento já vem "
-    "do texto completo: o do piloto (seção 1). A busca 2 (estudos empíricos, 790 registros) ainda não foi "
-    "triada.", S["body"]), bg=WARN, line=colors.HexColor("#c9a227")))
+    "<b>De onde vêm os elos.</b> Cada elo foi extraído do <b>texto completo</b> do artigo com as regras da skill "
+    "<i>analise-esc-fatores</i>: só conta o que sai dos dados do próprio estudo; recomendação e trabalho citado "
+    "não contam. Toda citação foi conferida por script contra o texto do PDF. "
+    f"<b>O que falta:</b> {len(SEM_PDF)} candidatos ficaram sem PDF (seção 5), a busca 2 (790 registros) ainda "
+    "não foi triada e os artigos ainda não estão no app.", S["body"]), bg=WARN, line=colors.HexColor("#c9a227")))
 story.append(Spacer(1, 10))
 for s in [
     "<b>Pergunta.</b> Como a adoção de práticas de Engenharia de Software Contínua (ESC) aumenta ou reduz "
@@ -220,11 +263,13 @@ for s in [
     "com a presença do fator. Se isso faz bem ou mal vem da polaridade do fator na etapa 1, mostrada entre "
     "parênteses ao lado do nome: <i>fator −</i> prejudica o bem-estar e <i>fator +</i> favorece.",
     f"<b>Como ler os efeitos.</b> {EFEITO['aumenta']} e {EFEITO['reduz']} descrevem a presença do fator, não o "
-    "bem-estar. Para o efeito líquido, combine com a polaridade do fator: reduzir <i>Interrupções no "
-    "trabalho</i> (fator −) é bom; aumentar <i>Reconhecimento no trabalho</i> (fator +) também.",
-    f"<b>Base.</b> Busca no Scopus (CAPES) em {D['meta']['data']}; triagem dos abstracts com os critérios "
-    "da skill <i>analise-esc-fatores</i>; catálogo de 64 fatores congelado em 24/09/2026. Protocolo completo "
-    "em docs/busca-esc-qvt.md.",
+    "bem-estar. Reduzir <i>Interrupções no trabalho</i> (fator −) é bom; aumentar <i>Relações no trabalho</i> "
+    "(fator +) também. <b>Evidência:</b> D = empírica direta (os dados ligam prática e fator: fala de "
+    "participante, antes/depois, modelo); I = empírica indireta (co-ocorrência, interpretação dos autores); "
+    "F = inferida (conclusão da discussão, sem dado que ligue os dois).",
+    f"<b>Base.</b> Busca no Scopus (CAPES) em {D['meta']['data']}; triagem dos abstracts e leitura do texto "
+    f"completo em {E['geradoEm']}; catálogo de 64 fatores congelado em 24/09/2026. Protocolo em "
+    "docs/busca-esc-qvt.md; dados em docs/esc/.",
 ]:
     story += [P(s, S["body"]), Spacer(1, 6)]
 story.append(PageBreak())
@@ -271,8 +316,8 @@ story.append(P("Cerqueira et al. (2024) e Trinkenreich et al. (2023): nenhum elo
                "DORA, citados por Trinkenreich, viram candidatos ao corpus.", S["meta"]))
 story.append(PageBreak())
 
-# 2. buscas
-story.append(P("2. As buscas", S["h1"]))
+# 2. buscas e triagem
+story.append(P("2. Buscas, triagem e leitura", S["h1"]))
 rows = [[C("Busca", True), C("O que pega", True), C("Registros", True)],
         [C("1 — ESC × QVT", True), C("Práticas de ESC + termos de bem-estar <b>e dos fatores</b> (carga, pressão de "
                                        "prazo, interrupção, carga cognitiva, <i>toil</i>, horas de trabalho, "
@@ -284,42 +329,69 @@ story.append(table(rows, [4.2 * cm, W - 6.2 * cm, 2 * cm]))
 story.append(Spacer(1, 8))
 story.append(P("Filtros: artigo, conferência, revisão ou capítulo; inglês ou português; sem Medicina e Enfermagem. "
                "Calibração com 12 artigos-semente: a união das buscas recupera 8. Os 4 que ficam fora não citam "
-               "nenhuma prática de ESC no resumo e entram por <i>snowballing</i>. Só 5 registros da busca 1 já "
-               "estavam no banco da etapa 1.", S["body"]))
+               "nenhuma prática de ESC no resumo e entram por <i>snowballing</i>.", S["body"]))
 story.append(Spacer(1, 10))
-story.append(P("Triagem da busca 1", S["h2"]))
+story.append(P("Triagem dos abstracts da busca 1", S["h2"]))
 motivos = Counter(a.get("motivo", "?") for a in reprov)
 rows = [[C("Veredito", True), C("Registros", True)], [C("Aprovado"), C(str(len(aprov)))],
         [C("Talvez (precisa do texto completo)"), C(str(len(talvez)))]]
 for m, n in motivos.most_common():
     rows.append([C(f"Reprovado — {x(m)}"), C(str(n))])
 story.append(table(rows, [W - 3 * cm, 3 * cm]))
+story.append(Spacer(1, 10))
+story.append(P("Leitura do texto completo dos 32 candidatos", S["h2"]))
+story.append(P(f"Os abstracts afirmavam {elos_abs} elos; o texto completo sustenta {len(efeitos)}, em "
+               f"{len(com_efeito)} artigos. Vários elos do abstract caíram (o efeito estava só no resumo, ou vinha "
+               "de trabalho citado) e muitos novos apareceram nas falas, tabelas e comparações antes/depois.",
+               S["body"]))
+story.append(Spacer(1, 6))
+rows = [[C("Resultado", True), C("Artigos", True), C("Quais", True)],
+        [C("Influencia fatores: aprovado com elo"), C(str(len(com_efeito))),
+         C(", ".join(cite_link(a) for a in sorted(com_efeito, key=short_cite)))],
+        [C("Aprovado, mas sem elo no texto"), C(str(len(sem_efeito))),
+         C(", ".join(cite_link(a) for a in sem_efeito))],
+        [C("Reprovado na leitura"), C(str(len(reprov_texto))),
+         C(", ".join(cite_link(a) for a in reprov_texto))],
+        [C("Sem PDF"), C(str(len(SEM_PDF))), C(", ".join(cite_link(META[k]) for k in SEM_PDF))]]
+story.append(table(rows, [5 * cm, 1.6 * cm, W - 6.6 * cm]))
 
-# 3. visão prática × fator
+# 3. matriz prática × fator
 story.append(PageBreak())
-story.append(P("3. Visão geral: prática × fator", S["h1"]))
-story.append(P("Cada linha é um par prática × fator afirmado em pelo menos um abstract. ↑ aumenta, ↓ reduz, "
-               "↕ ambivalente; o número é a quantidade de artigos.", S["meta"]))
-pares = defaultdict(lambda: Counter())
-for a, e in elos:
-    alvo = e["fator"] if e.get("fator") is not None else "desfecho: " + (e.get("desfecho") or "")
-    pares[(e["pratica"], alvo, json.dumps(e.get("fator") is None))][e["efeito"]] += 1
-rows = [[C("Prática", True), C("Fator", True), C("↑", True), C("↓", True), C("↕", True)]]
-for (pr, alvo, _), cnt in sorted(pares.items(), key=lambda kv: (kv[0][0], -sum(kv[1].values()))):
-    fake = {"fator": None, "desfecho": alvo[10:]} if alvo.startswith("desfecho: ") else {"fator": alvo}
-    if alvo in FATORES or alvo.startswith("desfecho: "):
-        ft = fator_txt(fake)
-    else:
-        ft = f'{x(alvo)} <font color="#616e7c">(emergente)</font>'
-    rows.append([C(x(pr)), C(ft), C(str(cnt["aumenta"] or "")), C(str(cnt["reduz"] or "")),
-                 C(str(cnt["ambivalente"] or ""))])
-story.append(table(rows, [4.6 * cm, W - 4.6 * cm - 3 * 1.1 * cm, 1.1 * cm, 1.1 * cm, 1.1 * cm]))
+story.append(P("3. Os elos: prática × fator", S["h1"]))
+story.append(P("Cada linha liga uma prática de ESC a um fator do catálogo (ou a um fator emergente, ou direto a um "
+               "desfecho). ↑ aumenta, ↓ reduz, ↕ ambivalente; o número é a quantidade de artigos. A última "
+               "coluna dá os artigos e, entre colchetes, a força da evidência (D, I, F).", S["meta"]))
+pares = defaultdict(list)
+for a, e in efeitos:
+    pares[(e["pratica"], alvo(e))].append((a, e))
+rows = [[C("Prática", True), C("Fator", True), C("↑", True), C("↓", True), C("↕", True), C("Artigos", True)]]
+for (pr, al), lst in sorted(pares.items(), key=lambda kv: (kv[0][0], -len(kv[1]), kv[0][1])):
+    cnt = Counter(e["efeito"] for _, e in lst)
+    rows.append([C(x(pr)), C(fator_txt(lst[0][1])), C(str(cnt["aumenta"] or "")), C(str(cnt["reduz"] or "")),
+                 C(str(cnt["ambivalente"] or "")),
+                 C("; ".join(f'{cite_link(a)} [{EVID.get(e["evidencia"], "?")}]' for a, e in lst))])
+story.append(table(rows, [3.6 * cm, 4.6 * cm, 0.7 * cm, 0.7 * cm, 0.7 * cm, W - 10.3 * cm]))
+story.append(Spacer(1, 6))
+for nome, nota in NOME_NEUTRO.items():
+    story.append(P(f"* <b>{x(nome)}</b>: {nota}", S["meta"]))
+story.append(Spacer(1, 10))
+story.append(P("Por fator", S["h2"]))
+story.append(P("A mesma informação vista do lado dos fatores: quais práticas mexem em cada um.", S["meta"]))
+por_fator = defaultdict(list)
+for a, e in efeitos:
+    por_fator[alvo(e)].append((a, e))
+rows = [[C("Fator", True), C("Práticas que mexem nele", True)]]
+for al, lst in sorted(por_fator.items(), key=lambda kv: (-len(kv[1]), kv[0])):
+    sim = {"aumenta": "↑", "reduz": "↓", "ambivalente": "↕"}
+    pr = Counter(f'{e["pratica"]} {sim[e["efeito"]]}' for _, e in lst)
+    rows.append([C(fator_txt(lst[0][1])), C("; ".join(f"{x(k)}" + (f" ×{n}" if n > 1 else "") for k, n in pr.items()))])
+story.append(table(rows, [6.2 * cm, W - 6.2 * cm]))
 
 # 4. achados por prática
 story.append(PageBreak())
 story.append(P("4. Achados por prática", S["h1"]))
-story.append(P("O que cada abstract afirma, agrupado pela prática. O nome do artigo leva à ficha dele (seção 5).",
-               S["meta"]))
+story.append(P("Cada elo com o mecanismo e as condições segundo o artigo e a citação do texto completo. O nome do "
+               "artigo leva à ficha dele (seção 5).", S["meta"]))
 for pr in sorted(por_pratica, key=lambda k: (-len(por_pratica[k]), k)):
     lst = por_pratica[pr]
     head = [Spacer(1, 8), P(x(pr), S["h2"]),
@@ -327,48 +399,52 @@ for pr in sorted(por_pratica, key=lambda k: (-len(por_pratica[k]), k)):
               S["meta"])]
     blocks = []
     for a, e in sorted(lst, key=lambda ae: (ae[1].get("fator") or "~", ae[0]["year"])):
-        inner = [P(f'{EFEITO.get(e["efeito"], x(e["efeito"]))} {fator_txt(e)}', S["ev"]),
-                 P(f'<link href="#{anc("a-", a["key"])}" color="#1f2933"><b>{x(short_cite(a))}</b></link> — '
-                   f'{x(a["title"])}', S["refsub"]),
-                 P(f'<b>Mecanismo:</b> {x(fim(e.get("mecanismo")))}'
-                   + (f' <b>Condições:</b> {x(fim(e["condicoes"]))}' if e.get("condicoes") else ""), S["ev"]),
-                 P(f'<font color="#616e7c">Abstract: “{x(e.get("trecho"))}”</font>', S["ev"])]
-        bt = Table([[inner]], colWidths=[W])
-        bt.setStyle(TableStyle([("LEFTPADDING", (0, 0), (-1, -1), 0), ("TOPPADDING", (0, 0), (-1, -1), 4),
-                                ("BOTTOMPADDING", (0, 0), (-1, -1), 6), ("LINEBELOW", (0, 0), (-1, -1), 0.4, RULE)]))
-        blocks.append(bt)
+        blocks.append(linha([
+            P(f'{EFEITO.get(e["efeito"], x(e["efeito"]))} {fator_txt(e)}', S["ev"]),
+            P(f'{cite_link(a)} — {x(a["title"])}', S["refsub"]),
+            P(f'<b>Mecanismo:</b> {x(fim(e.get("mecanismo")))}'
+              + (f' <b>Condições:</b> {x(fim(e["condicoes"]))}' if e.get("condicoes") else "")
+              + f' <b>Evidência:</b> {x(e.get("evidencia"))}.', S["ev"]),
+            P(f'<font color="#616e7c">{x(e.get("trecho"))}</font>', S["ev"])]))
     story.append(KeepTogether(head + blocks[:1]))
     story += blocks[1:]
 
 # 5. fichas
 story.append(PageBreak())
-story.append(P("5. Artigos aprovados e “talvez”", S["h1"]))
-story.append(P("Uma ficha por artigo: o que ele estuda e conclui segundo o abstract, e os elos que afirma. "
-               "“Talvez” são artigos que tratam de pessoas e de ESC, mas cujo abstract não diz se há efeito: "
-               "precisam do texto completo.", S["meta"]))
-for grupo, lista in [("Aprovados", aprov), ("Talvez", talvez)]:
+story.append(P("5. Fichas dos artigos", S["h1"]))
+story.append(P("O que cada artigo estuda e conclui segundo o texto completo, e os elos que sustenta.", S["meta"]))
+for grupo, lista in [("Com elo prática → fator", com_efeito), ("Aprovados sem elo no texto", sem_efeito),
+                     ("Reprovados na leitura do texto completo", reprov_texto)]:
     story.append(P(f"{grupo} ({len(lista)})", S["h2"]))
     for a in sorted(lista, key=lambda a: (-int(a["year"] or 0), short_cite(a))):
-        el = a.get("elos", [])
-        resumo = [P(f'<a name="{anc("a-", a["key"])}"/><b>{x(short_cite(a))}</b> — {x(a["title"])}', S["ref"]),
-                  P(x(a.get("venue")), S["refsub"]), P(x(a.get("resumo")), S["ev"])]
+        lido = LIDOS[a["key"]]
+        fl = [P(f'<a name="{anc("a-", a["key"])}"/><b>{x(short_cite(a))}</b> — {x(a["title"])}', S["ref"]),
+              P(x(a.get("venue")), S["refsub"])]
+        if lido.get("motivo"):
+            fl.append(P(f'<b>Motivo:</b> {x(fim(lido["motivo"]))}', S["ev"]))
+        fl.append(P(x(lido.get("resumo")), S["ev"]))
+        el = [e for b, e in efeitos if b["key"] == a["key"]]
         if el:
-            resumo.append(P("; ".join(f'{x(e["pratica"])} {EFEITO.get(e["efeito"], "")} {fator_txt(e)}' for e in el),
-                            S["ev"]))
-        bt = Table([[resumo]], colWidths=[W])
-        bt.setStyle(TableStyle([("LEFTPADDING", (0, 0), (-1, -1), 0), ("TOPPADDING", (0, 0), (-1, -1), 4),
-                                ("BOTTOMPADDING", (0, 0), (-1, -1), 6), ("LINEBELOW", (0, 0), (-1, -1), 0.4, RULE)]))
-        story.append(bt)
+            fl.append(P("; ".join(f'{x(e["pratica"])} {EFEITO.get(e["efeito"], "")} {fator_txt(e)}' for e in el),
+                        S["ev"]))
+        story.append(linha(fl))
+story.append(P(f"Sem PDF ({len(SEM_PDF)})", S["h2"]))
+for k, m in SEM_PDF.items():
+    a = META[k]
+    story.append(linha([P(f'<a name="{anc("a-", k)}"/><b>{x(short_cite(a))}</b> — {x(a["title"])}', S["ref"]),
+                        P(f'{x(fim(m))} No abstract: {x(a.get("resumo"))}', S["ev"])]))
 
 # 6. snowballing
 sec = [a for a in reprov if a.get("motivo", "").startswith("secund") and a.get("resumo")]
 story.append(PageBreak())
 story.append(P("6. Para o <i>snowballing</i>", S["h1"]))
-story.append(P("Estudos secundários não entram na análise, mas os primários que eles resenham são candidatos ao "
-               "corpus. Somam-se a eles as quatro sementes que nenhuma string alcança e os trabalhos citados pelo "
-               "corpus da etapa 1.", S["body"]))
+story.append(P("Primários citados pelos artigos lidos que ligam ESC a pessoas, estudos secundários da busca 1, as "
+               "sementes que nenhuma string alcança e os trabalhos citados pelo corpus da etapa 1.", S["body"]))
 story.append(Spacer(1, 6))
-rows = [[C("Fonte", True), C("Por quê", True)]]
+rows = [[C("Fonte", True), C("Indicado por / por quê", True)]]
+for k, a in LIDOS.items():
+    for s in a.get("snowballing") or []:
+        rows.append([C(x(s.split(" — ")[0].split(" (")[0][:90])), C(f'{cite_link(META[k])}: {x(s)}')])
 for a in sec:
     rows.append([C(f'<b>{x(short_cite(a))}</b><br/>{x(a["title"])}'), C(x(a.get("resumo")))])
 for f, why in [
@@ -380,13 +456,14 @@ for f, why in [
      "resumo; nenhuma string as recupera"),
 ]:
     rows.append([C(f), C(why)])
-story.append(table(rows, [6 * cm, W - 6 * cm]))
+story.append(table(rows, [5.2 * cm, W - 5.2 * cm]))
 
 # 7. referências
 story.append(PageBreak())
-story.append(P("7. Referências (aprovados e “talvez”)", S["h1"]))
+story.append(P("7. Referências (candidatos da busca 1)", S["h1"]))
 for a in sorted(aprov + talvez, key=lambda a: ((surnames(a.get("author", "")) or [""])[0].lower(), a["year"])):
     story.append(P(full_ref(a), S["bib"]))
 
 doc.build(story)
-print("ok", args.out, "| aprovados", len(aprov), "talvez", len(talvez), "elos", n_elos)
+print("ok", args.out, "| lidos", len(LIDOS), "com elo", len(com_efeito), "elos", len(efeitos),
+      "sem PDF", len(SEM_PDF))

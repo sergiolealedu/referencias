@@ -262,8 +262,10 @@ python scripts/docs/achados-fatores-pdf.py
 Outro banco ou outra saída: `--db <caminho>\referencias.db --out <arquivo>.pdf`.
 Requer `reportlab` e as fontes Calibri do Windows.
 
-Para a etapa 2 (práticas de ESC × fatores), `docs/achados-esc-etapa2.pdf` sai
-da triagem dos abstracts gravada em `docs/esc/triagem-busca1.json`:
+Para a etapa 2 (práticas de ESC × fatores), `docs/achados-esc-etapa2.pdf` junta
+a triagem dos abstracts (`docs/esc/triagem-busca1.json`) e os elos prática → fator
+extraídos do texto completo (`docs/esc/efeitos-texto-busca1.json`, formato da
+skill `analise-esc-fatores`):
 
 ```powershell
 python scripts/docs/achados-esc-pdf.py
