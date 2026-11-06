@@ -265,7 +265,8 @@ Requer `reportlab` e as fontes Calibri do Windows.
 Para a etapa 2 (práticas de ESC × fatores), `docs/achados-esc-etapa2.pdf` junta
 a triagem dos abstracts (`docs/esc/triagem-busca1.json`) e os elos prática → fator
 extraídos do texto completo (`docs/esc/efeitos-texto-busca1.json`, formato da
-skill `analise-esc-fatores`):
+skill `analise-esc-fatores`). A descrição de cada prática, em linguagem de gestão,
+vem de `docs/esc/praticas-esc.json`:
 
 ```powershell
 python scripts/docs/achados-esc-pdf.py

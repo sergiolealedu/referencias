@@ -35,9 +35,12 @@ ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
 ap.add_argument("--dados", default=str(REPO / "docs" / "esc" / "triagem-busca1.json"))
 ap.add_argument("--efeitos", default=str(REPO / "docs" / "esc" / "efeitos-texto-busca1.json"))
 ap.add_argument("--out", default=str(REPO / "docs" / "achados-esc-etapa2.pdf"))
+ap.add_argument("--praticas", default=str(REPO / "docs" / "esc" / "praticas-esc.json"))
 args = ap.parse_args()
 D = json.loads(Path(args.dados).read_text(encoding="utf-8"))
 E = json.loads(Path(args.efeitos).read_text(encoding="utf-8"))
+PR = json.loads(Path(args.praticas).read_text(encoding="utf-8"))
+PRATICA = {p["nome"]: p for p in PR["praticas"]}
 
 F = "C:/Windows/Fonts/"
 pdfmetrics.registerFont(TTFont("Cal", F + "calibri.ttf"))
@@ -258,7 +261,7 @@ story.append(box(P(
     "<b>De onde vêm os elos.</b> Cada elo foi extraído do <b>texto completo</b> do artigo com as regras da skill "
     "<i>analise-esc-fatores</i>: só conta o que sai dos dados do próprio estudo; recomendação e trabalho citado "
     "não contam. Toda citação foi conferida por script contra o texto do PDF. "
-    f"<b>O que falta:</b> {len(SEM_PDF)} candidatos ficaram sem PDF (seção 5), a busca 2 (790 registros) ainda "
+    f"<b>O que falta:</b> {len(SEM_PDF)} candidatos ficaram sem PDF (seção 6), a busca 2 (790 registros) ainda "
     "não foi triada e os artigos ainda não estão no app.", S["body"]), bg=WARN, line=colors.HexColor("#c9a227")))
 story.append(Spacer(1, 10))
 for s in [
@@ -278,8 +281,36 @@ for s in [
     story += [P(s, S["body"]), Spacer(1, 6)]
 story.append(PageBreak())
 
-# 1. corpus da etapa 1 e piloto
-story.append(P("1. O que o corpus da etapa 1 já dizia", S["h1"]))
+# 1. as práticas em linguagem de gestão
+story.append(P("1. As práticas de Engenharia de Software Contínua", S["h1"]))
+story.append(P("Engenharia de Software Contínua (ESC) é o conjunto de práticas que encurtam o caminho entre escrever "
+               "software e colocá-lo nas mãos dos clientes, com automação e ciclos curtos — e que mudam também quem "
+               "opera o sistema, como as falhas são tratadas e como as decisões são tomadas. DevOps é o nome mais "
+               "conhecido desse movimento. Esta seção descreve cada prática do catálogo da pesquisa em linguagem não "
+               "técnica: o que é, como funciona no dia a dia e por que importa para quem trabalha. São descrições "
+               "gerais; o que os estudos encontraram está nas seções 4 e 5.", S["body"]))
+story.append(Spacer(1, 6))
+n_por_pratica = Counter(e["pratica"] for _, e in efeitos)
+for g in PR["grupos"]:
+    membros = [p for p in PR["praticas"] if p["grupo"] == g["nome"]]
+    story += [Spacer(1, 6), P(x(g["nome"]), S["h2"]), P(x(g["resumo"]), S["meta"])]
+    for p in membros:
+        n = n_por_pratica.get(p["nome"], 0)
+        nelos = (f"{n} elo{'s' if n != 1 else ''} nesta pesquisa — "
+                 f'<link href="#{anc("pr-", p["nome"])}" color="#1f4e79">ver achados</link>') if n else \
+            "sem elo nos artigos lidos até agora"
+        story.append(KeepTogether([
+            Spacer(1, 4),
+            P(f'<a name="{anc("pd-", p["nome"])}"/><b>{x(p["nome"])}</b> '
+              f'<font color="#616e7c">— {x(p["termos"])}</font>', S["ref"]),
+            P(f"<b>O que é.</b> {x(p['oQueE'])}", S["ev"]),
+            P(f"<b>Na prática.</b> {x(p['naPratica'])}", S["ev"]),
+            P(f"<b>Por que importa para as pessoas.</b> {x(p['paraAsPessoas'])}", S["ev"]),
+            P(nelos, S["refsub"]), Spacer(1, 3), HRFlowable(width="100%", thickness=0.4, color=RULE)]))
+story.append(PageBreak())
+
+# 2. corpus da etapa 1 e piloto
+story.append(P("2. O que o corpus da etapa 1 já dizia", S["h1"]))
 story.append(P("Varredura do texto completo dos 65 artigos com fatores: 37 não mencionam nenhuma prática de "
                "ESC, 22 só de passagem (referência, cargo do participante, nome de ferramenta) e 6 tocam no elo, "
                "sempre como evidência secundária.", S["body"]))
@@ -321,7 +352,7 @@ story.append(P("Cerqueira et al. (2024) e Trinkenreich et al. (2023): nenhum elo
 story.append(PageBreak())
 
 # 2. buscas e triagem
-story.append(P("2. Buscas, triagem e leitura", S["h1"]))
+story.append(P("3. Buscas, triagem e leitura", S["h1"]))
 rows = [[C("Busca", True), C("O que pega", True), C("Registros", True)],
         [C("1 — ESC × QVT", True), C("Práticas de ESC + termos de bem-estar <b>e dos fatores</b> (carga, pressão de "
                                        "prazo, interrupção, carga cognitiva, <i>toil</i>, horas de trabalho, "
@@ -361,7 +392,7 @@ story.append(table(rows, [5 * cm, 1.6 * cm, W - 6.6 * cm]))
 
 # 3. matriz prática × fator
 story.append(PageBreak())
-story.append(P("3. Os elos: prática × fator", S["h1"]))
+story.append(P("4. Os elos: prática × fator", S["h1"]))
 story.append(P("Cada linha liga uma prática de ESC a um fator do catálogo (ou a um fator emergente, ou direto a um "
                "desfecho). ↑ aumenta, ↓ reduz, ↕ ambivalente; o número é a quantidade de artigos. A última "
                "coluna dá os artigos e, entre colchetes, a força da evidência (D, I, F).", S["meta"]))
@@ -393,14 +424,22 @@ story.append(table(rows, [6.2 * cm, W - 6.2 * cm]))
 
 # 4. achados por prática
 story.append(PageBreak())
-story.append(P("4. Achados por prática", S["h1"]))
+story.append(P("5. Achados por prática", S["h1"]))
 story.append(P("Cada elo com o mecanismo e as condições segundo o artigo e a citação do texto completo. O nome do "
-               "artigo leva à ficha dele (seção 5).", S["meta"]))
+               "artigo leva à ficha dele (seção 6); o nome da prática, à descrição dela (seção 1).", S["meta"]))
 for pr in sorted(por_pratica, key=lambda k: (-len(por_pratica[k]), k)):
     lst = por_pratica[pr]
-    head = [Spacer(1, 8), P(x(pr), S["h2"]),
+    desc = PRATICA.get(pr)
+    head = [Spacer(1, 8),
+            P(f'<a name="{anc("pr-", pr)}"/>'
+              + (f'<link href="#{anc("pd-", pr)}" color="#1f2933">{x(pr)}</link>' if desc else x(pr)), S["h2"]),
             P(f"{len(lst)} elo{'s' if len(lst) != 1 else ''} em {len({a['key'] for a, _ in lst})} artigo(s)",
               S["meta"])]
+    if desc:
+        head.append(box(P(f"<b>O que é.</b> {x(desc['oQueE'])} "
+                          f'<link href="#{anc("pd-", pr)}" color="#1f4e79">Descrição completa na seção 1.</link>',
+                          S["ev"])))
+        head.append(Spacer(1, 4))
     blocks = []
     for a, e in sorted(lst, key=lambda ae: (ae[1].get("fator") or "~", ae[0]["year"])):
         fl = [P(f'{EFEITO.get(e["efeito"], x(e["efeito"]))} {fator_txt(e)}', S["ev"]),
@@ -429,7 +468,7 @@ for pr in sorted(por_pratica, key=lambda k: (-len(por_pratica[k]), k)):
 
 # 5. fichas
 story.append(PageBreak())
-story.append(P("5. Fichas dos artigos", S["h1"]))
+story.append(P("6. Fichas dos artigos", S["h1"]))
 story.append(P("O que cada artigo estuda e conclui segundo o texto completo, e os elos que sustenta.", S["meta"]))
 for grupo, lista in [("Com elo prática → fator", com_efeito), ("Aprovados sem elo no texto", sem_efeito),
                      ("Reprovados na leitura do texto completo", reprov_texto)]:
@@ -455,7 +494,7 @@ for k, m in SEM_PDF.items():
 # 6. snowballing
 sec = [a for a in reprov if a.get("motivo", "").startswith("secund") and a.get("resumo")]
 story.append(PageBreak())
-story.append(P("6. Para o <i>snowballing</i>", S["h1"]))
+story.append(P("7. Para o <i>snowballing</i>", S["h1"]))
 story.append(P("Primários citados pelos artigos lidos que ligam ESC a pessoas, estudos secundários da busca 1, as "
                "sementes que nenhuma string alcança e os trabalhos citados pelo corpus da etapa 1.", S["body"]))
 story.append(Spacer(1, 6))
@@ -478,7 +517,7 @@ story.append(table(rows, [5.2 * cm, W - 5.2 * cm]))
 
 # 7. referências
 story.append(PageBreak())
-story.append(P("7. Referências (candidatos da busca 1)", S["h1"]))
+story.append(P("8. Referências (candidatos da busca 1)", S["h1"]))
 for a in sorted(aprov + talvez, key=lambda a: ((surnames(a.get("author", "")) or [""])[0].lower(), a["year"])):
     story.append(P(full_ref(a), S["bib"]))
 
