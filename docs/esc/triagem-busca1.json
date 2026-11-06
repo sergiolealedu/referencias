@@ -1,0 +1,2453 @@
+{
+ "meta": {
+  "data": "2026-11-05",
+  "busca1": 187,
+  "busca2": 790,
+  "fonte": "triagem dos abstracts da busca 1 (Scopus), critérios da skill analise-esc-fatores"
+ },
+ "fatores": {
+  "Pressão por atualização": {
+   "categoria": "Tarefa e carga de trabalho",
+   "pos": 1,
+   "neg": 5
+  },
+  "Insegurança no emprego": {
+   "categoria": "Organizacional",
+   "pos": 1,
+   "neg": 5
+  },
+  "Mentoria": {
+   "categoria": "Equipe e relações",
+   "pos": 3,
+   "neg": 0
+  },
+  "Apoio do gestor": {
+   "categoria": "Organizacional",
+   "pos": 11,
+   "neg": 1
+  },
+  "Pressão de prazos": {
+   "categoria": "Tarefa e carga de trabalho",
+   "pos": 0,
+   "neg": 11
+  },
+  "Senso de realização": {
+   "categoria": "Tarefa e carga de trabalho",
+   "pos": 3,
+   "neg": 1
+  },
+  "Flexibilidade de horário": {
+   "categoria": "Tarefa e carga de trabalho",
+   "pos": 12,
+   "neg": 0
+  },
+  "Senso de propósito": {
+   "categoria": "Organizacional",
+   "pos": 3,
+   "neg": 0
+  },
+  "Inclusão e representatividade": {
+   "categoria": "Organizacional",
+   "pos": 5,
+   "neg": 0
+  },
+  "Ferramentas de IA para codificação": {
+   "categoria": "Técnico e ferramentas",
+   "pos": 4,
+   "neg": 1
+  },
+  "Imposição de ferramentas": {
+   "categoria": "Técnico e ferramentas",
+   "pos": 0,
+   "neg": 3
+  },
+  "Monitoramento no trabalho": {
+   "categoria": "Organizacional",
+   "pos": 2,
+   "neg": 2
+  },
+  "Competição no trabalho": {
+   "categoria": "Equipe e relações",
+   "pos": 0,
+   "neg": 2
+  },
+  "Carga de trabalho": {
+   "categoria": "Tarefa e carga de trabalho",
+   "pos": 0,
+   "neg": 10
+  },
+  "Relações no trabalho": {
+   "categoria": "Equipe e relações",
+   "pos": 23,
+   "neg": 2
+  },
+  "Iniciativas superficiais de bem-estar": {
+   "categoria": "Organizacional",
+   "pos": 0,
+   "neg": 3
+  },
+  "Conflito trabalho-família": {
+   "categoria": "Tarefa e carga de trabalho",
+   "pos": 0,
+   "neg": 8
+  },
+  "Ambiguidade de papel": {
+   "categoria": "Tarefa e carga de trabalho",
+   "pos": 0,
+   "neg": 4
+  },
+  "Conflito de papéis": {
+   "categoria": "Tarefa e carga de trabalho",
+   "pos": 0,
+   "neg": 1
+  },
+  "Interação com clientes": {
+   "categoria": "Processo de desenvolvimento",
+   "pos": 0,
+   "neg": 8
+  },
+  "Empatia no trabalho": {
+   "categoria": "Equipe e relações",
+   "pos": 4,
+   "neg": 0
+  },
+  "Segurança psicológica": {
+   "categoria": "Equipe e relações",
+   "pos": 8,
+   "neg": 1
+  },
+  "Fadiga por empatia": {
+   "categoria": "Equipe e relações",
+   "pos": 0,
+   "neg": 1
+  },
+  "Ergonomia visual": {
+   "categoria": "Técnico e ferramentas",
+   "pos": 1,
+   "neg": 0
+  },
+  "Alinhamento das práticas ágeis": {
+   "categoria": "Processo de desenvolvimento",
+   "pos": 1,
+   "neg": 0
+  },
+  "Carga cognitiva": {
+   "categoria": "Tarefa e carga de trabalho",
+   "pos": 0,
+   "neg": 2
+  },
+  "Interrupções no trabalho": {
+   "categoria": "Tarefa e carga de trabalho",
+   "pos": 0,
+   "neg": 9
+  },
+  "Gamificação no trabalho": {
+   "categoria": "Processo de desenvolvimento",
+   "pos": 0,
+   "neg": 1
+  },
+  "Desenho do trabalho": {
+   "categoria": "Tarefa e carga de trabalho",
+   "pos": 0,
+   "neg": 4
+  },
+  "Fenômeno do impostor": {
+   "categoria": "Individual",
+   "pos": 0,
+   "neg": 1
+  },
+  "Alinhamento do uso do tempo": {
+   "categoria": "Individual",
+   "pos": 4,
+   "neg": 1
+  },
+  "Manutenção do ambiente de desenvolvimento": {
+   "categoria": "Técnico e ferramentas",
+   "pos": 0,
+   "neg": 5
+  },
+  "Documentação interna": {
+   "categoria": "Técnico e ferramentas",
+   "pos": 4,
+   "neg": 1
+  },
+  "Suporte e treinamento de TI": {
+   "categoria": "Técnico e ferramentas",
+   "pos": 4,
+   "neg": 0
+  },
+  "Reconhecimento no trabalho": {
+   "categoria": "Organizacional",
+   "pos": 4,
+   "neg": 0
+  },
+  "Cultura autoritária": {
+   "categoria": "Organizacional",
+   "pos": 0,
+   "neg": 4
+  },
+  "Complexidade do código": {
+   "categoria": "Técnico e ferramentas",
+   "pos": 0,
+   "neg": 2
+  },
+  "Diversidade de competências": {
+   "categoria": "Equipe e relações",
+   "pos": 2,
+   "neg": 0
+  },
+  "Integração de novatos": {
+   "categoria": "Equipe e relações",
+   "pos": 3,
+   "neg": 0
+  },
+  "Práticas de mindfulness": {
+   "categoria": "Individual",
+   "pos": 4,
+   "neg": 0
+  },
+  "Qualidade dos requisitos": {
+   "categoria": "Técnico e ferramentas",
+   "pos": 1,
+   "neg": 0
+  },
+  "Dívida técnica": {
+   "categoria": "Técnico e ferramentas",
+   "pos": 0,
+   "neg": 2
+  },
+  "Conformidade e sigilo de dados": {
+   "categoria": "Organizacional",
+   "pos": 0,
+   "neg": 1
+  },
+  "Justiça organizacional": {
+   "categoria": "Organizacional",
+   "pos": 0,
+   "neg": 2
+  },
+  "Oportunidades de carreira": {
+   "categoria": "Organizacional",
+   "pos": 1,
+   "neg": 0
+  },
+  "Qualidade do sono": {
+   "categoria": "Individual",
+   "pos": 3,
+   "neg": 0
+  },
+  "Preparação organizacional para crises": {
+   "categoria": "Organizacional",
+   "pos": 1,
+   "neg": 0
+  },
+  "Treinamento de soft skills": {
+   "categoria": "Organizacional",
+   "pos": 1,
+   "neg": 0
+  },
+  "Adoção de métodos ágeis": {
+   "categoria": "Processo de desenvolvimento",
+   "pos": 0,
+   "neg": 1
+  },
+  "Silêncio organizacional": {
+   "categoria": "Organizacional",
+   "pos": 0,
+   "neg": 1
+  },
+  "Coping focado no problema": {
+   "categoria": "Individual",
+   "pos": 1,
+   "neg": 0
+  },
+  "Coping focado na emoção": {
+   "categoria": "Individual",
+   "pos": 0,
+   "neg": 1
+  },
+  "Cultura organizacional generativa": {
+   "categoria": "Organizacional",
+   "pos": 1,
+   "neg": 0
+  },
+  "Clima de aprendizagem": {
+   "categoria": "Organizacional",
+   "pos": 1,
+   "neg": 0
+  },
+  "Instabilidade da equipe": {
+   "categoria": "Equipe e relações",
+   "pos": 0,
+   "neg": 1
+  },
+  "Uso de substâncias psicoativas": {
+   "categoria": "Individual",
+   "pos": 1,
+   "neg": 0
+  },
+  "Estigma do uso de substâncias": {
+   "categoria": "Organizacional",
+   "pos": 0,
+   "neg": 1
+  },
+  "Política antidrogas": {
+   "categoria": "Organizacional",
+   "pos": 0,
+   "neg": 1
+  },
+  "Divulgação da neurodivergência": {
+   "categoria": "Individual",
+   "pos": 1,
+   "neg": 0
+  },
+  "Estigma da neurodivergência": {
+   "categoria": "Organizacional",
+   "pos": 0,
+   "neg": 1
+  },
+  "Acomodações para neurodivergência": {
+   "categoria": "Organizacional",
+   "pos": 1,
+   "neg": 0
+  },
+  "Contatos sociais fora do trabalho": {
+   "categoria": "Individual",
+   "pos": 1,
+   "neg": 0
+  },
+  "Comunicação de más notícias": {
+   "categoria": "Equipe e relações",
+   "pos": 0,
+   "neg": 1
+  },
+  "Estruturação do processo de trabalho": {
+   "categoria": "Processo de desenvolvimento",
+   "pos": 1,
+   "neg": 0
+  }
+ },
+ "artigos": [
+  {
+   "key": "Biege20261005",
+   "title": "SoK: A Taxonomy for Cybersecurity Incident Response Influence Factors",
+   "author": "Biege, Thomas and Brockhoff, Marius and Kaspereit, Jonas and Ising, Fabian and Gröber, Lea and Schinzel, Sebastian",
+   "year": "2026",
+   "venue": "Proceedings - 11th European Symposium on Security and Privacy, EuroS and P 2026",
+   "doi": "10.1109/EuroSP68448.2026.00068",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Dipple200864",
+   "title": "Fitness to work",
+   "author": "Dipple, John and Marcial, Lilian",
+   "year": "2008",
+   "venue": "Society of Petroleum Engineers - SPE Middle East Health, Safety, Security and Environment Conference and Exhibition 2008 - Strengthening Sustainable Practices and Regulations",
+   "doi": "",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Ferazza2026411",
+   "title": "Socio-technical Friction: An Emergent Grounded Theory of DevSecOps Challenges",
+   "author": "Ferazza, Francesco and Mersinas, Konstantinos",
+   "year": "2026",
+   "venue": "Lecture Notes in Computer Science",
+   "doi": "10.1007/978-3-032-20018-1_22",
+   "veredito": "aprovado",
+   "resumo": "Teoria fundamentada com 18 entrevistas (9 gestores de cibersegurança e 9 engenheiros de software) sobre os obstáculos à adoção de DevSecOps. Conclui que os engenheiros vivem as iniciativas de segurança como disruptivas, ineficientes e prejudiciais à sua experiência de desenvolvedor, e que o desalinhamento sociotécnico (prioridades desalinhadas, comunicação quebrada) gera atrito.",
+   "elos": [
+    {
+     "pratica": "DevSecOps",
+     "fator": null,
+     "desfecho": "experiência do desenvolvedor (DevEx) prejudicada",
+     "efeito": "aumenta",
+     "mecanismo": "os esforços de segurança do DevSecOps são vividos pelos engenheiros como disruptivos e ineficientes no trabalho diário",
+     "condicoes": "iniciativas que tratam os sistemas social e técnico separadamente, com prioridades desalinhadas entre gestores e engenheiros e sem soluções desenhadas em conjunto",
+     "trecho": "engineers frequently experienced security efforts as disruptive, inefficient, and detrimental to their developer experience (DevEx)"
+    }
+   ]
+  },
+  {
+   "key": "Itkonen2016",
+   "title": "Perceived Benefits of Adopting Continuous Delivery Practices",
+   "author": "Itkonen, Juha and Udd, Raoul and Lassenius, Casper and Lehtonen, Timo",
+   "year": "2016",
+   "venue": "International Symposium on Empirical Software Engineering and Measurement",
+   "doi": "10.1145/2961111.2962627",
+   "veredito": "aprovado",
+   "resumo": "Estudo de caso exploratório, com entrevistas semiestruturadas, numa organização cliente-fornecedor ao longo de cinco anos de transição para entrega contínua. Os benefícios percebidos incluem mais comunicação e colaboração entre desenvolvedores e cliente e melhora do moral dos desenvolvedores, além de produtividade e qualidade.",
+   "elos": [
+    {
+     "pratica": "Entrega contínua",
+     "fator": "Interação com clientes",
+     "efeito": "aumenta",
+     "mecanismo": "a adoção de entrega contínua aumentou a comunicação e a colaboração entre desenvolvedores e cliente",
+     "condicoes": "organização cliente-fornecedor, em transição de cinco anos",
+     "trecho": "Increased communication and collaboration between developers and customer was perceived as one of the core benefits."
+    },
+    {
+     "pratica": "Entrega contínua",
+     "fator": null,
+     "desfecho": "moral dos desenvolvedores",
+     "efeito": "aumenta",
+     "mecanismo": "a adoção de práticas de entrega contínua foi percebida como melhorando o moral dos desenvolvedores; o abstract não diz por qual via",
+     "condicoes": "organização cliente-fornecedor, em transição de cinco anos",
+     "trecho": "improved developer morale"
+    }
+   ]
+  },
+  {
+   "key": "Nechkoska2026237",
+   "title": "Co-creation Clusters Across the Western Balkans’ Higher Education Ecosystems, Place-Based and Enabled by Digitalization",
+   "author": "Nechkoska, Renata Petrevska and Petkoska, Marija Midovska and Kacani, Jolta",
+   "year": "2026",
+   "venue": "Engineering Cyber-Physical Systems and Critical Infrastructures",
+   "doi": "10.1007/978-3-032-18275-3_9",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Akbar2024528",
+   "title": "Towards People Maturity for Secure Development and Operations: A vision",
+   "author": "Akbar, Muhammad Azeem and Rafi, Saima and Hyrynsalmi, Sami and Khan, Arif Ali",
+   "year": "2024",
+   "venue": "ACM International Conference Proceeding Series",
+   "doi": "10.1145/3661167.3661238",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Lopukhovych2026240",
+   "title": "Mathematical Modelling of the Impact of Developer Experience Metrics on the Duration of the Release Cycle in Full-Stack Projects",
+   "author": "Lopukhovych, Volodymyr and Martynenko, Roman and Poltavskyi, Dmytro and Sypiahin, Oleksandr and Sypiahin, Oleh",
+   "year": "2026",
+   "venue": "VFAST Transactions on Software Engineering",
+   "doi": "10.21015/vtse.v14i1.2300",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Souza2017459",
+   "title": "Sentiment Analysis of Travis CI Builds",
+   "author": "Souza, Rodrigo and Silva, Bruno",
+   "year": "2017",
+   "venue": "IEEE International Working Conference on Mining Software Repositories",
+   "doi": "10.1109/MSR.2017.27",
+   "veredito": "aprovado",
+   "resumo": "Estudo de mineração de repositórios sobre builds do Travis CI e os commits correspondentes, analisando o sentimento dos desenvolvedores. Conclui que o sentimento negativo afeta e é afetado pelo resultado do build (quebra), com influência pequena, e que os desenvolvedores tendem a ser mais positivos ao escrever sobre o servidor de CI.",
+   "elos": [
+    {
+     "pratica": "Integração contínua",
+     "fator": null,
+     "desfecho": "sentimento negativo",
+     "efeito": "aumenta",
+     "mecanismo": "a quebra do build no servidor de CI está associada a sentimento negativo nos commits, numa relação de mão dupla",
+     "condicoes": "quando o build quebra; a influência observada é pequena",
+     "trecho": "We found evidence that negative sentiment both affects and is affected by the result of the build process, although the influence seems to be small."
+    }
+   ]
+  },
+  {
+   "key": "Alenljung20263",
+   "title": "A Digital Simulation System for Cross-Organizational First Responders’ Training in Risk Management",
+   "author": "Alenljung, Beatrice and Backlund, Per and Bankler, Victor and Susi, Tarja and van Laere, Joeri",
+   "year": "2026",
+   "venue": "Lecture Notes in Computer Science",
+   "doi": "10.1007/978-3-032-30405-6_1",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Banse2025",
+   "title": "Cross-sectional survey of rural and nonrural veterinarians indicates similarities in intent to stay or leave practice and differences in community attachment and satisfaction",
+   "author": "Banse, Heidi E. and Hunter, Anjel Stough and Althouse, Gary and Anderson, Stacy and Boudreaux, Bonnie and Chaney, Kristin and Garden, Oliver A. and Navarre, Christine and Roush, James K. and Schleining, Jennifer A. and Seneca, Eric and Shivley, Jake and Ward, Jessica and Raczkoski, Brandon",
+   "year": "2025",
+   "venue": "Journal of the American Veterinary Medical Association",
+   "doi": "10.2460/javma.24.08.0513",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Dehghani2023267",
+   "title": "A knowledge management-driven and DevOps-based method for situational method engineering",
+   "author": "Dehghani, Razieh and Ramsin, Raman",
+   "year": "2023",
+   "venue": "Information Technology and Management",
+   "doi": "10.1007/s10799-023-00386-y",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Paduraru20252205",
+   "title": "Semantic Feedback Processing with LLMs: Automating Issue Detection and Prioritization in DevOps",
+   "author": "Paduraru, Ciprian and Zavelca, Miruna and Stefanescu, Alin",
+   "year": "2025",
+   "venue": "Procedia Computer Science",
+   "doi": "10.1016/j.procs.2025.09.341",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Pérez-Sánchez2024314",
+   "title": "A Taxonomy on Human Factors that Affect DevOps Adoption",
+   "author": "Pérez-Sánchez, Juanjo and Rafi, Saima and Carrillo de Gea, Juan Manuel and Nicolás Ros, Joaquín and Fernández Alemán, José Luis",
+   "year": "2024",
+   "venue": "Lecture Notes in Networks and Systems",
+   "doi": "10.1007/978-3-031-60221-4_31",
+   "veredito": "reprovado",
+   "motivo": "secundário",
+   "resumo": "Mapeamento sistemático (21 estudos) que cria uma taxonomia de 59 fatores humanos que afetam a adoção de DevOps, com foco em cultura. A direção é pessoas → adoção, não prática → pessoas; candidato a snowballing pelos primários que tratam de cultura e fatores humanos em DevOps."
+  },
+  {
+   "key": "Gillooly2022762",
+   "title": "“Lights and Sirens”: Variation in 911 Call-Taker Risk Appraisal and its Effects on Police Officer Perceptions at the Scene",
+   "author": "Gillooly, Jessica W.",
+   "year": "2022",
+   "venue": "Journal of Policy Analysis and Management",
+   "doi": "10.1002/pam.22369",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Kulas2014",
+   "title": "Practical experience with test-driven development during commissioning of the multi-star AO system ARGOS",
+   "author": "Kulas, M. and Borelli, Jose Luis and Gäsler, Wolfgang and Peter, Diethard and Rabien, Sebastian and Orban De Xivry, Gilles and Busoni, Lorenzo and Bonaglia, Marco and Mazzoni, Tommaso and Rahmer, Gustavo",
+   "year": "2014",
+   "venue": "Proceedings of SPIE - The International Society for Optical Engineering",
+   "doi": "10.1117/12.2056218",
+   "veredito": "talvez",
+   "resumo": "Relato de experiência do uso de TDD, programação em par e integração contínua por engenheiros de software durante o comissionamento do sistema ARGOS, fase de pressão de tempo e estresse. O abstract diz que a equipe conseguiu manter o TDD sob pressão, mas não traz resultados sobre o efeito da integração contínua sobre as pessoas.",
+   "elos": []
+  },
+  {
+   "key": "Boone2022287",
+   "title": "Fixing Continuous Integration Tests From Within the IDE With Contextual Information",
+   "author": "Boone, Casper and Brandt, Carolin and Zaidman, Andy",
+   "year": "2022",
+   "venue": "IEEE International Conference on Program Comprehension",
+   "doi": "10.1145/3524610.3527908",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Nixon2026195",
+   "title": "Unified NL Interface for Automating System Commands and Advanced Dev Ops Tasks",
+   "author": "Nixon, Dwayne and Menezes, Shaun and Kulkarni, Ramya and Shaikh, Dr. Phiroj",
+   "year": "2026",
+   "venue": "Lecture Notes in Networks and Systems",
+   "doi": "10.1007/978-3-032-06700-5_20",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Slater2023183",
+   "title": "Mentoring the Wellbeing of Specialist Pediatric Palliative Care Medical and Nursing Trainees: The Quality of Care Collaborative Australia",
+   "author": "Slater, Penelope J. and Herbert, Anthony R.",
+   "year": "2023",
+   "venue": "Advances in Medical Education and Practice",
+   "doi": "10.2147/AMEP.S393052",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Alaiyed20204418",
+   "title": "Venlafaxine stimulates an MMP-9-dependent increase in excitatory/inhibitory balance in a stress model of depression",
+   "author": "Alaiyed, Seham and McCann, Mondona and Mahajan, Gouri and Rajkowska, Grazyna and Stockmeier, Craig A. and Kellar, Kenneth J. and Wu, Jian Young and Conant, Katherine",
+   "year": "2020",
+   "venue": "Journal of Neuroscience",
+   "doi": "10.1523/JNEUROSCI.2387-19.2020",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Yu20201225",
+   "title": "A Novel Developer Portrait Model based on Bert-Capsule Network",
+   "author": "Yu, Pengyu and Wu, Yirui and Wu, Benze",
+   "year": "2020",
+   "venue": "Proceedings - 2020 IEEE 22nd International Conference on High Performance Computing and Communications, IEEE 18th International Conference on Smart City and IEEE 6th International Conference on Data Science and Systems, HPCC-SmartCity-DSS 2020",
+   "doi": "10.1109/HPCC-SmartCity-DSS50907.2020.00158",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Steinberg20221897",
+   "title": "HUMAN FACTORS AT THE SPEED OF RELEVANCE FOR AGILE ENGINEERING",
+   "author": "Steinberg, Richard",
+   "year": "2022",
+   "venue": "Proceedings of the Human Factors and Ergonomics Society",
+   "doi": "10.1177/1071181322661268",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Seth2016",
+   "title": "ACI (automated Continuous Integration) using Jenkins: Key for successful embedded Software development",
+   "author": "Seth, Nikita and Khare, Rishi",
+   "year": "2016",
+   "venue": "2015 2nd International Conference on Recent Advances in Engineering and Computational Sciences, RAECS 2015",
+   "doi": "10.1109/RAECS.2015.7453279",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Ryan202437",
+   "title": "Training Developers to Code Securely: Theory and Practice",
+   "author": "Ryan, Ita and Roedig, Utz and Stol, Klaas-Jan",
+   "year": "2024",
+   "venue": "Proceedings - 2024 IEEE/ACM 4th International Workshop on Engineering and Cybersecurity of Critical Systems and 2024 IEEE/ACM 2nd International Workshop on Software Vulnerability, EnCyCriS/SVM 2024",
+   "doi": "10.1145/3643662.3643956",
+   "veredito": "reprovado",
+   "motivo": "sem elo"
+  },
+  {
+   "key": "Tim2017",
+   "title": "Continuous integration processes for modern client-side web applications",
+   "author": "Tim, Ratha and Tanachutiwat, Sansiri and Vukadinovic, Marko and Schlebusch, Heinz-Josef and Lichter, Horst",
+   "year": "2017",
+   "venue": "2017 International Electrical Engineering Congress, iEECON 2017",
+   "doi": "10.1109/IEECON.2017.8075805",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Waseem2026",
+   "title": "Understanding the issues, their causes and solutions in microservices systems: An empirical study",
+   "author": "Waseem, Muhammad and Liang, Peng and Ahmad, Aakash and Khan, Arif Ali and Shahin, Mojtaba and Nasab, Ali Rezaei and Mikkonen, Tommi and Abrahamsson, Pekka",
+   "year": "2026",
+   "venue": "Journal of Systems and Software",
+   "doi": "10.1016/j.jss.2026.112828",
+   "veredito": "reprovado",
+   "motivo": "sem pessoas"
+  },
+  {
+   "key": "Bolling2023",
+   "title": "Viewing DevOps Security Processes through An Applied Cyberpsychology Lens",
+   "author": "Bolling, Tammie and Lennon, Ruth G.",
+   "year": "2023",
+   "venue": "2023 Cyber Research Conference - Ireland, Cyber-RCI 2023",
+   "doi": "10.1109/Cyber-RCI59474.2023.10671453",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Lai2015386",
+   "title": "Applying Continuous Integration for Reducing Web Applications Development Risks",
+   "author": "Lai, Sen-Tarng and Leu, Fang-Yie",
+   "year": "2015",
+   "venue": "Proceedings - 2015 10th International Conference on Broadband and Wireless Computing, Communication and Applications, BWCCA 2015",
+   "doi": "10.1109/BWCCA.2015.54",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Kuzmych202656",
+   "title": "DEVELOPMENT OF A METHOD FOR AUTOMATED INTEGRATION OF THE “PENTAGON” TESTING MODEL INTO A CONTINUOUS INTEGRATION AND DELIVERY PIPELINE FOR MICROSERVICE SOFTWARE",
+   "author": "Kuzmych, Oleh and Seniv, Maksym",
+   "year": "2026",
+   "venue": "Eastern-European Journal of Enterprise Technologies",
+   "doi": "10.15587/1729-4061.2026.360693",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Kavitha2026285",
+   "title": "Agile Software Development: DevOps, SRE, and VSM Practices & Tools",
+   "author": "Kavitha, K.",
+   "year": "2026",
+   "venue": "Advances in Computers",
+   "doi": "10.1016/bs.adcom.2025.06.011",
+   "veredito": "reprovado",
+   "motivo": "sem pessoas"
+  },
+  {
+   "key": "Bayer20241",
+   "title": "How Metamodeling Concepts Improve Internal Developer Platforms and Cloud Platforms to Foster Business Agility",
+   "author": "Bayer, Franz",
+   "year": "2024",
+   "venue": "Metamodeling: Applications and Trajectories to the Future: Essays in Honor of Dimitris Karagiannis",
+   "doi": "10.1007/978-3-031-56862-6_1",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Hesketh2024117",
+   "title": "Developing resilience interventions for emergency service responders—a view from the field",
+   "author": "Hesketh, Ian and Tehrani, Noreen",
+   "year": "2024",
+   "venue": "Public Money and Management",
+   "doi": "10.1080/09540962.2022.2141876",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Kassab20261643",
+   "title": "The Emotional Cost of Technical Debt: Quantifying Developer Frustration Across Debt-Related Concern Themes",
+   "author": "Kassab, Mohamad and Sohail, Izah and Fernandes, João Paulo",
+   "year": "2026",
+   "venue": "FSE Companion 2026 - Proceedings of the 34th ACM International Conference on the Foundations of Software Engineering",
+   "doi": "10.1145/3803437.3805542",
+   "veredito": "aprovado",
+   "resumo": "Análise de mais de 73 mil comentários de issues de três projetos Apache (Hadoop, Kafka, Flink), com mineração de dívida técnica, LDA e classificação de emoções, propondo o Negative Emotion Index. Conclui que preocupações operacionais e de infraestrutura, como integração contínua instável (flaky) e implantação instável, se associam a intensidade emocional negativa sistematicamente maior que as de implementação.",
+   "elos": [
+    {
+     "pratica": "Pipeline de CI/CD",
+     "fator": null,
+     "desfecho": "frustração (intensidade emocional negativa)",
+     "efeito": "aumenta",
+     "mecanismo": "problemas de integração contínua instável (flaky) e de implantação instável aparecem nos comentários com mais emoção negativa que problemas de implementação",
+     "condicoes": "quando a integração contínua é instável (flaky) e a implantação é instável; associação observada em comentários de issues de projetos Apache",
+     "trecho": "We find that operational and infrastructure-oriented concerns - such as flaky continuous integration, configuration complexity, and deployment instability - are associated with systematically higher negative emotional intensity than implementation-level and API usability concerns."
+    }
+   ]
+  },
+  {
+   "key": "Allen2025",
+   "title": "Cyber Security Response Plans Through the Lens of Critical Task Analysis",
+   "author": "Allen, David and Flower, Chris",
+   "year": "2025",
+   "venue": "Institution of Chemical Engineers Symposium Series",
+   "doi": "",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Vasilieva2022361",
+   "title": "Research on the Level of Soft Skills of the Digital Generation",
+   "author": "Vasilieva, Elena",
+   "year": "2022",
+   "venue": "Lecture Notes in Information Systems and Organisation",
+   "doi": "10.1007/978-3-030-94252-6_27",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Gummadi2026",
+   "title": "Service Level Objective (SLO) Observability with Splunk and Dynatrace in Microservices",
+   "author": "Gummadi, Venkata Pavan Kumar and Chilamkurthi, Lakshmi Sujatha and Kavuri, Srikanth",
+   "year": "2026",
+   "venue": "2026 International Conference on Artificial Intelligence, Systems, and Emerging Technologies, ICAISET 2026",
+   "doi": "10.1109/ICAISET66439.2026.11541542",
+   "veredito": "talvez",
+   "resumo": "Artigo sobre observabilidade centrada em SLO com plataformas de mercado em microsserviços, discutindo fundamentos, desafios de integração e boas práticas. Afirma que aplicações de SLO reduziram a fadiga de alertas, mas parece ilustrativo e não descreve método nem amostra; precisa do texto completo para saber se há evidência sobre as pessoas.",
+   "elos": [
+    {
+     "pratica": "Monitoramento e observabilidade",
+     "fator": "Fadiga de alertas",
+     "fatorEmergente": true,
+     "categoria": "Tarefa e carga de trabalho",
+     "efeito": "reduz",
+     "mecanismo": "monitoramento baseado em SLO, alinhado à experiência real do usuário, reduz a fadiga de alertas em comparação com limiares estáticos genéricos",
+     "condicoes": "observabilidade centrada em SLO em vez de monitoramento de uptime e limiares estáticos genéricos",
+     "trecho": "The paper illustrates successful applications of SLO frameworks in reducing alert fatigue, improving mean time to resolution, and enhancing cross-team accountability"
+    }
+   ]
+  },
+  {
+   "key": "Babur2026",
+   "title": "Process mining for agile development of farm management information systems",
+   "author": "Babur, Önder and Frisch, Malte and Verdouw, Cor",
+   "year": "2026",
+   "venue": "Smart Agricultural Technology",
+   "doi": "10.1016/j.atech.2026.102653",
+   "veredito": "reprovado",
+   "motivo": "sem pessoas"
+  },
+  {
+   "key": "Kafoe20262505",
+   "title": "\"making Our Life Less Monotonous\" or \"just Tick Things Off\": An Exploratory Multi-Method Study of Toil",
+   "author": "Kafoe, Tom and Ochoa, Lina and Siravuru, Sharath and Serebrenik, Alexander",
+   "year": "2026",
+   "venue": "Proceedings - 2026 IEEE/ACM 48th International Conference on Software Engineering, ICSE 2026",
+   "doi": "10.1145/3744916.3764540",
+   "veredito": "aprovado",
+   "resumo": "Estudo multimétodo sobre toil em SRE: análise de literatura cinzenta e entrevistas semiestruturadas no ING Group. Conclui que os praticantes veem o toil negativamente, inclusive pelo impacto na moral das equipes, e que a eliminação do toil é elogiada, mas enfrenta resistência, entre outros motivos pelo possível impacto negativo sobre quem trabalha predominantemente com toil.",
+   "elos": [
+    {
+     "pratica": "Site Reliability Engineering",
+     "fator": null,
+     "desfecho": "moral dos engenheiros",
+     "efeito": "ambivalente",
+     "mecanismo": "o toil da operação de serviços em produção é visto como prejudicial à moral, e sua eliminação é elogiada, mas pode afetar negativamente quem trabalha predominantemente com toil",
+     "condicoes": "a eliminação do toil favorece a moral em geral; para funcionários cujo trabalho é predominantemente toil, a eliminação pode ter impacto negativo",
+     "trecho": "Practitioners generally view toil negatively, citing its impact on organisations' growth, teams' efficiency, and morale. However, while toil elimination is generally praised, we also observe resistance stemming from concerns over cost, complexity, and the possible negative impact this elimination can have on employees predominantly working on toil."
+    }
+   ]
+  },
+  {
+   "key": "Claes2017243",
+   "title": "Abnormal Working Hours: Effect of Rapid Releases and Implications to Work Content",
+   "author": "Claes, Maelick and Mantyla, Mika and Kuutila, Miikka and Adams, Bram",
+   "year": "2017",
+   "venue": "IEEE International Working Conference on Mining Software Repositories",
+   "doi": "10.1109/MSR.2017.3",
+   "veredito": "aprovado",
+   "resumo": "Mineração de repositórios do Mozilla Firefox (e comparação com o Firefox OS) para estudar padrões de horário de trabalho antes e depois da mudança para ciclo de releases rápidas. Conclui que a mudança reduziu o trabalho em fins de semana e à noite, também entre os contratados da Mozilla (com efeitos menores), sugerindo impacto positivo no equilíbrio entre trabalho e vida pessoal.",
+   "elos": [
+    {
+     "pratica": "Releases frequentes",
+     "fator": "Conflito trabalho-família",
+     "efeito": "reduz",
+     "mecanismo": "a passagem para releases rápidas reduziu a atividade de desenvolvimento nos fins de semana e à noite",
+     "condicoes": "projeto Mozilla Firefox; o efeito é menor considerando só os contratados da Mozilla (d = 0.64 em fins de semana e 0.23 à noite); dados quantitativos de uma só organização",
+     "trecho": "We find that switching to rapid releases has reduced weekend work (Cohen's d = 1.43) and working during the night (Cohen's d = 0.45)."
+    }
+   ]
+  },
+  {
+   "key": "Swierc2026",
+   "title": "A Hybrid Approach to Optimizing Build and Test Time: Marginal and Concurrent Delay Analysis",
+   "author": "Swierc, Stanislaw and Yost, Scott and Villa, Ben",
+   "year": "2026",
+   "venue": "Proceedings - 2026 IEEE International Conference on Software Testing, Verification and Validation Workshops, ICSTW 2026",
+   "doi": "10.1109/ICSTW72326.2026.00059",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Bogatinovski202395",
+   "title": "Auto-Logging: AI-centred Logging Instrumentation",
+   "author": "Bogatinovski, Jasmin and Kao, Odej",
+   "year": "2023",
+   "venue": "Proceedings - International Conference on Software Engineering",
+   "doi": "10.1109/ICSE-NIER58687.2023.00023",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Locke2023454",
+   "title": "QEX: Automated Testing Observability and QA Developer Experience Framework",
+   "author": "Locke, Huang Luohua and Keshia, Yap Kai Ting and Yu, Joseph Chu Ken and Chua, Hock Yao",
+   "year": "2023",
+   "venue": "Proceedings - 2023 IEEE 16th International Conference on Software Testing, Verification and Validation, ICST 2023",
+   "doi": "10.1109/ICST57152.2023.00049",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Stone2026126",
+   "title": "Toward a Multi-Agent System for Reliable Mocking of Static Methods and Continuous Integration",
+   "author": "Stone, Jasper",
+   "year": "2026",
+   "venue": "Proceedings - 2026 IEEE/ACM 48th International Conference on Software Engineering: Companion Proceedings, ICSE-Companion 2026",
+   "doi": "10.1145/3774748.3787622",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Bartram2009164",
+   "title": "The mental health of the UK veterinary profession how do farm animal practitioners fare?",
+   "author": "Bartram, D.J.",
+   "year": "2009",
+   "venue": "Cattle Practice",
+   "doi": "",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Handri2024108835",
+   "title": "Developing an Agile Cybersecurity Framework With Organizational Culture Approach Using Q Methodology",
+   "author": "Handri, Eko Yon and Indra Sensuse, Dana and Tarigan, Avinanta",
+   "year": "2024",
+   "venue": "IEEE Access",
+   "doi": "10.1109/ACCESS.2024.3432160",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Hemon-Hildgen2020474",
+   "title": "Orchestrating automation and sharing in DevOps teams: a revelatory case of job satisfaction factors, risk and work conditions",
+   "author": "Hemon-Hildgen, Aymeric and Rowe, Frantz and Monnier-Senicourt, Laetitia",
+   "year": "2020",
+   "venue": "European Journal of Information Systems",
+   "doi": "10.1080/0960085X.2020.1782276",
+   "veredito": "aprovado",
+   "resumo": "Estudo de caso com 59 funcionários de 12 times ágeis e DevOps de uma mesma empresa, à luz das teorias de características do trabalho e de Herzberg. Conclui que DevOps dá mais satisfação no trabalho que o ágil sozinho, mas amplifica riscos e exige orquestrar automação e compartilhamento, a depender das condições de trabalho.",
+   "elos": [
+    {
+     "pratica": "ESC/DevOps em geral",
+     "fator": null,
+     "desfecho": "satisfação no trabalho",
+     "efeito": "aumenta",
+     "mecanismo": "times DevOps relatam mais satisfação no trabalho que times apenas ágeis; o abstract liga isso à orquestração entre automação e compartilhamento",
+     "condicoes": "comparação com times só ágeis na mesma empresa; a melhora depende de orquestrar as interações entre automação, compartilhamento e riscos, contingente às condições de trabalho",
+     "trecho": "Findings show that DevOps provides greater job satisfaction than agile alone."
+    }
+   ]
+  },
+  {
+   "key": "Lunde202040",
+   "title": "Continuous practices and technical debt: A systematic literature review",
+   "author": "Lunde, Bjorn Arild and Colomo-Palacios, Ricardo",
+   "year": "2020",
+   "venue": "Proceedings - 2020 20th International Conference on Computational Science and Its Applications, ICCSA 2020",
+   "doi": "10.1109/ICCSA50381.2020.00018",
+   "veredito": "reprovado",
+   "motivo": "secundário",
+   "resumo": "Revisão sistemática sobre como práticas contínuas e DevOps afetam a dívida técnica (fator do catálogo), com impactos positivos e negativos; conclui que podem reduzi-la se bem aplicadas. Não trata de pessoas diretamente, mas os primários sobre práticas contínuas e dívida técnica podem servir ao snowballing."
+  },
+  {
+   "key": "Chatley20198",
+   "title": "Supporting the developer experience with production metrics",
+   "author": "Chatley, Robert",
+   "year": "2019",
+   "venue": "Proceedings - 2019 IEEE/ACM Joint 4th International Workshop on Rapid Continuous Software Engineering and 1st International Workshop on Data-Driven Decisions, Experimentation and Evolution, RCoSE/DDrEE 2019",
+   "doi": "10.1109/RCoSE/DDrEE.2019.00009",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Zimmermann2017301",
+   "title": "Microservices tenets: Agile approach to service development and deployment",
+   "author": "Zimmermann, Olaf",
+   "year": "2017",
+   "venue": "Computer Science - Research and Development",
+   "doi": "10.1007/s00450-016-0337-0",
+   "veredito": "reprovado",
+   "motivo": "secundário",
+   "resumo": "Artigo de visão geral que revisa introduções populares a microsserviços e os compara com SOA; afirma que microsserviços e os paradigmas associados (inclusive a abordagem DevOps contínua) aumentam a carga cognitiva dos arquitetos. Não é estudo primário e o efeito é atribuído a microsserviços, não a uma prática de ESC."
+  },
+  {
+   "key": "Verner20081",
+   "title": "Quality software development: What do we need to improve in the software development process?",
+   "author": "Verner, June M.",
+   "year": "2008",
+   "venue": "Proceedings - International Conference on Software Engineering",
+   "doi": "10.1145/1370099.1370100",
+   "veredito": "reprovado",
+   "motivo": "sem elo"
+  },
+  {
+   "key": "Fluri2024",
+   "title": "On the importance of CI/CD practices for database applications",
+   "author": "Fluri, Jasmin and Fornari, Fabrizio and Pustulka, Ela",
+   "year": "2024",
+   "venue": "Journal of Software: Evolution and Process",
+   "doi": "10.1002/smr.2720",
+   "veredito": "aprovado",
+   "resumo": "Revisão sinóptica e proposta de um pipeline genérico de CI/CD para aplicações de banco de dados, aplicado em três casos industriais com medições e entrevistas com desenvolvedores antes e depois. Conclui que o CI/CD reduziu falhas de implantação e aumentou o número de implantações, e que trouxe benefícios claros à equipe, como redução da carga cognitiva.",
+   "elos": [
+    {
+     "pratica": "Pipeline de CI/CD",
+     "fator": "Carga cognitiva",
+     "efeito": "reduz",
+     "mecanismo": "a automação de integração e implantação pelo pipeline reduziu a carga cognitiva da equipe, segundo entrevistas antes e depois da implantação",
+     "condicoes": "desenvolvimento de aplicações de banco de dados, em três casos industriais",
+     "trecho": "Interviews with the developers before and after the implementation of the CI/CD show that the pipeline brings clear benefits to the development team (i.e., a reduced cognitive load)."
+    }
+   ]
+  },
+  {
+   "key": "Lykousas2025431",
+   "title": "The Potential of LLM-Generated Reports in DevSecOps",
+   "author": "Lykousas, Nikolaos and Argyropoulos, Vasileios and Casino, Fran",
+   "year": "2025",
+   "venue": "Learning and Analytics in Intelligent Systems",
+   "doi": "10.1007/978-3-031-98410-5_27",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Ismail202587",
+   "title": "AI-Driven Automation for Transforming the Future of Software Development",
+   "author": "Ismail, Laith S. and Jamil, Abeer Salim and Dastanbekovich, Azimov Amantur and Al-Dosari, Ibraheem Hatem Mohammed and Salman, Khdier",
+   "year": "2025",
+   "venue": "Iranian Journal of Information Processing and Management",
+   "doi": "10.22034/jipm.2025.728106",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Tamburri2026155",
+   "title": "“The Candle is Burning Out on its Own..”: Modeling Fatigue and Empathy Among Chinese Developers",
+   "author": "Tamburri, Damian A. and Zhang, Haotian and Blincoe, Kelly and Kazman, Rick and Giordano, Giammaria and Pontillo, Valeria and Palomba, Fabio",
+   "year": "2026",
+   "venue": "Lecture Notes in Computer Science",
+   "doi": "10.1007/978-3-032-04207-1_11",
+   "veredito": "reprovado",
+   "motivo": "sem elo"
+  },
+  {
+   "key": "Seliutin202632",
+   "title": "Neural Network-Based Techniques for Automated Code Review and Program Repair: Analysis, Datasets, and Practical Integration Scenarios",
+   "author": "Seliutin, Denys and Yashyna, Olena",
+   "year": "2026",
+   "venue": "Lecture Notes in Networks and Systems",
+   "doi": "10.1007/978-3-032-22372-2_3",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Woodward2020710",
+   "title": "Development and evaluation of an electronic hospital referral system: a human factors approach",
+   "author": "Woodward, Matthew and De Pennington, Nicholas and Grandidge, Carly and McCulloch, Peter and Morgan, Lauren",
+   "year": "2020",
+   "venue": "Ergonomics",
+   "doi": "10.1080/00140139.2020.1748232",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Pendyala20261020",
+   "title": "A Unified Framework for Platform Engineering and Service Automation in Enterprise Cloud Architecture",
+   "author": "Pendyala, Baba Prasad and Praveen, P.",
+   "year": "2026",
+   "venue": "6th International Conference on Inventive Computation and Information Technologies, ICICIT 2026 - Proceedings",
+   "doi": "10.1109/ICICIT69063.2026.11634008",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Shetty20221477",
+   "title": "AutoTSG: learning and synthesis for incident troubleshooting",
+   "author": "Shetty, Manish and Bansal, Chetan and Upadhyayula, Sai Pramod and Radhakrishna, Arjun and Gupta, Anurag",
+   "year": "2022",
+   "venue": "ESEC/FSE 2022 - Proceedings of the 30th ACM Joint Meeting European Software Engineering Conference and Symposium on the Foundations of Software Engineering",
+   "doi": "10.1145/3540250.3558958",
+   "veredito": "talvez",
+   "resumo": "Estudo empírico de mais de 4 mil guias de troubleshooting (TSGs) ligados a incidentes e do feedback de mais de 400 engenheiros de plantão na Microsoft, seguido da ferramenta AutoTSG para automatizá-los. A fadiga de plantão aparece só como motivação (TSGs incompletos); o abstract não traz resultados sobre o efeito nas pessoas, mas a análise do feedback dos engenheiros pode trazê-los.",
+   "elos": []
+  },
+  {
+   "key": "Patterson2001317",
+   "title": "Shift changes, updates, and the on-call architecture in space shuttle mission control",
+   "author": "Patterson, Emily S. and Woods, David D.",
+   "year": "2001",
+   "venue": "Computer Supported Cooperative Work",
+   "doi": "10.1023/A:1012705926828",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Jha2023",
+   "title": "From theory to practice: Understanding DevOps culture and mindset",
+   "author": "Jha, Amitkumar V. and Teri, Riya and Verma, Subra and Tarafder, Susmita and Bhowmik, Wriddhi and Kumar Mishra, Sunil and Appasani, Bhargav and Srinivasulu, Avireni and Philibert, Nsengiyumva",
+   "year": "2023",
+   "venue": "Cogent Engineering",
+   "doi": "10.1080/23311916.2023.2251758",
+   "veredito": "reprovado",
+   "motivo": "secundário",
+   "resumo": "Revisão sistemática sobre cultura e mentalidade DevOps (princípios, práticas, ferramentas, desafios), que diz ajudar a entender o fenômeno pela perspectiva de fatores humanos e identifica três temas culturais: colaboração, melhoria contínua e automação. Candidato a snowballing pelos primários sobre cultura DevOps."
+  },
+  {
+   "key": "Rossi201612",
+   "title": "Continuous deployment of mobile software at facebook (showcase)",
+   "author": "Rossi, Chuck and Shibley, Elisa and Su, Shi and Beck, Kent and Savor, Tony and Stumm, Michael",
+   "year": "2016",
+   "venue": "Proceedings of the ACM SIGSOFT Symposium on the Foundations of Software Engineering",
+   "doi": "10.1145/2950290.2994157",
+   "veredito": "aprovado",
+   "resumo": "Relato industrial do processo de implantação móvel do Facebook, com análise de métricas de engenharia de sete anos, durante a passagem de uma implantação Android a cada 8 semanas para uma por semana. Conclui que a frequência de implantação não afeta diretamente a produtividade nem a qualidade, e os autores argumentam que isso ocorre porque a maior frequência força automação que reduz a carga de trabalho dos desenvolvedores.",
+   "elos": [
+    {
+     "pratica": "Releases frequentes",
+     "fator": "Carga de trabalho",
+     "efeito": "reduz",
+     "mecanismo": "aumentar a frequência de implantação força a melhoria da automação de release e implantação, que reduz a carga de trabalho dos desenvolvedores (argumento dos autores para explicar o achado)",
+     "condicoes": "aplicativo móvel Android do Facebook, de implantação a cada 8 semanas para semanal; depende da automação de release e implantação",
+     "trecho": "We argue that this findings is due to the fact that increasing the frequency of continuous deployment forces improved release and deployment automation, which in turn reduces developer workload."
+    }
+   ]
+  },
+  {
+   "key": "Wrobel2023113848",
+   "title": "Using Continuous Integration Techniques in Open Source Projects - An Exploratory Study",
+   "author": "Wrobel, Michal R. and Szymukowicz, Jaroslaw and Weichbroth, Pawel",
+   "year": "2023",
+   "venue": "IEEE Access",
+   "doi": "10.1109/ACCESS.2023.3324536",
+   "veredito": "reprovado",
+   "motivo": "sem pessoas"
+  },
+  {
+   "key": "Muhammad2021",
+   "title": "Methods and Guidelines for Incorporating Human Factors Requirements in Automated Vehicles Development",
+   "author": "Muhammad, Amna Pir",
+   "year": "2021",
+   "venue": "CEUR Workshop Proceedings",
+   "doi": "",
+   "veredito": "reprovado",
+   "motivo": "sem pessoas"
+  },
+  {
+   "key": "Grigaraviciute2026",
+   "title": "A Systematic Literature Review on the Application of Gamification in the Field of Information Security",
+   "author": "Grigaraviciute, Indre and Goranin, Nikolaj",
+   "year": "2026",
+   "venue": "Computers, Materials and Continua",
+   "doi": "10.32604/cmc.2026.084893",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Wu2026166",
+   "title": "AI-Augmented DevSecOps Pipeline for Intelligent Vulnerability Triage: Integrating SonarQube with LLM",
+   "author": "Wu, Steven and Tan, Tan-Hsu and Liu, Shing -Hong and Chen, Chao- Rong",
+   "year": "2026",
+   "venue": "Lecture Notes on Data Engineering and Communications Technologies",
+   "doi": "10.1007/978-3-032-23347-9_14",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "He2025646",
+   "title": "How Do Developers Use ChatGPT for Software Test Generation? Usage Patterns, Satisfaction, and Code Adoption Analysis",
+   "author": "He, Sicheng and Zhan, Wanwei and Wang, Jijun and Dai, Junjie and Chen, Haoxuan and Tan, Cheng and Li, Fuyang",
+   "year": "2025",
+   "venue": "Proceedings - Asia-Pacific Software Engineering Conference, APSEC",
+   "doi": "10.1109/APSEC66846.2025.00067",
+   "veredito": "reprovado",
+   "motivo": "sem elo"
+  },
+  {
+   "key": "Lokhande2022113",
+   "title": "Deployment Strategy using DevOps Methodology: Cloud Container based Orchestration Frameworks",
+   "author": "Lokhande, Shivaji Rao and Kumar, S. Anupama",
+   "year": "2022",
+   "venue": "International Conference on Edge Computing and Applications, ICECAA 2022 - Proceedings",
+   "doi": "10.1109/ICECAA55415.2022.9936478",
+   "veredito": "reprovado",
+   "motivo": "sem pessoas"
+  },
+  {
+   "key": "Adem2025595",
+   "title": "LLM-Powered Code Quality Bot: Automating Refactoring in CI/CD",
+   "author": "Adem, Akram and Melo, Glaucia",
+   "year": "2025",
+   "venue": "Proceedings - 2025 IEEE International Conference on Collaborative Advances in Software and Computing, CASCON 2025",
+   "doi": "10.1109/CASCON66301.2025.00101",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Castillo2026343",
+   "title": "Empirical Evaluation of MVC Frameworks: Performance, Scalability, Developer Experience and Learning Curve",
+   "author": "Castillo, C. and Castellanos, O.",
+   "year": "2026",
+   "venue": "Communications in Computer and Information Science",
+   "doi": "10.1007/978-3-032-16851-1_24",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Fluri202346",
+   "title": "Measuring the Benefits of CI/CD Practices for Database Application Development",
+   "author": "Fluri, Jasmin and Fornari, Fabrizio and Pustulka, Ela",
+   "year": "2023",
+   "venue": "Proceedings - 2023 IEEE/ACM International Conference on Software and System Processes, ICSSP 2023",
+   "doi": "10.1109/ICSSP59042.2023.00015",
+   "veredito": "aprovado",
+   "resumo": "Dois estudos de caso industriais implantam um pipeline de CI/CD que automatiza a integração e a implantação de aplicações de banco de dados (antes manuais), com medidas quantitativas e entrevistas com os desenvolvedores antes e depois. Além de menos implantações falhas e mais implantações, os desenvolvedores relatam redução da carga cognitiva.",
+   "elos": [
+    {
+     "pratica": "Pipeline de CI/CD",
+     "fator": "Carga cognitiva",
+     "efeito": "reduz",
+     "mecanismo": "a automação da integração e da implantação do banco de dados, antes feitas à mão, reduz a carga cognitiva relatada pelo time nas entrevistas antes/depois",
+     "condicoes": "desenvolvimento de aplicações de banco de dados em que integração e implantação eram manuais; dois casos industriais",
+     "trecho": "the results show the CI/CD pipeline brings clear benefits to the development team (i.e., reduced cognitive load)"
+    }
+   ]
+  },
+  {
+   "key": "Kataria2025450",
+   "title": "Intelligent Site Reliability Engineering: A Multi-agent LLM Framework for Automated Incident Analysis and Root Cause Determination",
+   "author": "Kataria, Vipin",
+   "year": "2025",
+   "venue": "International Journal of Intelligent Engineering and Systems",
+   "doi": "10.22266/ijies2025.1231.28",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Kortum2017608",
+   "title": "Characterizing relationships for system dynamics models supported by exploratory data analysis : A conceptualizing approach about the meeting diversity in student software projects",
+   "author": "Kortum, Fabian and Klünder, Jil and Schneider, Kurt",
+   "year": "2017",
+   "venue": "Proceedings of the International Conference on Software Engineering and Knowledge Engineering, SEKE",
+   "doi": "10.18293/SEKE2017-143",
+   "veredito": "reprovado",
+   "motivo": "sem elo"
+  },
+  {
+   "key": "Lertpongrujikorn2026",
+   "title": "Empirical Analysis of Cloud-Edge Infrastructure Complexity: Practitioner Pain Points and Architectural Directions",
+   "author": "Lertpongrujikorn, Pawissanutt and Nguyen, Hai Duc and Salehi, Mohsen Amini",
+   "year": "2026",
+   "venue": "Proceedings - International Conference on Computer Communications and Networks, ICCCN",
+   "doi": "10.1109/ICCCN69946.2026.11662594",
+   "veredito": "talvez",
+   "resumo": "101 entrevistas semiestruturadas em 86 organizações sobre práticas, dores e expectativas do desenvolvimento cloud-native; a complexidade de implantação (38,6%) e a dificuldade de onboarding (35,6%) são os principais gargalos, e engenharia de plataforma aparece como direção arquitetural. O abstract não diz se a forma de implantar ou a plataforma afeta as pessoas além da produtividade.",
+   "elos": []
+  },
+  {
+   "key": "Gustavsson2021",
+   "title": "Sleep among primary care physicians–Association with overtime, night duties and strategies to counteract poor sleep quality",
+   "author": "Gustavsson, Katarzyna and Wierzbicka, Aleksandra and Matuszczyk, Michał and Matuszczyk, Maciej and Wichniak, Adam",
+   "year": "2021",
+   "venue": "Journal of Sleep Research",
+   "doi": "10.1111/jsr.13031",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Papatheocharous201457",
+   "title": "Personalised continuous software engineering",
+   "author": "Papatheocharous, Efi and Belk, Marios and Nyfjord, Jaana and Germanakos, Panagiotis and Samaras, George",
+   "year": "2014",
+   "venue": "1st International Workshop on Rapid Continuous Software Engineering, RCoSE 2014 - Proceedings",
+   "doi": "10.1145/2593812.2593815",
+   "veredito": "reprovado",
+   "motivo": "sem elo"
+  },
+  {
+   "key": "Russell1999641",
+   "title": "One hospital's successful 20-year experience with physician assistants in graduate medical education",
+   "author": "Russell, John C. and Kaplowe, Joseph and Heinrich, Jeffrey",
+   "year": "1999",
+   "venue": "Academic Medicine",
+   "doi": "10.1097/00001888-199906000-00007",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Volmer2007179",
+   "title": "Help us help you! Getting the most from a diagnostic toxicology laboratory",
+   "author": "Volmer, Petra A.",
+   "year": "2007",
+   "venue": "Veterinary Medicine",
+   "doi": "",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Hagen2025",
+   "title": "Human Factors in AI-Driven Cybersecurity: Cognitive Biases and Trust Issues",
+   "author": "Hagen, Raymond Andre and Øverlier, Lasse and Helkala, Kirsi",
+   "year": "2025",
+   "venue": "Digital Threats: Research and Practice",
+   "doi": "10.1145/3759260",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Jothi20263",
+   "title": "Empowering Developer Productivity through Platform Engineering: A Transformative Approach to Scalable and Streamlined Software Development",
+   "author": "Jothi, C. Saranya and Surya, E. and Rabiya, M. Syed and Lalitha, B. and Roselinkiruba, R.",
+   "year": "2026",
+   "venue": "Platform Engineering: Concepts, Challenges, and Applications",
+   "doi": "10.1002/9781394395910.ch1",
+   "veredito": "talvez",
+   "resumo": "Capítulo de livro acadêmico, conceitual, que discute como a engenharia de plataforma (automação, fluxos padronizados, autoatendimento) melhora a produtividade e a experiência do desenvolvedor, citando redução da carga cognitiva. O abstract não traz dados nem resultados empíricos; a afirmação aparece como tema do capítulo.",
+   "elos": []
+  },
+  {
+   "key": "Kirpitsas2026",
+   "title": "KIBO, a new hybrid software development method with enhanced information systems auditing capability",
+   "author": "Kirpitsas, Ioannis and Pachidis, Theodore",
+   "year": "2026",
+   "venue": "Information and Software Technology",
+   "doi": "10.1016/j.infsof.2025.107958",
+   "veredito": "talvez",
+   "resumo": "Propõe o KIBO, método híbrido que integra Scrum, DevOps e Disciplined Agile Delivery com auditoria contínua, avaliado por 90 especialistas e numa implantação de 7 semanas; o time relatou melhora de qualidade, confiabilidade do processo e satisfação líquida dos desenvolvedores. A satisfação é atribuída ao método como um todo, não a uma prática de ESC isolada.",
+   "elos": []
+  },
+  {
+   "key": "Dias2019",
+   "title": "Testing and deployment patterns for the internet-of-things",
+   "author": "Dias, João Pedro and Ferreira, Hugo Sereno and Sousa, Tiago Boldt",
+   "year": "2019",
+   "venue": "ACM International Conference Proceeding Series",
+   "doi": "10.1145/3361149.3361165",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "van der Heijden2023",
+   "title": "Internet-Purchased Sodium Azide Used in a Fatal Suicide Attempt: A Case Report and Review of the Literature",
+   "author": "van der Heijden, Lisa T. and van den Hondel, Karen E. and Olyslager, Erik J. H. and de Jong, Lutea A. A. and Reijnders, Udo J. L. and Franssen, Eric J. F.",
+   "year": "2023",
+   "venue": "Toxics",
+   "doi": "10.3390/toxics11070608",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Coffman2025",
+   "title": "A Devops Workflow for Courses Managing Course Material with Git and GitHub",
+   "author": "Coffman, Joel",
+   "year": "2025",
+   "venue": "Proceedings - Frontiers in Education Conference, FIE",
+   "doi": "10.1109/FIE63693.2025.11328712",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Valenzuela-Toledo2024213",
+   "title": "The Hidden Costs of Automation: An Empirical Study on GitHub Actions Workflow Maintenance",
+   "author": "Valenzuela-Toledo, Pablo and Bergel, Alexandre and Kehrer, Timo and Nierstrasz, Oscar",
+   "year": "2024",
+   "venue": "Proceedings - 2024 IEEE International Conference on Source Code Analysis and Manipulation, SCAM 2024",
+   "doi": "10.1109/SCAM63643.2024.00029",
+   "veredito": "talvez",
+   "resumo": "Estudo de mineração da evolução de arquivos de workflow do GitHub Actions em quase 200 projetos, caracterizando a manutenção desses workflows (correção de bugs e melhoria de CI/CD são os principais motivos). O abstract sugere, como motivação, que os workflows geram carga extra para os desenvolvedores, mas não traz resultado sobre as pessoas.",
+   "elos": []
+  },
+  {
+   "key": "Brubaker2024",
+   "title": "AI and the Afterlife",
+   "author": "Brubaker, Jed R. and Morris, Meredith Ringel and Doyle, Dylan Thomas and Fiesler, Casey and Gibbs, Martin and McGrenere, Joanna",
+   "year": "2024",
+   "venue": "Conference on Human Factors in Computing Systems - Proceedings",
+   "doi": "10.1145/3613905.3636321",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Dallat2025",
+   "title": "The Silence Is Deafening: Exploring the Impacts of Serious Incidents on Practitioners Across the Outdoor and Adventure Programs Work System",
+   "author": "Dallat, Clare and Mitten, Denise and Slay, Stuart and Mitchell, Virginia and Ajango, Deb",
+   "year": "2025",
+   "venue": "Human Factors and Ergonomics in Manufacturing and Service Industries",
+   "doi": "10.1002/hfm.70017",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Politowski2018103",
+   "title": "Learning from the past: A process recommendation system for video game projects using postmortems experiences",
+   "author": "Politowski, Cristiano and Fontoura, Lisandra M. and Petrillo, Fabio and Guéhéneuc, Yann-Gaël",
+   "year": "2018",
+   "venue": "Information and Software Technology",
+   "doi": "10.1016/j.infsof.2018.04.003",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Joshi201889",
+   "title": "Organization & cultural impact of microservices architecture",
+   "author": "Joshi, Sunil",
+   "year": "2018",
+   "venue": "Advances in Intelligent Systems and Computing",
+   "doi": "10.1007/978-3-319-60747-4_9",
+   "veredito": "reprovado",
+   "motivo": "sem elo"
+  },
+  {
+   "key": "Vandervoort2014",
+   "title": "Quality of dying in nursing home residents dying with dementia: Does advanced care planning matter? A nationwide postmortem study",
+   "author": "Vandervoort, An and Houttekier, Dirk and Vander Stichele, Robert and Van Der Steen, Jenny T. and Van Den Block, Lieve",
+   "year": "2014",
+   "venue": "PLoS ONE",
+   "doi": "10.1371/journal.pone.0091130",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Venkataraman2025281",
+   "title": "Algorithmic Stress and Leadership Repertoires: An Interpretive Study of India’s Tech Industry",
+   "author": "Venkataraman, A.",
+   "year": "2025",
+   "venue": "The Palgrave Handbook of Change and Resilience at Work",
+   "doi": "10.1007/978-3-031-91493-5_14",
+   "veredito": "reprovado",
+   "motivo": "sem elo"
+  },
+  {
+   "key": "Costa2026",
+   "title": "Applying generative artificial intelligence for vulnerability fixing in a proprietary software ecosystem",
+   "author": "Costa, Luiz Alexandre and Fontão, Awdren and Santos, Rodrigo Pereira dos and Serebrenik, Alexander",
+   "year": "2026",
+   "venue": "Journal of Systems and Software",
+   "doi": "10.1016/j.jss.2025.112723",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Guisao2026",
+   "title": "Toward Platform Engineering, the Evolution of DevOps—A Systematic Mapping",
+   "author": "Guisao, Yohan and Suescún, Elizabeth and Noreña, Paola and Pardo, César",
+   "year": "2026",
+   "venue": "Journal of Software: Evolution and Process",
+   "doi": "10.1002/smr.70108",
+   "veredito": "reprovado",
+   "motivo": "secundário"
+  },
+  {
+   "key": "Andreyev2025161",
+   "title": "The Art of Managing Flaky Tests at Scale",
+   "author": "Andreyev, Oleg",
+   "year": "2025",
+   "venue": "2025 IEEE International Conference on Software Testing, Verification and Validation Workshops, ICSTW 2025",
+   "doi": "10.1109/ICSTW64639.2025.10962486",
+   "veredito": "talvez",
+   "resumo": "Relato de uma iniciativa de um ano para reduzir testes instáveis (flaky) numa grande organização, ajustando limiares de falha para levar em conta a fadiga de alertas e criando incentivos para estabilizar testes. O abstract não traz resultados sobre as pessoas, só que é preciso equilibrar ganhos técnicos com a dinâmica organizacional.",
+   "elos": []
+  },
+  {
+   "key": "Raub20241131",
+   "title": "Live or Let Die: MILSTD 1472 Type Usability Checklists in an Agile Development World",
+   "author": "Raub, Esther and Steinberg, Richard",
+   "year": "2024",
+   "venue": "Proceedings of the Human Factors and Ergonomics Society",
+   "doi": "10.1177/10711813241279798",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Pinto201774",
+   "title": "Inadequate testing, time pressure, and (Over) confidence: A tale of continuous integration users",
+   "author": "Pinto, Gustavo and Reboucas, Marcel and Castor, Fernando",
+   "year": "2017",
+   "venue": "Proceedings - 2017 IEEE/ACM 10th International Workshop on Cooperative and Human Aspects of Software Engineering, CHASE 2017",
+   "doi": "10.1109/CHASE.2017.13",
+   "veredito": "aprovado",
+   "resumo": "Survey qualitativo com 158 usuários de integração contínua sobre as causas de quebra de build: testes inadequados são a principal causa técnica e falta de tempo pesa nas causas sociais. Parte dos respondentes relata que a CI aumenta a confiança de que o código está num estado conhecido, e parte relata uma falsa sensação de confiança ao confiar cegamente nos testes.",
+   "elos": [
+    {
+     "pratica": "Integração contínua",
+     "fator": "Confiança no estado do código",
+     "fatorEmergente": true,
+     "categoria": "Técnico e ferramentas",
+     "efeito": "aumenta",
+     "mecanismo": "o uso de CI faz o desenvolvedor confiar que o código está num estado conhecido; parte dessa confiança é falsa quando se confia cegamente nos testes",
+     "condicoes": "a confiança é falsa quando os testes são inadequados e confiados cegamente",
+     "trecho": "although some respondents reported that CI usage increases the confidence that the code is in a known state, some respondents also reported that there is a false sense of confidence when blindly trusting tests"
+    }
+   ]
+  },
+  {
+   "key": "Ullmann20229",
+   "title": "Video Game Project Management Anti-patterns",
+   "author": "Ullmann, Gabriel C. and Politowski, Cristiano and Gueheneuc, Yann-Gael and Petrillo, Fabio and Montandon, Joao Eduardo",
+   "year": "2022",
+   "venue": "Proceedings - 6th International ICSE Workshop on Games and Software Engineering: Engineering Fun, Inspiration, and Motivation, GAS 2022",
+   "doi": "10.1145/3524494.3527623",
+   "veredito": "reprovado",
+   "motivo": "sem elo"
+  },
+  {
+   "key": "Giao2025162",
+   "title": "A Block-Based Language for CI/CD Authoring",
+   "author": "Giao, Hugo Da and Pereira, Rui and Cunha, Jacome",
+   "year": "2025",
+   "venue": "Proceedings of IEEE Symposium on Visual Languages and Human-Centric Computing, VL/HCC",
+   "doi": "10.1109/VL-HCC65237.2025.00074",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Nibler2021",
+   "title": "PINTA – one Tool to plan them all",
+   "author": "Nibler, Rainer and Hartung, Jens and Krenss, Jonas and Fürbacher, Anna and Mrowka, Falk and Brogl, Sandra",
+   "year": "2021",
+   "venue": "16th International Conference on Space Operations",
+   "doi": "",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Ahmad2023337",
+   "title": "An Industrial Study on the Challenges and Effects of Diversity-Based Testing in Continuous Integration",
+   "author": "Ahmad, Azeem and Neto, Francisco Gomes De Oliveira and Enoiu, Eduard Paul and Sandahl, Kristian and Leifler, Ola",
+   "year": "2023",
+   "venue": "IEEE International Conference on Software Quality, Reliability and Security, QRS",
+   "doi": "10.1109/QRS60937.2023.00041",
+   "veredito": "talvez",
+   "resumo": "Estudo de caso na Axis Communications com análise temática de um grupo focal de praticantes seniores sobre os desafios e efeitos percebidos de introduzir priorização de testes baseada em diversidade no pipeline de CI, incluindo aspectos humanos. O abstract lista preferências (técnicas compreensíveis que inspirem confiança, compatíveis com a infraestrutura) mas não diz se há efeito sobre as pessoas.",
+   "elos": []
+  },
+  {
+   "key": "Suciu2026484",
+   "title": "An Empirical Concept Model of Difficulties in Agile Adoption",
+   "author": "Suciu, Dan Mircea and Motogna, Simona and Petrescu, Manuela Andreea",
+   "year": "2026",
+   "venue": "Communications in Computer and Information Science",
+   "doi": "10.1007/978-3-032-16448-3_27",
+   "veredito": "reprovado",
+   "motivo": "sem elo"
+  },
+  {
+   "key": "Lucas2023611",
+   "title": "Understanding the Motivations, Challenges, and Practices of Software Rejuvenation",
+   "author": "Lucas, Walter and Bonifacio, Rodrigo and Saraiva, Joao",
+   "year": "2023",
+   "venue": "Proceedings - 2023 IEEE International Conference on Software Maintenance and Evolution, ICSME 2023",
+   "doi": "10.1109/ICSME58846.2023.00082",
+   "veredito": "reprovado",
+   "motivo": "sem elo"
+  },
+  {
+   "key": "Gunathilaka2025",
+   "title": "Context-Aware Behavior-Driven Pipeline Generation",
+   "author": "Gunathilaka, Pawara and Senadheera, Dinal and Perara, Shenan and Gunawardana, Chamithu and Thelijjagoda, Samantha and Krishara, Jenny",
+   "year": "2025",
+   "venue": "ISDFS 2025 - 13th International Symposium on Digital Forensics and Security",
+   "doi": "10.1109/ISDFS65363.2025.11011952",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Garg2024137",
+   "title": "Cyber-Physical System Security: Challenges and Countermeasures",
+   "author": "Garg, Ankit and Singh, Anuj Kumar and Ali, Aleem and Saini, Madan Lal",
+   "year": "2024",
+   "venue": "Emerging Threats and Countermeasures in Cybersecurity",
+   "doi": "10.1002/9781394230600.ch7",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Mohammad2026242",
+   "title": "An Exploratory Study of the Code Quality of Open-Source JavaScript Projects",
+   "author": "Mohammad, Suzad and Jobair, Abdullah Al and Abedeen, Iftekharul",
+   "year": "2026",
+   "venue": "Communications in Computer and Information Science",
+   "doi": "10.1007/978-3-032-19050-5_12",
+   "veredito": "reprovado",
+   "motivo": "sem pessoas"
+  },
+  {
+   "key": "Barrak2025110",
+   "title": "FaaSGuard: Secure CI/CD for Serverless Applications - An OpenFaaS Case Study",
+   "author": "Barrak, Amine and Ksontini, Emna and Atike, Ridouane and Jaafar, Fehmi",
+   "year": "2025",
+   "venue": "Proceedings - 2025 IEEE International Conference on Source Code Analysis and Manipulation, SCAM 2025",
+   "doi": "10.1109/SCAM67354.2025.00018",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Sethupathy2026174",
+   "title": "Zero-Touch GenAI Coach: Self-healing SDLC Pipelines for FinTech Micro-services",
+   "author": "Sethupathy, Utham Kumar Anugula and Ananthanarayanan, Vijayanand",
+   "year": "2026",
+   "venue": "Communications in Computer and Information Science",
+   "doi": "10.1007/978-981-95-7289-2_14",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Kortum201994",
+   "title": "Sprint performance forecasts in agile software development: The effect of futurespectives on team-driven dynamics",
+   "author": "Kortum, Fabian and Klünder, Jil and Brunotte, Wasja and Schneider, Kurt",
+   "year": "2019",
+   "venue": "Proceedings of the International Conference on Software Engineering and Knowledge Engineering, SEKE",
+   "doi": "10.18293/SEKE2019-224",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Thantharate2023800",
+   "title": "IntelligentMonitor: Empowering DevOps Environments with Advanced Monitoring and Observability",
+   "author": "Thantharate, Pratik",
+   "year": "2023",
+   "venue": "2023 International Conference on Information Technology: Cybersecurity Challenges for Sustainable Cities, ICIT 2023 - Proceeding",
+   "doi": "10.1109/ICIT58056.2023.10226123",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Omonijo2013205",
+   "title": "Relevance of thermal environment to human health: A case study of Ondo State, Nigeria",
+   "author": "Omonijo, Akinyemi Gabriel and Adeofun, Clement Olabinjo and Oguntoke, Olusegun and Matzarakis, Andreas",
+   "year": "2013",
+   "venue": "Theoretical and Applied Climatology",
+   "doi": "10.1007/s00704-012-0777-9",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Zhang2018295",
+   "title": "One size does not fit all: An empirical study of containerized continuous deployment workflows",
+   "author": "Zhang, Yang and Vasilescu, Bogdan and Wang, Huaimin and Filkov, Vladimir",
+   "year": "2018",
+   "venue": "ESEC/FSE 2018 - Proceedings of the 2018 26th ACM Joint Meeting on European Software Engineering Conference and Symposium on the Foundations of Software Engineering",
+   "doi": "10.1145/3236024.3236033",
+   "veredito": "talvez",
+   "resumo": "Estudo de métodos mistos (survey e estudo quantitativo em larga escala) sobre experiências, necessidades e barreiras de desenvolvedores com fluxos de implantação contínua conteinerizados; encontra dois fluxos predominantes com trade-offs distintos. Benefícios como onboarding mais fácil aparecem só como contexto, e o abstract não traz resultados sobre efeitos nas pessoas.",
+   "elos": []
+  },
+  {
+   "key": "Raynor2026626",
+   "title": "From Evidence to Decisions: Interview-based Study of Reporting Practices in Defensive Cyber Operations",
+   "author": "Raynor, Justin and Shrestha, Bijesh and Dunne, Cody and Tory, Melanie and Harrison, Lane",
+   "year": "2026",
+   "venue": "European Conference on Information Warfare and Security, ECCWS",
+   "doi": "",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Pérez-Sánchez2025",
+   "title": "A theory on human factors in DevOps adoption",
+   "author": "Pérez-Sánchez, Juanjo and Rafi, Saima and Carrillo de Gea, Juan Manuel and Nicolás Ros, Joaquín and Fernández Alemán, José Luis",
+   "year": "2025",
+   "venue": "Computer Standards and Interfaces",
+   "doi": "10.1016/j.csi.2024.103907",
+   "veredito": "reprovado",
+   "motivo": "secundário",
+   "resumo": "Mapeamento sistemático seguido de clusterização e avaliação por questionário (n=15) que identifica 59 fatores humanos relacionados ao DevOps e propõe uma teoria sobre fatores humanos na adoção de DevOps; a direção estudada é fatores humanos → adoção, não DevOps → pessoas. Candidato a snowballing pelos primários resenhados."
+  },
+  {
+   "key": "Łuczak2022157",
+   "title": "A Model of a Parallel Design Environment for the Development of Decision-Making IoT Systems",
+   "author": "Łuczak, Anna and Stróżański, Konrad and Orłowski, Cezary",
+   "year": "2022",
+   "venue": "Lecture Notes in Computer Science (including subseries Lecture Notes in Artificial Intelligence and Lecture Notes in Bioinformatics)",
+   "doi": "10.1007/978-3-662-66597-8_9",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Parry2022253",
+   "title": "Surveying the Developer Experience of Flaky Tests",
+   "author": "Parry, Owain and Kapfhammer, Gregory M. and Hilton, Michael and Mcminn, Phil",
+   "year": "2022",
+   "venue": "Proceedings - International Conference on Software Engineering",
+   "doi": "10.1109/ICSE-SEIP55303.2022.9793965",
+   "veredito": "talvez",
+   "resumo": "Survey com 170 desenvolvedores e análise de 38 threads do StackOverflow sobre como desenvolvedores definem testes instáveis (flaky), seus impactos, causas e reações: eles concordam fortemente que testes instáveis atrapalham a integração contínua, e quem os enfrenta com mais frequência tende a ignorar falhas genuínas. O abstract não liga os testes instáveis a um fator de QVT; o texto completo pode trazer impactos sobre as pessoas.",
+   "elos": []
+  },
+  {
+   "key": "De Oliveira Neto201839",
+   "title": "Improving continuous integration with similarity-based test case selection",
+   "author": "De Oliveira Neto, Francisco G. and Ahmad, Azeem and Leifler, Ola and Sandahl, Kristian and Enoiu, Eduard",
+   "year": "2018",
+   "venue": "Proceedings - International Conference on Software Engineering",
+   "doi": "10.1145/3194733.3194744",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Alkindi2020741",
+   "title": "Assessment of occupational stress among oral and maxillofacial surgeons and residents in Saudi Arabia: A cross-sectional study",
+   "author": "Alkindi, Mohammed and Alghamdi, Osama and Alnofaie, Hourya and Alhammad, Ziyad and Badwelan, Mohammed and Albarakati, Sahar",
+   "year": "2020",
+   "venue": "Advances in Medical Education and Practice",
+   "doi": "10.2147/AMEP.S268430",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Tait2021856",
+   "title": "Impact of shift work on sleep and fatigue in Maritime pilots",
+   "author": "Tait, Jamie L. and Chambers, Timothy P. and Tait, Regan S. and Main, Luana C.",
+   "year": "2021",
+   "venue": "Ergonomics",
+   "doi": "10.1080/00140139.2021.1882705",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Straubinger202491",
+   "title": "An IDE Plugin for Gamified Continuous Integration",
+   "author": "Straubinger, Philipp and Fraser, Gordon",
+   "year": "2024",
+   "venue": "Proceedings - 2024 1st IDE Workshop, IDE 2024",
+   "doi": "10.1145/3643796.3648462",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Abbass2019",
+   "title": "Adopting continuous integeration and continuous delivery for small teams",
+   "author": "Abbass, Moutaman Kamal Aldeen and Osman, Rahama Ibrahim Elyass and Mohammed, Abubaker Motasem Hmad and Alshaikh, Mohannad Waheed Ahmed",
+   "year": "2019",
+   "venue": "Proceedings of the International Conference on Computer, Control, Electrical, and Electronics Engineering 2019, ICCCEEE 2019",
+   "doi": "10.1109/ICCCEEE46830.2019.9070849",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Derghal202585",
+   "title": "Towards a Constraint-Driven Deployment Process for Cloud-Native Applications",
+   "author": "Derghal, Ouail and Bach, Jean-Christophe and Dagnat, Fabien",
+   "year": "2025",
+   "venue": "Proceedings - 2025 IEEE International Conference on Cloud Engineering, IC2E 2025",
+   "doi": "10.1109/IC2E65552.2025.00024",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Sinha2025",
+   "title": "A Scalable Approach to Reduce Infrastructure Induced Build Failures in Continuous Integration",
+   "author": "Sinha, Prameet Keshore and Nand, Parma and Tiwari, Smita",
+   "year": "2025",
+   "venue": "2025 17th International Conference on Contemporary Computing, IC3 2025",
+   "doi": "10.1109/IC366947.2025.11290270",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Patrudu20245623",
+   "title": "The Agile Trinity Fusion Model: A Comprehensive Strategy for Software Development Enhancement",
+   "author": "Patrudu, Makena Bharadwaja N. and Anusha, Maddala Hemasri Nagagowri and Sivakoti, Sumeddha and Kiran, K.V.D.",
+   "year": "2024",
+   "venue": "15th International Conference on Advances in Computing, Control, and Telecommunication Technologies, ACT 2024",
+   "doi": "",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Pratinav2026",
+   "title": "One Engine to Rule Them All",
+   "author": "Pratinav, Akshay and Bhatt, Chaitanya",
+   "year": "2026",
+   "venue": "2026 Silicon Valley Cybersecurity Conference, SVCC 2026",
+   "doi": "10.1109/SVCC69905.2026.11642242",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Obrizan2024275",
+   "title": "CIPerf: a benchmark for continuous integration services performance and cost analysis; [CIPerf: Бенчмарк для аналізу продуктивності та вартості сервісів безперервної інтеграції]",
+   "author": "Obrizan, Volodymyr I.",
+   "year": "2024",
+   "venue": "Herald of Advanced Information Technology",
+   "doi": "10.15276/hait.07.2024.19",
+   "veredito": "reprovado",
+   "motivo": "sem pessoas"
+  },
+  {
+   "key": "Yaman2017199",
+   "title": "Notifying and Involving Users in Experimentation: Ethical Perceptions of Software Practitioners",
+   "author": "Yaman, Sezin and Fagerholm, Fabian and Munezero, Myriam and Maenpaa, Hanna and Mannisto, Tomi",
+   "year": "2017",
+   "venue": "International Symposium on Empirical Software Engineering and Measurement",
+   "doi": "10.1109/ESEM.2017.31",
+   "veredito": "reprovado",
+   "motivo": "sem elo"
+  },
+  {
+   "key": "Soares2024673",
+   "title": "MicroSensor: Towards an Extensible Tool for the Static Analysis of Microservices Systems in Continuous Integration",
+   "author": "Soares, Edson and Paixao, Matheus and Araújo, Allysson Allex",
+   "year": "2024",
+   "venue": "FSE Companion - Companion Proceedings of the 32nd ACM International Conference on the Foundations of Software Engineering",
+   "doi": "10.1145/3663529.3663874",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Johanssen201912",
+   "title": "Continuous thinking aloud",
+   "author": "Johanssen, Jan Ole and Reimer, Lara Marie and Bruegge, Bernd",
+   "year": "2019",
+   "venue": "Proceedings - 2019 IEEE/ACM Joint 4th International Workshop on Rapid Continuous Software Engineering and 1st International Workshop on Data-Driven Decisions, Experimentation and Evolution, RCoSE/DDrEE 2019",
+   "doi": "10.1109/RCoSE/DDrEE.2019.00010",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Rylander200826",
+   "title": "Building a robust development environment",
+   "author": "Rylander, Stephen",
+   "year": "2008",
+   "venue": "Dr. Dobb's Journal",
+   "doi": "",
+   "veredito": "reprovado",
+   "motivo": "veículo: revista de prática (Dr. Dobb's); sem elo entre CI e pessoas"
+  },
+  {
+   "key": "Asthana20231268",
+   "title": "A Case Study of Developer Bots: Motivations, Perceptions, and Challenges",
+   "author": "Asthana, Sumit and Sajnani, Hitesh and Voyloshnikova, Elena and Acharya, Birendra and Herzig, Kim",
+   "year": "2023",
+   "venue": "ESEC/FSE 2023 - Proceedings of the 31st ACM Joint Meeting European Software Engineering Conference and Symposium on the Foundations of Software Engineering",
+   "doi": "10.1145/3611643.3616248",
+   "veredito": "talvez",
+   "resumo": "Estudo de caso na Microsoft com 23 bots de desenvolvimento usados em fluxos de CI/CD (entrevistas e surveys com autores e usuários dos bots, e meio milhão de ações históricas). Aponta problemas como ruído e excesso de bots e benefícios como comunicação entre times, mas o abstract não diz como isso afeta as pessoas nem separa uma prática de ESC.",
+   "elos": []
+  },
+  {
+   "key": "Begoug2024100",
+   "title": "Fine-Grained Just-In-Time Defect Prediction at the Block Level in Infrastructure-as-Code (IaC)",
+   "author": "Begoug, Mahi and Chouchen, Moataz and Ouni, Ali and Alomar, Eman Abdullah and Mkaouer, Mohamed Wiem",
+   "year": "2024",
+   "venue": "Proceedings - 2024 IEEE/ACM 21st International Conference on Mining Software Repositories, MSR 2024",
+   "doi": "10.1145/3643991.3644934",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Mahindru20211353",
+   "title": "Log Anomaly to Resolution: AI Based Proactive Incident Remediation",
+   "author": "Mahindru, Ruchi and Kumar, Harshit and Bansal, Sahil",
+   "year": "2021",
+   "venue": "Proceedings - 2021 36th IEEE/ACM International Conference on Automated Software Engineering, ASE 2021",
+   "doi": "10.1109/ASE51524.2021.9678815",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Laukkanen20151",
+   "title": "Build Waiting Time in Continuous Integration-An Initial Interdisciplinary Literature Review",
+   "author": "Laukkanen, Eero and Mantyla, Mika",
+   "year": "2015",
+   "venue": "Proceedings - 2nd International Workshop on Rapid Continuous Software Engineering, RCoSE 2015",
+   "doi": "10.1109/RCoSE.2015.8",
+   "veredito": "reprovado",
+   "motivo": "secundário",
+   "resumo": "Revisão interdisciplinar da literatura sobre tempo de espera do build em integração contínua; classifica os efeitos da espera em específicos de CI, cognitivos e emocionais e sugere reduzir a percepção da espera com feedback e outras atividades durante a integração. Candidato a snowballing pelos primários sobre efeitos cognitivos e emocionais da espera do build."
+  },
+  {
+   "key": "Soltren202398",
+   "title": "Enabling Pre-Merge CI on your TV",
+   "author": "Soltren, Jose and Mulligan, Kyle",
+   "year": "2023",
+   "venue": "Proceedings - 2023 IEEE 16th International Conference on Software Testing, Verification and Validation Workshops, ICSTW 2023",
+   "doi": "10.1109/ICSTW58534.2023.00028",
+   "veredito": "talvez",
+   "resumo": "Relato industrial (Roku) da adoção de CI pré-merge obrigatória, com dados de confiabilidade do build (quebras caem de 8,70% para 4,85%). Sobre pessoas, diz só que exigir CI pré-merge aprovada trouxe processo adicional aos committers quando o merge falha e que, antes, só com verificação pós-submit, o desenvolvimento às vezes parava; a experiência do desenvolvedor aparece como motivação.",
+   "elos": [
+    {
+     "pratica": "Integração contínua",
+     "fator": "Manutenção do ambiente de desenvolvimento",
+     "efeito": "aumenta",
+     "mecanismo": "tornar obrigatória a aprovação na CI pré-merge acrescenta processo para quem faz commit sempre que o merge falha",
+     "condicoes": "CI pré-merge obrigatória num build embarcado multiplataforma de grande escala",
+     "trecho": "Forcing passing pre-merge CI checks resulted in additional process for committers when merges failed."
+    }
+   ]
+  },
+  {
+   "key": "Sun20242498",
+   "title": "Enhancing Software Design and Developer Experience Via LLMs",
+   "author": "Sun, Simin",
+   "year": "2024",
+   "venue": "Proceedings - 2024 39th ACM/IEEE International Conference on Automated Software Engineering, ASE 2024",
+   "doi": "10.1145/3691620.3695606",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica: IA generativa, sem prática de ESC"
+  },
+  {
+   "key": "Hemon2018",
+   "title": "Job satisfaction factors and risks perception: An embedded case study of DevOps and Agile Teams",
+   "author": "Hemon, Aymeric and Monnier-Senicourt, Laetitia and Rowe, Frantz",
+   "year": "2018",
+   "venue": "International Conference on Information Systems 2018, ICIS 2018",
+   "doi": "",
+   "veredito": "aprovado",
+   "resumo": "Estudo de caso exploratório com 11 times ágeis e DevOps sobre percepção de riscos e dificuldades e sobre (in)satisfação no trabalho. Conclui que DevOps aumenta a satisfação no trabalho em relação ao ágil, mas ao mesmo tempo amplifica o risco percebido.",
+   "elos": [
+    {
+     "pratica": "ESC/DevOps em geral",
+     "fator": null,
+     "desfecho": "satisfação no trabalho",
+     "efeito": "aumenta",
+     "mecanismo": "times DevOps relatam mais satisfação no trabalho que times só ágeis; o abstract não diz por qual fator",
+     "condicoes": "comparação com times ágeis sem DevOps",
+     "trecho": "Findings shows DevOps as an enhancer of job satisfaction in comparison to agile."
+    },
+    {
+     "pratica": "ESC/DevOps em geral",
+     "fator": "Percepção de risco no trabalho",
+     "fatorEmergente": true,
+     "categoria": "Tarefa e carga de trabalho",
+     "efeito": "aumenta",
+     "mecanismo": "junto com a satisfação, DevOps amplifica o risco percebido pelos times; o abstract não detalha de que risco se trata",
+     "condicoes": "comparação com times ágeis sem DevOps",
+     "trecho": "this study unveiled a simultaneous effect of amplification of the risk with DevOps in comparison to Agile"
+    }
+   ]
+  },
+  {
+   "key": "Pangavhane2024",
+   "title": "AI-Augmented Software Development: Boosting Efficiency and Quality",
+   "author": "Pangavhane, Shreyas and Raktate, Gokul and Pariane, Prasad and Shelar, Krishna and Wakchaure, Rohit and Kale, J.N.",
+   "year": "2024",
+   "venue": "2024 International Conference on Decision Aid Sciences and Applications, DASA 2024",
+   "doi": "10.1109/DASA63652.2024.10836523",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Karlovs-Karlovskis2026930",
+   "title": "An Industrial Evaluation of Automated CI/CD Pipeline Generation Framework",
+   "author": "Karlovs-Karlovskis, Uldis and Nikiforova, Oksana and Pastor, Oscar and Tran, Ngoc Bao Tram",
+   "year": "2026",
+   "venue": "International Conference on Evaluation of Novel Approaches to Software Engineering, ENASE - Proceedings",
+   "doi": "10.5220/0015048200004015",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Kärpänoja2016",
+   "title": "Exploring peopleware in continuous delivery",
+   "author": "Kärpänoja, Pauli and Virtanen, Antti and Lehtonen, Timo and Mikkonen, Tommi",
+   "year": "2016",
+   "venue": "ACM International Conference Proceeding Series",
+   "doi": "10.1145/2962695.2962708",
+   "veredito": "aprovado",
+   "resumo": "Entrevistas com profissionais de projetos que aplicam entrega contínua, sobre como a prática afeta os desenvolvedores. Conclui que os benefícios exigem dar mais responsabilidade aos desenvolvedores, e que essa responsabilidade a mais não aumenta necessariamente o estresse, podendo reduzi-lo e melhorar motivação e satisfação no trabalho.",
+   "elos": [
+    {
+     "pratica": "Entrega contínua",
+     "fator": null,
+     "desfecho": "estresse",
+     "efeito": "reduz",
+     "mecanismo": "a entrega contínua dá mais responsabilidade aos desenvolvedores, e essa responsabilidade adicional pode diminuir o estresse em vez de aumentá-lo",
+     "condicoes": "quando a adoção dá mais responsabilidade aos desenvolvedores; o abstract diz que o estresse não aumenta necessariamente e pode diminuir",
+     "trecho": "the added responsibilities do not necessarily increase stress, but can actually decrease it"
+    },
+    {
+     "pratica": "Entrega contínua",
+     "fator": null,
+     "desfecho": "motivação e satisfação no trabalho",
+     "efeito": "aumenta",
+     "mecanismo": "a responsabilidade adicional trazida pela entrega contínua melhora motivação e satisfação no trabalho",
+     "condicoes": "quando a adoção dá mais responsabilidade aos desenvolvedores",
+     "trecho": "at the same time improve motivation and job satisfaction"
+    }
+   ]
+  },
+  {
+   "key": "Anandayuvaraj20262109",
+   "title": "Learning from Software Failures: A Case Study at a National Space Research Center",
+   "author": "Anandayuvaraj, Dharun and Singla, Tanmay and Hammadeh, Zain Alabedin Haj and Lund, Andreas and Holloway, Alexandra and Davis, James C.",
+   "year": "2026",
+   "venue": "Proceedings - 2026 IEEE/ACM 48th International Conference on Software Engineering, ICSE 2026",
+   "doi": "10.1145/3744916.3773149",
+   "veredito": "talvez",
+   "resumo": "Estudo de caso com 10 entrevistas com engenheiros de software de pesquisa num centro espacial nacional (mais 5 em outras organizações de alta confiabilidade) sobre como aprendem com falhas. Conclui que o aprendizado com falhas é informal e ad hoc e é minado por falta de tempo, rotatividade e documentação fragmentada; o abstract liga esses fatores à prática (postmortem), não a prática às pessoas.",
+   "elos": []
+  },
+  {
+   "key": "Agrawal2016291",
+   "title": "A Current Study on the Limitations of Agile Methods in Industry Using Secure Google Forms",
+   "author": "Agrawal, Ashish and Atiq, Mohd. Aurangzeb and Maurya, L.S.",
+   "year": "2016",
+   "venue": "Procedia Computer Science",
+   "doi": "10.1016/j.procs.2016.02.056",
+   "veredito": "reprovado",
+   "motivo": "sem elo: CI só como atributo do ágil; o estresse é atribuído às limitações do ágil"
+  },
+  {
+   "key": "Brown2021591",
+   "title": "Communication and coordination across event phases: A multi-team system emergency response",
+   "author": "Brown, Olivia and Power, Nicola and Conchie, Stacey M.",
+   "year": "2021",
+   "venue": "Journal of Occupational and Organizational Psychology",
+   "doi": "10.1111/joop.12349",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Kormanik2023318",
+   "title": "Exploring GitOps: An Approach to Cloud Cluster System Deployment",
+   "author": "Kormanik, Tomas and Poruban, Jaroslav",
+   "year": "2023",
+   "venue": "ICETA 2023 - 21st Year of International Conference on Emerging eLearning Technologies and Applications, Proceedings",
+   "doi": "10.1109/ICETA61311.2023.10344182",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Sarni2025143",
+   "title": "A Review of Machine Learning Approaches for Real-Time Alerting in Service Level Objective Monitoring",
+   "author": "Sarni, Tomi and Nurminen, Jukka K.",
+   "year": "2025",
+   "venue": "Proceedings - 2025 IEEE International Conference on Software Services Engineering, SSE 2025",
+   "doi": "10.1109/SSE67621.2025.00026",
+   "veredito": "reprovado",
+   "motivo": "secundário"
+  },
+  {
+   "key": "Aftab202751",
+   "title": "Security Governance for Deployment: Continuous Security Posture Management in Shift-Left IaC Pipelines",
+   "author": "Aftab, Salim",
+   "year": "2027",
+   "venue": "Lecture Notes on Data Engineering and Communications Technologies",
+   "doi": "10.1007/978-3-032-29430-2_5",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Villarrubia2026",
+   "title": "Large language models for agile effort estimation: a post-mortem study incorporating developer experience and optimism",
+   "author": "Villarrubia, Carlos and Villarrubia-Martin, Enrique Adrian and Vara, Juan Manuel and Granada, David",
+   "year": "2026",
+   "venue": "Requirements Engineering",
+   "doi": "10.1007/s00766-026-00463-y",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica: estimativa com LLM, sem prática de ESC"
+  },
+  {
+   "key": "Akbar2022587",
+   "title": "A Vision of DevOps Requirements Change Management Standardization",
+   "author": "Akbar, Muhammad Azeem and Khan, Arif Ali and Mahmood, Sajjad and Rafi, Saima",
+   "year": "2022",
+   "venue": "Proceedings - 2022 IEEE 22nd International Conference on Software Quality, Reliability and Security Companion, QRS-C 2022",
+   "doi": "10.1109/QRS-C57518.2022.00094",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Islam20261042",
+   "title": "ProGem: A Hybrid AI Framework for Task Effort Estimation",
+   "author": "Islam, Shahid and Arshad, Shazia and Nigar, Natasha and Lukose, Jose",
+   "year": "2026",
+   "venue": "International Journal of Advanced Computer Science and Applications",
+   "doi": "10.14569/IJACSA.2026.0170393",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Bernanda20241504",
+   "title": "Leveraging Transformer Model for Data-Driven Requirement Engineering: A Case Study of NLP4RE E-Commerce Business Apps in Malaysia and Indonesia",
+   "author": "Bernanda, Devi Yurisca and Jawawi, Dayang Norhayati Abang and Halim, Shahliza Abd and Adikara, Fransiskus and Herdian, Cevi",
+   "year": "2024",
+   "venue": "Journal of Computer Science",
+   "doi": "10.3844/JCSSP.2024.1504.1509",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Adamson2014302",
+   "title": "Best practice in responding to critical incidents and potentially traumatic experience within an organisational setting",
+   "author": "Adamson, Carole",
+   "year": "2014",
+   "venue": "Evidence Discovery and Assessment in Social Work Practice",
+   "doi": "10.4018/978-1-4666-6563-7.ch015",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Upeksha2025",
+   "title": "The Influence of Generative AI on work-life balance among female software professionals in Sri Lanka",
+   "author": "Upeksha, Sanduni and Samarasinghe, Dumindu T. and Sanochana, Mithun and Samarathunga, Sapni S. and Rajamanthri, Lochana and Samarakkody, Takshila and Aluthwala, Chathuni",
+   "year": "2025",
+   "venue": "2025 5th International Conference on Advanced Research in Computing: Converging Horizons: Uniting Disciplines in Computing Research through AI Innovation, ICARC 2025 - Proceedings",
+   "doi": "10.1109/ICARC64760.2025.10963119",
+   "veredito": "reprovado",
+   "motivo": "sem elo: o efeito sobre equilíbrio trabalho-vida é da IA generativa, não de prática de ESC"
+  },
+  {
+   "key": "Dada202363",
+   "title": "The Leading Locations of Information Technology (IT) Jobs in South Africa",
+   "author": "Dada, Oluwaseun Alexander and Obaido, George and Mienye, Ibomoiye Domor and Aruleba, Kehinde",
+   "year": "2023",
+   "venue": "Lecture Notes in Information Systems and Organisation",
+   "doi": "10.1007/978-3-031-32436-9_6",
+   "veredito": "reprovado",
+   "motivo": "sem elo: DevOps só como cargo em anúncios de vagas"
+  },
+  {
+   "key": "Virtanen2024597",
+   "title": "The Psychological Effects of Continuity Threatening Cyber Incidents",
+   "author": "Virtanen, Toni",
+   "year": "2024",
+   "venue": "European Conference on Information Warfare and Security, ECCWS",
+   "doi": "",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Suk2019115",
+   "title": "Failure-aware application placement modeling and optimization in high turnover devops environment",
+   "author": "Suk, Tonghoon and Hwang, Jinho and Bulut, Muhammed Fatih and Zeng, Zemei",
+   "year": "2019",
+   "venue": "IEEE International Conference on Cloud Computing, CLOUD",
+   "doi": "10.1109/CLOUD.2019.00030",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Thool2026135",
+   "title": "SafeAIMerge: A Tool for Integrating DAST and LLM-Generated Security Feedback into GitHub Actions Workflows",
+   "author": "Thool, Arpit and Smith, Justin and Brown, Chris",
+   "year": "2026",
+   "venue": "SecDev 2026 - Proceedings of the 2026 ACM Secure Development Conference, Co-located with FSE 2026",
+   "doi": "10.1145/3805773.3806003",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Adamson2017732",
+   "title": "Best practice in responding to critical incidents and potentially traumatic experience within an organisational setting",
+   "author": "Adamson, Carole",
+   "year": "2017",
+   "venue": "Social Issues in the Workplace: Breakthroughs in Research and Practice",
+   "doi": "10.4018/978-1-5225-3917-9.ch038",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Aïdasso2026513",
+   "title": "Predicting Intermittent Job Failure Categories for Diagnosis Using Few-Shot Fine-Tuned Language Models",
+   "author": "Aïdasso, Henri and Bordeleau, Francis and Tizghadam, Ali",
+   "year": "2026",
+   "venue": "FSE Companion 2026 - Proceedings of the 34th ACM International Conference on the Foundations of Software Engineering",
+   "doi": "10.1145/3803437.3805224",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Khadem2025189670",
+   "title": "Aligning DevOps and Microservice Architecture: Empirical Mapping, Taxonomy, and RAG-Based Decision Support",
+   "author": "Khadem, Ehsan Azizi and Movaghar, Ali",
+   "year": "2025",
+   "venue": "IEEE Access",
+   "doi": "10.1109/ACCESS.2025.3628665",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Akbar202543698",
+   "title": "Empirical Investigation of Key Enablers for Secure DevOps Practices",
+   "author": "Akbar, Muhammad Azeem and Alsanad, Abeer Abdulaziz",
+   "year": "2025",
+   "venue": "IEEE Access",
+   "doi": "10.1109/ACCESS.2025.3549183",
+   "veredito": "reprovado",
+   "motivo": "sem elo"
+  },
+  {
+   "key": "Mannava2026275",
+   "title": "A Novel DevOps Monitoring and Incident Response System: Methodology and Performance Evaluation",
+   "author": "Mannava, Amrutha Varshini and Priyanka, Kakumanu Venkata Sai Keerthi and Raju, Vegesna Kumar Durga Abhirama and Lavenia, Penumala and Rani, B. Prameela",
+   "year": "2026",
+   "venue": "De Gruyter Proceedings in Mathematics",
+   "doi": "10.1515/9783112221082-024",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Bitzer2023",
+   "title": "Managing the Inevitable – A Maturity Model to Establish Incident Response Management Capabilities",
+   "author": "Bitzer, Michael and Häckel, Björn and Leuthe, Daniel and Ott, Joshua and Stahl, Bastian and Strobel, Jacqueline",
+   "year": "2023",
+   "venue": "Computers and Security",
+   "doi": "10.1016/j.cose.2022.103050",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Orozco-Jiménez2027165",
+   "title": "Strategy to Foster High-Performance Characteristics in Newly Formed Teams",
+   "author": "Orozco-Jiménez, Ernesto and Muñoz, Mirna and Peña, Adriana and Mejía, Jezreel",
+   "year": "2027",
+   "venue": "Communications in Computer and Information Science",
+   "doi": "10.1007/978-3-032-36813-3_11",
+   "veredito": "reprovado",
+   "motivo": "sem elo"
+  },
+  {
+   "key": "O'Brien201160",
+   "title": "An invitation to grieve: Reconsidering critical incident responses by support teams in the school setting",
+   "author": "O'Brien, Patrick and Mills, Katrina and Fraser, Amanda and Andersson, John",
+   "year": "2011",
+   "venue": "Australian Journal of Guidance and Counselling",
+   "doi": "10.1375/ajgc.21.1.60",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Nibler2022345",
+   "title": "PINTA—One Tool to Plan Them All",
+   "author": "Nibler, Rainer and Hartung, Jens and Krenss, Jonas and Fürbacher, Anna and Mrowka, Falk and Brogl, Sandra",
+   "year": "2022",
+   "venue": "Springer Aerospace Technology",
+   "doi": "10.1007/978-3-030-94628-9_16",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Theunissen2021",
+   "title": "Continuous Learning with the Sandwich of Happiness and Result Planning",
+   "author": "Theunissen, Theo and Overbeek, Sietse and Hoppenbrouwers, Stijn",
+   "year": "2021",
+   "venue": "ACM International Conference Proceeding Series",
+   "doi": "10.1145/3489449.3489974",
+   "veredito": "reprovado",
+   "motivo": "sem elo"
+  },
+  {
+   "key": "Beek2023233",
+   "title": "Measuring Team Effectiveness in Scrum",
+   "author": "Beek, Kars and Wagenaar, Gerard and Kester, Laura and Overbeek, Sietse and de Rooij, Evert",
+   "year": "2023",
+   "venue": "Communications in Computer and Information Science",
+   "doi": "10.1007/978-3-031-43703-8_17",
+   "veredito": "reprovado",
+   "motivo": "sem elo"
+  },
+  {
+   "key": "Slade2008271",
+   "title": "Emergency communication: The discursive challenges facing emergency clinicians and patients in hospital emergency departments",
+   "author": "Slade, Diana and Scheeres, Hermine and Manidis, Marie and Iedema, Rick and Dunston, Roger and Stein-Parbury, Jane and Matthiessen, Christian and Herke, Maria and McGregor, Jeannette",
+   "year": "2008",
+   "venue": "Discourse and Communication",
+   "doi": "10.1177/1750481308091910",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Tennakoon2025",
+   "title": "Achieving Sustainability in Sri Lankan SME IT Firms through DevOps",
+   "author": "Tennakoon, Hiruni and Jayatissa, Yehemini",
+   "year": "2025",
+   "venue": "Proceedings - International Research Conference on Smart Computing and Systems Engineering, SCSE 2025",
+   "doi": "10.1109/SCSE65633.2025.11031052",
+   "veredito": "aprovado",
+   "resumo": "Revisão de literatura e survey com mais de 100 profissionais de PMEs de TI do Sri Lanka, analisado por modelagem de equações estruturais, sobre o impacto de DevOps na sustentabilidade econômica, ambiental e social. Conclui que DevOps aumenta a satisfação e a retenção dos empregados ao promover uma cultura de aprendizado e melhoria contínuos.",
+   "elos": [
+    {
+     "pratica": "ESC/DevOps em geral",
+     "fator": "Clima de aprendizagem",
+     "efeito": "aumenta",
+     "mecanismo": "DevOps promove uma cultura de aprendizado e melhoria contínuos, e por ela aumenta a satisfação e a retenção dos empregados",
+     "condicoes": "PMEs de TI do Sri Lanka",
+     "trecho": "boosts employee satisfaction and retention by fostering a culture of continuous learning and improvement"
+    }
+   ]
+  },
+  {
+   "key": "Nagaraju2027477",
+   "title": "Generative AI, Agentic AI, MCP, and RAG for Improving Developer Productivity",
+   "author": "Nagaraju, Rakesh Kumar Bidanagere",
+   "year": "2027",
+   "venue": "Communications in Computer and Information Science",
+   "doi": "10.1007/978-3-032-39763-8_27",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Borle20181931",
+   "title": "Analyzing the effects of test driven development in GitHub",
+   "author": "Borle, Neil C. and Feghhi, Meysam and Stroulia, Eleni and Greiner, Russell and Hindle, Abram",
+   "year": "2018",
+   "venue": "Empirical Software Engineering",
+   "doi": "10.1007/s10664-017-9576-3",
+   "veredito": "reprovado",
+   "motivo": "sem pessoas"
+  },
+  {
+   "key": "Amanbayev2026",
+   "title": "AI-Powered Code Generation in Agile Workflows: Risks, Review Strategies, and Developer Perceptions",
+   "author": "Amanbayev, Marlen and Aukatov, Sayan and Nagumanov, Azamat and Sakhipov, Aivar and Nurgaliyeva, Symbat and Omirzak, Islam",
+   "year": "2026",
+   "venue": "SIST 2026 - 2026 IEEE 6th International Conference on Smart Information Systems and Technologies, Conference Proceedings",
+   "doi": "10.1109/SIST61674.2026.11596025",
+   "veredito": "reprovado",
+   "motivo": "sem elo: o efeito sobre carga cognitiva é das ferramentas de IA; CI/CD só como recomendação"
+  },
+  {
+   "key": "Stryder2023",
+   "title": "Trauma team on call: Why are we all so stressed?",
+   "author": "Stryder, Brandon T. and Hall, Erin C. and Newark, Annemarie and Sava, Jack and Fong, Allan and Fitzgibbons, Shimae C.",
+   "year": "2023",
+   "venue": "Human Factors in Healthcare",
+   "doi": "10.1016/j.hfh.2023.100035",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Johanssen20191",
+   "title": "Toward usability problem identification based on user emotions derived from facial expressions",
+   "author": "Johanssen, Jan Ole and Bernius, Jan Philip and Bruegge, Bernd",
+   "year": "2019",
+   "venue": "Proceedings - 2019 IEEE/ACM 4th International Workshop on Emotion Awareness in Software Engineering, SEmotion 2019",
+   "doi": "10.1109/SEmotion.2019.00008",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "De Clercq2025818",
+   "title": "Cooling facilities in paediatric palliative care: a ritual form of mourning? A scoping literature review",
+   "author": "De Clercq, Eva and Vokinger, Anna Katharina and Pedraza, Eddy Carolina and von Bueren, André Oscar and Tinner, Eva Maria and Michel, Gisela",
+   "year": "2025",
+   "venue": "Mortality",
+   "doi": "10.1080/13576275.2024.2384875",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Mäkiaho201575",
+   "title": "Software metrics in students' software development projects",
+   "author": "Mäkiaho, Pekka and Poranen, Timo and Seppi, Ari",
+   "year": "2015",
+   "venue": "ACM International Conference Proceeding Series",
+   "doi": "10.1145/2812428.2812473",
+   "veredito": "reprovado",
+   "motivo": "sem elo"
+  },
+  {
+   "key": "Fantinelli2023",
+   "title": "Psychological Contracts and Organizational Commitment: The Positive Impact of Relational Contracts on Call Center Operators",
+   "author": "Fantinelli, Stefania and Galanti, Teresa and Guidetti, Gloria and Conserva, Federica and Giffi, Veronica and Cortini, Michela and Di Fiore, Teresa",
+   "year": "2023",
+   "venue": "Administrative Sciences",
+   "doi": "10.3390/admsci13040112",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Toh202198",
+   "title": "A Review on DevOps Adoption in Continuous Delivery Process",
+   "author": "Toh, M. Zulfahmi and Sahibuddin, Shamsul and Bakar, Rohani Abu",
+   "year": "2021",
+   "venue": "Proceedings - 2021 International Conference on Software Engineering and Computer Systems and 4th International Conference on Computational Science and Information Management, ICSECS-ICOCSIM 2021",
+   "doi": "10.1109/ICSECS52883.2021.00025",
+   "veredito": "reprovado",
+   "motivo": "secundário"
+  },
+  {
+   "key": "Levy2026",
+   "title": "Beats, Rhymes, and Life: Evaluating Hip Hop Counseling Small-Groups for Adolescents",
+   "author": "Levy, Ian and Weiss, Emily and Gill, John",
+   "year": "2026",
+   "venue": "International Journal for the Advancement of Counselling",
+   "doi": "10.1007/s10447-025-09632-0",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Claassen2015248",
+   "title": "Shorter feedback loops by means of continuous deployment",
+   "author": "Claassen, Arjan and Boekhorst, Laurens",
+   "year": "2015",
+   "venue": "Lecture Notes in Business Information Processing",
+   "doi": "10.1007/978-3-319-18612-2_24",
+   "veredito": "aprovado",
+   "resumo": "Artigo curto que propõe usar implantação contínua para fechar cedo o ciclo de feedback das funcionalidades. Afirma que a prática também diminui o esforço de implantação dos desenvolvedores, aumentando sua felicidade; o abstract não descreve método nem amostra.",
+   "elos": [
+    {
+     "pratica": "Implantação contínua",
+     "fator": "Carga de trabalho",
+     "efeito": "reduz",
+     "mecanismo": "a implantação contínua diminui o esforço de implantação que recai sobre os desenvolvedores, o que aumenta sua felicidade",
+     "condicoes": "",
+     "trecho": "This also lowers the deployment effort for developers, increasing their happiness."
+    }
+   ]
+  },
+  {
+   "key": "Sathyakumar2024165",
+   "title": "Practical Workflows to Engineer Scalable Presentation Platforms for Modern Web Applications",
+   "author": "Sathyakumar, Damodaran Chingleput",
+   "year": "2024",
+   "venue": "2024 4th IEEE International Conference on Software Engineering and Artificial Intelligence, SEAI 2024",
+   "doi": "10.1109/SEAI62072.2024.10674071",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Guedes2024",
+   "title": "Revisioning Healthcare Interoperability System for ABI Architectures: Introspection and Improvements",
+   "author": "Guedes, João and Duarte, Júlio and Guimarães, Tiago and Santos, Manuel Filipe",
+   "year": "2024",
+   "venue": "Information (Switzerland)",
+   "doi": "10.3390/info15120745",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Limoncelli201812",
+   "title": "SQL is no excuse to avoid DevOps",
+   "author": "Limoncelli, Thomas A.",
+   "year": "2018",
+   "venue": "Queue",
+   "doi": "10.1145/3291276.3300018",
+   "veredito": "aprovado",
+   "resumo": "Artigo de opinião em revista de prática (ACM Queue; literatura cinza de 1º nível, entra com aviso), sem método empírico declarado, defendendo DevOps com bancos SQL por automação de schema e de releases. Afirma que automatizar releases transforma um upgrade manual preocupante e estressante em evento rotineiro e cria um local de trabalho mais sustentável.",
+   "elos": [
+    {
+     "pratica": "Entrega contínua",
+     "fator": "Ansiedade de implantação",
+     "fatorEmergente": true,
+     "categoria": "Tarefa e carga de trabalho",
+     "efeito": "reduz",
+     "mecanismo": "automatizar as releases troca o upgrade manual, preocupante e estressante, por um evento regular que acontece sem incidente, o que torna o local de trabalho mais sustentável",
+     "condicoes": "com automação do gerenciamento de schema do banco SQL e disciplina dos desenvolvedores",
+     "trecho": "Automating releases liberates us. It turns a worrisome, stressful, manual upgrade process into a regular event that happens without incident."
+    }
+   ]
+  },
+  {
+   "key": "Ranasinghe2022",
+   "title": "An Artificial Intelligence Framework for the Detection of Emotion Transitions in Telehealth Services",
+   "author": "Ranasinghe, Sajani and Gamage, Gihan and Moraliyage, Harsha and Mills, Nishan and McCaffrey, Nikki and Bucholc, Jessica and Lane, Katherine and Cahill, Angela and White, Victoria and De Silva, Daswin",
+   "year": "2022",
+   "venue": "International Conference on Human System Interaction, HSI",
+   "doi": "10.1109/HSI55341.2022.9869503",
+   "veredito": "reprovado",
+   "motivo": "fora de ES"
+  },
+  {
+   "key": "Riedl202583",
+   "title": "How an Agile Software Process Increases Developers’ Job Satisfaction: A Stress Perspective Based on the Effort-Reward-Imbalance Model",
+   "author": "Riedl, René and Oettl, Christian and Stangl, Fabian J. and Hevner, Alan R.",
+   "year": "2025",
+   "venue": "Business and Information Systems Engineering",
+   "doi": "10.1007/s12599-024-00919-x",
+   "veredito": "aprovado",
+   "resumo": "Survey com 178 desenvolvedores na Áustria testando um modelo de mediação moderada (estresse pelo modelo esforço-recompensa) entre agilidade (oito práticas) e satisfação no trabalho. A agilidade aumenta a satisfação indiretamente ao reduzir o estresse, sobretudo por aumentar a percepção de recompensa; entre as práticas, integração contínua (com programação em par, refatoração, teste unitário, propriedade coletiva e padrões de código) tem efeito redutor de estresse, enquanto mudança de requisitos e relação com cliente o aumentam.",
+   "elos": [
+    {
+     "pratica": "Integração contínua",
+     "fator": null,
+     "desfecho": "estresse (desequilíbrio esforço-recompensa)",
+     "efeito": "reduz",
+     "mecanismo": "integração contínua reduz a percepção de estresse, predominantemente pelo aumento da percepção de recompensa",
+     "condicoes": "o benefício é menor para desenvolvedores com alto sobrecomprometimento",
+     "trecho": "the other six practices (pair programming, continuous integration, refactoring, unit testing, collective ownership, coding standards) have a stress-reducing effect"
+    }
+   ]
+  },
+  {
+   "key": "Jeyam2026590",
+   "title": "\"still in the Loop\": Coping with Technostress in DevOps Teams and the Impact of GenAI",
+   "author": "Jeyam, Dharneeka and Wiedemann, Anna and Schwabe, Gerhard and Güney, Kadircan",
+   "year": "2026",
+   "venue": "Proceedings - 2026 IEEE/ACM 48th International Conference on Software Engineering: Software Engineering in Practice, ICSE-SEIP 2026",
+   "doi": "10.1145/3786583.3786899",
+   "veredito": "talvez",
+   "resumo": "Estudo qualitativo com 26 entrevistas com membros de times DevOps sobre como vivem e enfrentam o tecnoestresse, com foco na IA generativa. Identifica estratégias de coping focadas na emoção e no problema (desenvolvimento de habilidades, compartilhamento de conhecimento, padronização de ferramentas) e o papel duplo da IA generativa; o abstract não liga uma prática de ESC específica ao tecnoestresse, só o contexto DevOps.",
+   "elos": []
+  },
+  {
+   "key": "Chinnaswamy2024156",
+   "title": "User Story Based Automated Test Case Generation Using NLP",
+   "author": "Chinnaswamy, Arunkumar and Sabarish, B.A. and Menan, R. Deepak",
+   "year": "2024",
+   "venue": "IFIP Advances in Information and Communication Technology",
+   "doi": "10.1007/978-3-031-69982-5_12",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "van de Kamp2024177",
+   "title": "Paving the Path Towards Platform Engineering Using a Comprehensive Reference Model",
+   "author": "van de Kamp, Ruben and Bakker, Kees and Zhao, Zhiming",
+   "year": "2024",
+   "venue": "Lecture Notes in Business Information Processing",
+   "doi": "10.1007/978-3-031-54712-6_11",
+   "veredito": "reprovado",
+   "motivo": "ferramenta/técnica"
+  },
+  {
+   "key": "Rahman2017499",
+   "title": "Impact of continuous integration on code reviews",
+   "author": "Rahman, Mohammad Masudur and Roy, Chanchal K.",
+   "year": "2017",
+   "venue": "IEEE International Working Conference on Mining Software Repositories",
+   "doi": "10.1109/MSR.2017.39",
+   "veredito": "reprovado",
+   "motivo": "sem pessoas"
+  },
+  {
+   "key": "Agrawal2016291b",
+   "title": "A Current Study on the Limitations of Agile Methods in Industry Using Secure Google Forms",
+   "author": "Agrawal, Ashish and Atiq, Mohd. Aurangzeb and Maurya, L.S.",
+   "year": "2016",
+   "venue": "Physics Procedia",
+   "doi": "10.1016/j.procs.2016.02.056",
+   "veredito": "reprovado",
+   "motivo": "sem elo: CI só como atributo do ágil; o estresse é atribuído às limitações do ágil"
+  }
+ ]
+}

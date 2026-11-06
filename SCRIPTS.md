@@ -262,6 +262,13 @@ python scripts/docs/achados-fatores-pdf.py
 Outro banco ou outra saída: `--db <caminho>\referencias.db --out <arquivo>.pdf`.
 Requer `reportlab` e as fontes Calibri do Windows.
 
+Para a etapa 2 (práticas de ESC × fatores), `docs/achados-esc-etapa2.pdf` sai
+da triagem dos abstracts gravada em `docs/esc/triagem-busca1.json`:
+
+```powershell
+python scripts/docs/achados-esc-pdf.py
+```
+
 ### Títulos colados → BibTeX (fallback)
 
 Para quando não sai arquivo nenhum da base: cola-se uma lista de títulos (um por
